@@ -15,6 +15,7 @@ export function initFile(renderer: Renderer)
     let filename = getFilename()
     kernel.init_file(filename)
     renderers.set(filename, renderer)
+    renderNext(filename)  //This will readd itself, so it's an infinite loop in the background
 }
 
 export function beginUndoEvent(desc: string)
@@ -52,7 +53,6 @@ export function redoLatest()
 {
     let filename = getFilename()
     kernel.redo_latest(filename)
-    renderNext(filename)
 }
 
 export function takeUndoSnapshot(event: string, id: string)
@@ -77,12 +77,17 @@ export function deleteTempObject(id: string)
     renderers.get(filename).deleteMesh(id)
 }
 
+export function deleteObject(event: string, id: string)
+{
+    let filename = getFilename()
+    kernel.delete_object(filename, event, id)
+}
+
 function renderNext(filename: string) 
 {
     kernel.get_updates(filename, (err: any, updates: any) => {
         if(!err) {
             updates.forEach((msg: any) => {
-                console.log(msg)
                 if(msg.Mesh) {
                     renderers.get(filename).renderMesh(msg.Mesh.data, msg.Mesh.data.id)
                 }
@@ -91,6 +96,7 @@ function renderNext(filename: string)
                 }
             })
         }
+        renderNext(filename)
     })
 }
 
@@ -98,19 +104,16 @@ export function createWall(event: string, firstPt: math.Point3d, secondPt: math.
 {
     let filename = getFilename()
     kernel.create_wall(firstPt, secondPt, width, height, filename, event, id)
-    renderNext(filename)
 }
 
 export function joinWalls(event: string, id_1: string, id_2: string, pt: math.Point3d) 
 {
     let filename = getFilename()
     kernel.join_walls(filename, event, id_1, id_2, pt)
-    renderNext(filename)
 }
 
 export function moveObj(event: string, id: string, delta: math.Point3d)
 {
     let filename = getFilename()
     kernel.move_object(filename, event, id, delta)
-    renderNext(filename)
 }

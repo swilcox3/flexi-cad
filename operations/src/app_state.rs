@@ -90,6 +90,13 @@ pub fn modify_obj(file: &PathBuf, event: &UndoEventID, id: &RefID, mut callback:
     }
 }
 
+pub fn delete_obj(file: &PathBuf, event: &UndoEventID, id: &RefID) -> Result<DataObject, DBError> {
+    match APP_STATE.files.get(&file) {
+        Some(ops) => ops.delete_obj(event, id),
+        None => Err(DBError::NotFound)
+    }
+}
+
 pub fn update_deps(file: PathBuf, id: RefID) {
     Scheduler::spawn(move || {
         match APP_STATE.files.get(&file) {

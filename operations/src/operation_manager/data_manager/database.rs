@@ -66,7 +66,6 @@ impl FileDatabase {
                 Change::Modify{obj} => {
                     match self.db.remove(obj.get_id()) {
                         Some(val) => {
-                            println!("{:?}", val);
                             redo.changes.push(Change::Modify{obj: val.1});
                         }
                         None => return Err(DBError::NotFound),

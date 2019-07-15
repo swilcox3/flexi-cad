@@ -1,5 +1,7 @@
 const gui = require('./gui')
 import * as math from '../utils/math'
+import { openSync } from 'fs';
+import * as ops from '../operations/operations'
 
 interface Tool
 {
@@ -12,7 +14,7 @@ interface Tool
 class UIController
 {
     private activeTool: Tool
-    private selectedObjs: Array<string>
+    private selectedObjs: Array<BABYLON.AbstractMesh>
     constructor() {
         this.activeTool = null
         this.selectedObjs = []
@@ -32,21 +34,29 @@ class UIController
         this.activeTool = tool
     }
 
-    leftClick(pt:math.Point3d, mesh: string)
+    leftClick(pt:math.Point3d, mesh: BABYLON.AbstractMesh)
     {
         if(this.activeTool != null)
         {
-            this.activeTool.onMouseDown(pt, mesh)
+            var id = undefined;
+            if(mesh != null) {
+                id = mesh.name;
+            }
+            this.activeTool.onMouseDown(pt, id)
         }
         else if(mesh != null)
         {
+            var mat = mesh.material as BABYLON.StandardMaterial;
+            mat.diffuseColor = BABYLON.Color3.Green();
             this.selectedObjs.push(mesh)
         }
         else if(mesh == null)
         {
-            this.selectedObjs.forEach((mesh) => {
-
+            this.selectedObjs.forEach((obj) => {
+                var mat = obj.material as BABYLON.StandardMaterial;
+                mat.diffuseColor = BABYLON.Color3.Gray();
             })
+            this.selectedObjs = [];
         }
     }
 
@@ -70,6 +80,16 @@ class UIController
             this.activeTool.finish()
             this.activeTool = null
         }
+    }
+
+    deleteSelected()
+    {
+        var event = ops.beginUndoEvent("Delete objs");
+        this.selectedObjs.forEach((obj) => {
+            ops.deleteObject(event, obj.name)
+        });
+        ops.endUndoEvent(event);
+        this.selectedObjs = []
     }
 }
 

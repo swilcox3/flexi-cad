@@ -187,6 +187,14 @@ fn move_object(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
+fn delete_object(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let path = cx.argument::<JsString>(0)?.value();
+    let event = &RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
+    let id_1 = RefID::from_str(&cx.argument::<JsString>(2)?.value()).unwrap();
+    let _ = operations_kernel::delete_obj(&PathBuf::from(path), &event, &id_1).unwrap();
+    Ok(cx.undefined())
+}
+
 register_module!(mut cx, {
     cx.export_function("get_updates", get_updates)?;
     cx.export_function("init_file", init_file)?;
@@ -201,5 +209,6 @@ register_module!(mut cx, {
     cx.export_function("create_wall", create_wall)?;
     cx.export_function("join_walls", join_walls)?;
     cx.export_function("move_object", move_object)?;
+    cx.export_function("delete_object", delete_object)?;
     Ok(())
 });

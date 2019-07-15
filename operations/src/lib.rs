@@ -21,7 +21,7 @@ mod app_state;
 pub use data_model::*;
 
 use std::path::PathBuf;
-pub use app_state::{init_file, begin_undo_event, end_undo_event, undo_latest, redo_latest, suspend_event, resume_event, take_undo_snapshot};
+pub use app_state::{init_file, begin_undo_event, end_undo_event, undo_latest, redo_latest, suspend_event, resume_event, take_undo_snapshot, delete_obj};
 
 pub fn move_obj(file: &PathBuf, event: &UndoEventID, id: &RefID, delta: &Vector3f) -> Result<(), DBError> {
     app_state::modify_obj(file, event, id, |obj| {

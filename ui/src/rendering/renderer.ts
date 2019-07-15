@@ -64,6 +64,7 @@ export class Renderer {
         if(!mesh) {
             mesh = new BABYLON.Mesh(id, this._scene);
             var objMaterial = new BABYLON.StandardMaterial("obj", this._scene);
+            objMaterial.diffuseColor = BABYLON.Color3.Gray();
             objMaterial.backFaceCulling = false;
             mesh.material = objMaterial;
             var pointerDragBehavior = new BABYLON.PointerDragBehavior({dragPlaneNormal: new BABYLON.Vector3(0,1,0)});

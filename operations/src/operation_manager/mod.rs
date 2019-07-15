@@ -46,7 +46,6 @@ impl OperationManager {
 
     pub fn undo_latest(&self, user: &UserID) -> Result<(), DBError> {
         let set = self.data.undo_latest(user)?;
-        println!("{:?}", set);
         self.update_set(&set)?;
         self.update_all_deps(set.iter())
     }
@@ -60,7 +59,6 @@ impl OperationManager {
     fn update_set(&self, set: &HashSet<RefID>) -> Result<(), DBError> {
         for obj_id in set {
             if let Err(e) = self.data.get_mut_obj_no_undo(&obj_id, &mut |obj: &mut DataObject| {
-                println!("{:?}", obj);
                 self.updates.send(obj.update()?).unwrap();
                 Ok(())
             }) {
