@@ -91,6 +91,15 @@ class UIController
         ops.endUndoEvent(event);
         this.selectedObjs = []
     }
+
+    cancel()
+    {
+        if(this.activeTool != null)
+        {
+            this.activeTool.cancel()
+            this.activeTool = null
+        }
+    }
 }
 
 class UIControllerSingleton

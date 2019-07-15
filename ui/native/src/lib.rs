@@ -106,6 +106,13 @@ fn resume_event(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
+fn cancel_event(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let path = cx.argument::<JsString>(0)?.value();
+    let id = cx.argument::<JsString>(1)?.value();
+    operations_kernel::cancel_event(&PathBuf::from(path), &RefID::from_str(&id).unwrap()).unwrap();
+    Ok(cx.undefined())
+}
+
 fn take_undo_snapshot(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let event_id = cx.argument::<JsString>(1)?.value();
@@ -205,6 +212,7 @@ register_module!(mut cx, {
     cx.export_function("take_undo_snapshot", take_undo_snapshot)?;
     cx.export_function("suspend_event", suspend_event)?;
     cx.export_function("resume_event", resume_event)?;
+    cx.export_function("cancel_event", cancel_event)?;
     cx.export_function("get_temp_wall", get_temp_wall)?;
     cx.export_function("create_wall", create_wall)?;
     cx.export_function("join_walls", join_walls)?;

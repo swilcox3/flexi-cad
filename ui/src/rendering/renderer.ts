@@ -119,6 +119,8 @@ export class Renderer {
 
     deleteMesh(id:string) {
         var mesh = this._scene.getMeshByName(id)
-        mesh.dispose()
+        if(mesh) {
+            mesh.dispose()
+        }
     }
 }

@@ -187,6 +187,16 @@ impl PendingEvents {
         }
     }
 
+    pub fn cancel_event(&self, db: &FileDatabase, event_id: &UndoEventID) -> Result<HashSet<RefID>, DBError> {
+        match self.events.remove(event_id) {
+            Some((_, event)) => {
+                let redo = db.undo(event)?;
+                Ok(redo.get_changed_objects())
+            }
+            None => Err(DBError::NotFound)
+        }
+    }
+
     pub fn add_obj(&self, db: &FileDatabase, event_id: &UndoEventID, obj: DataObject) -> Result<(), DBError> {
         match self.events.get_mut(event_id) {
             Some(mut event) => {

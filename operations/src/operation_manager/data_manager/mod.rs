@@ -40,6 +40,10 @@ impl DataManager {
         self.pending.resume_event(event_id)
     }
 
+    pub fn cancel_event(&self, event_id: &UndoEventID) -> Result<HashSet<RefID>, DBError> {
+        self.pending.cancel_event(&self.db, event_id)
+    }
+
     pub fn add_obj(&self, event_id: &UndoEventID, obj: DataObject) -> Result<(), DBError> {
         self.pending.add_obj(&self.db, event_id, obj)
     }

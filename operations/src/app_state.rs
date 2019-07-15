@@ -69,6 +69,13 @@ pub fn resume_event(file: &PathBuf, event: &UndoEventID) -> Result<(), DBError> 
     }
 }
 
+pub fn cancel_event(file: &PathBuf, event: &UndoEventID) -> Result<(), DBError> {
+    match APP_STATE.files.get(file) {
+        Some(ops) => ops.cancel_event(event),
+        None => Err(DBError::NotFound)
+    }
+}
+
 pub fn take_undo_snapshot(file: &PathBuf, event: &UndoEventID, key: &RefID) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.take_undo_snapshot(event, key),

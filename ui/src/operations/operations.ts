@@ -49,6 +49,12 @@ export function resumeEvent(event: string)
     kernel.resume_event(filename, event)
 }
 
+export function cancelEvent(event: string)
+{
+    let filename = getFilename()
+    kernel.cancel_event(filename, event)
+}
+
 export function redoLatest()
 {
     let filename = getFilename()
@@ -88,6 +94,7 @@ function renderNext(filename: string)
     kernel.get_updates(filename, (err: any, updates: any) => {
         if(!err) {
             updates.forEach((msg: any) => {
+                //console.log(msg);
                 if(msg.Mesh) {
                     renderers.get(filename).renderMesh(msg.Mesh.data, msg.Mesh.data.id)
                 }

@@ -40,6 +40,12 @@ impl OperationManager {
         self.data.resume_event(event_id)
     }
 
+    pub fn cancel_event(&self, event_id: &UndoEventID) -> Result<(), DBError> {
+        let set = self.data.cancel_event(event_id)?;
+        self.update_set(&set)?;
+        self.update_all_deps(set.iter())
+    }
+
     pub fn take_undo_snapshot(&self, event_id: &UndoEventID, key: &RefID) -> Result<(), DBError> {
         self.data.take_undo_snapshot(event_id, key)
     }
@@ -56,7 +62,9 @@ impl OperationManager {
         self.update_all_deps(set.iter())
     }
 
+
     fn update_set(&self, set: &HashSet<RefID>) -> Result<(), DBError> {
+        //println!("{:?}", set);
         for obj_id in set {
             if let Err(e) = self.data.get_mut_obj_no_undo(&obj_id, &mut |obj: &mut DataObject| {
                 self.updates.send(obj.update()?).unwrap();

@@ -57,6 +57,9 @@ export class WallTool {
 
     cancel()
     {
+        if(this.undoEventId) {
+            ops.cancelEvent(this.undoEventId)
+        }
         ops.deleteTempObject(this.activeTempId)
     }
 
