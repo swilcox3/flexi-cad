@@ -1,0 +1,22 @@
+[package]
+name = "cad-ui-js"
+version = "0.1.0"
+authors = ["SWilcox <wilcox.scot@gmail.com>"]
+license = "MIT"
+build = "build.rs"
+exclude = ["artifacts.json", "index.node"]
+
+[lib]
+name = "cad_ui_js"
+crate-type = ["dylib"]
+
+[build-dependencies]
+neon-build = "0.2.0"
+
+[dependencies]
+neon = "0.2.0"
+operations_kernel = {version = "0.1.0", path = "../../operations-kernel/operations"}
+neon-serde = "0.1.1"
+crossbeam-channel = "0.3.8"
+lazy_static = "1.3.0"
+ccl = "4.2.0"

@@ -1,0 +1,8 @@
+/operations-kernel/operations/target
+/operations-kernel/data-model/target
+**/*.rs.bk
+/operations-kernel/operations/Cargo.lock
+/operations-kernel/data-model/Cargo.lock
+/ui/app
+/ui/node_modules
+/ui/native/target
