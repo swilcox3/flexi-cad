@@ -56,7 +56,6 @@ function onPointerMove(scene: BABYLON.Scene, ground: BABYLON.Mesh) {
     }
 
     var current = getGroundPosition(scene, ground);
-
     if (!current) {
         return;
     }

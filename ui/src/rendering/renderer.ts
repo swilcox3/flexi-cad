@@ -4,16 +4,27 @@ var mouse = require('../ui/mouse_events')
 import * as ops from '../operations/operations'
 import * as math from '../utils/math'
 
+function getHoveredMesh(scene: BABYLON.Scene, ground: BABYLON.Mesh)
+{
+    var pickinfo = scene.pick(scene.pointerX, scene.pointerY, mesh => { return mesh != ground});
+    if (pickinfo.hit) {
+        return pickinfo.pickedMesh;
+    }
+    return null;
+}
+
 export class Renderer {
     private _canvas: HTMLCanvasElement
     private _engine: BABYLON.Engine
     private _scene: BABYLON.Scene
+    private _highlight: BABYLON.HighlightLayer
 
     createScene(canvas: HTMLCanvasElement, engine: BABYLON.Engine) {
         this._canvas = canvas;
         this._engine = engine;
         // This creates a basic Babylon Scene object (non-mesh)
         const scene = new BABYLON.Scene(engine);
+        var _highlight = new BABYLON.HighlightLayer("highlight1", scene);
         this._scene = scene;
         // This creates and positions a free camera (non-mesh)
         const camera = new BABYLON.ArcRotateCamera("camera1", -Math.PI / 2, 1.0, 110, BABYLON.Vector3.Zero(), scene);
@@ -36,7 +47,18 @@ export class Renderer {
             mouse.onPointerDown(this._scene, this._canvas, evt, ground, camera)
         }
 
+        var current_hover: BABYLON.Mesh = null;
         var onPointerMove = (evt: MouseEvent) => {
+            var hovered = getHoveredMesh(scene, ground)
+            var layer = scene.getHighlightLayerByName("highlight1");
+            if (current_hover && hovered != current_hover) {
+                layer.removeMesh(current_hover)
+            }
+            if (hovered) {
+                layer.addMesh(hovered as BABYLON.Mesh, BABYLON.Color3.Green());
+                current_hover = hovered as BABYLON.Mesh;
+            }
+
             mouse.onPointerMove(this._scene, ground)
         }
 
@@ -49,7 +71,7 @@ export class Renderer {
         }
     }
     initialize(canvas: HTMLCanvasElement) {
-        const engine = new BABYLON.Engine(canvas, true);
+        const engine = new BABYLON.Engine(canvas, true, {stencil: true});
         this.createScene(canvas, engine);
         engine.runRenderLoop(() => {
             this._scene.render();
