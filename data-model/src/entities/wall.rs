@@ -40,7 +40,9 @@ impl Data for Wall {
             positions: Vec::with_capacity(24),
             indices: Vec::with_capacity(36),
             metadata: Some(json!({
-                "type": "Wall"
+                "type": "Wall",
+                "Width": self.width,
+                "Height": self.height,
             }))
         };
         let dir = self.second_pt - self.first_pt;
