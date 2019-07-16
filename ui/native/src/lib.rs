@@ -165,7 +165,7 @@ fn create_wall(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         }
         None => RefID::new_v4()
     };
-    if let Err(e) = operations_kernel::create_wall(&PathBuf::from(path), &RefID::from_str(&event).unwrap(), id, point_1, point_2, width, height) {
+    if let Err(e) = operations_kernel::create_wall(PathBuf::from(path), RefID::from_str(&event).unwrap(), id, point_1, point_2, width, height) {
         panic!("{:?}", e);
     }
     else {
@@ -180,25 +180,35 @@ fn join_walls(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let id_2 = RefID::from_str(&cx.argument::<JsString>(3)?.value()).unwrap();
     let arg_4 = cx.argument::<JsValue>(4)?;
     let point = neon_serde::from_value(&mut cx, arg_4)?;
-    operations_kernel::join_walls(&PathBuf::from(path), &event, &id_1, &id_2, point).unwrap();
+    operations_kernel::join_walls(PathBuf::from(path), event, id_1, id_2, point).unwrap();
     Ok(cx.undefined())
 }
 
 fn move_object(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
-    let event = &RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
+    let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let id_1 = RefID::from_str(&cx.argument::<JsString>(2)?.value()).unwrap();
     let arg_3 = cx.argument::<JsValue>(3)?;
     let delta = neon_serde::from_value(&mut cx, arg_3)?;
-    operations_kernel::move_obj(&PathBuf::from(path), &event, &id_1, &delta).unwrap();
+    operations_kernel::move_obj(PathBuf::from(path), event, id_1, delta).unwrap();
     Ok(cx.undefined())
 }
 
 fn delete_object(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
-    let event = &RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
+    let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let id_1 = RefID::from_str(&cx.argument::<JsString>(2)?.value()).unwrap();
     let _ = operations_kernel::delete_obj(&PathBuf::from(path), &event, &id_1).unwrap();
+    Ok(cx.undefined())
+}
+
+fn set_object_data(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let path = cx.argument::<JsString>(0)?.value();
+    let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
+    let id_1 = RefID::from_str(&cx.argument::<JsString>(2)?.value()).unwrap();
+    let arg_3 = cx.argument::<JsString>(3)?.value();
+    let data: serde_json::Value = serde_json::from_str(&arg_3).unwrap();
+    operations_kernel::set_obj_data(PathBuf::from(path), event, id_1, data).unwrap();
     Ok(cx.undefined())
 }
 
@@ -218,5 +228,6 @@ register_module!(mut cx, {
     cx.export_function("join_walls", join_walls)?;
     cx.export_function("move_object", move_object)?;
     cx.export_function("delete_object", delete_object)?;
+    cx.export_function("set_object_data", set_object_data)?;
     Ok(())
 });

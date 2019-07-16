@@ -1,5 +1,8 @@
 import * as BABYLONGUI from "babylonjs-gui"
 import {WallTool} from './tools/wall_tool'
+import { openSync } from "fs";
+import * as ops from '../operations/operations'
+
 
 export default class GUI
 {
@@ -42,11 +45,21 @@ export default class GUI
         this.buttonPanel.addControl(button1);
     }
 
-    createObjectOverlay(obj: any)
+    createObjectOverlay(id: string, obj: any)
     {
-        var curRow = 0;
+        this.objOverlay.addRowDefinition(40, true);
+        var label = new BABYLONGUI.TextBlock();
+        label.text = obj.type
+        label.color = "black"
+        label.height = "40px"
+        label.width = 1
+        this.objOverlay.addControl(label, 0, 0);
+        var curRow = 1;
         for(var prop in obj)
         {
+            if(prop == "type") {
+                continue;
+            }
             this.objOverlay.addRowDefinition(40, true);
             var text = new BABYLONGUI.TextBlock();
             text.text = prop
@@ -56,10 +69,18 @@ export default class GUI
             this.objOverlay.addControl(text, curRow, 0);
             var edit = new BABYLONGUI.InputText();
             edit.text = JSON.stringify(obj[prop])
-            edit.color = "black"
             edit.background = "white"
+            edit.color = "black"
+            edit.focusedBackground = "grey"
             edit.height = "40px"
             edit.width = 1
+            edit.metadata = prop
+            edit.onBlurObservable.add((evt) => {
+                var event = ops.beginUndoEvent("prop set");
+                var data = {[evt.metadata]: Number(evt.text)};
+                ops.setObjectData(event, id, data);
+                ops.endUndoEvent(event)
+            })
             this.objOverlay.addControl(edit, curRow, 1);
             curRow = curRow + 1;
         }

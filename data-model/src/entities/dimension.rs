@@ -37,6 +37,10 @@ impl Data for LinearDimension {
     fn update(&self) -> Result<UpdateMsg, DBError> {
         Err(DBError::NotFound)
     }
+
+    fn set_data(&mut self, data: &serde_json::Value) -> Result<(), DBError> {
+        Ok(())
+    }
 }
 
 impl Update for LinearDimension {

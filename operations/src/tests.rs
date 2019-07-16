@@ -36,6 +36,10 @@ impl Data for TestObj {
     fn update(&self) -> Result<UpdateMsg, DBError> {
         Ok(UpdateMsg::Other{data: serde_json::to_value(&self).unwrap()})
     }
+
+    fn set_data(&mut self, data: &serde_json::Value) -> Result<(), DBError> {
+        Ok(())
+    }
 }
 
 impl Store for TestObj {

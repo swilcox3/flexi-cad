@@ -24,17 +24,3 @@ pub use entity_ops::*;
 
 use std::path::PathBuf;
 pub use app_state::{init_file, begin_undo_event, end_undo_event, undo_latest, redo_latest, suspend_event, resume_event, cancel_event, take_undo_snapshot, delete_obj};
-
-pub fn move_obj(file: &PathBuf, event: &UndoEventID, id: &RefID, delta: &Vector3f) -> Result<(), DBError> {
-    app_state::modify_obj(file, event, id, |obj| {
-        match obj.query_mut::<Position>() {
-            Some(movable) => {
-                movable.move_obj(delta);
-                Ok(())
-            }
-            None => Err(DBError::ObjLacksTrait)
-        }
-    })?;
-    app_state::update_deps(file.clone(), id.clone());
-    Ok(())
-}

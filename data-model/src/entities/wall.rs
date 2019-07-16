@@ -79,6 +79,24 @@ impl Data for Wall {
         data.indices.extend(&[2, 4, 6]);
         Ok(UpdateMsg::Mesh{data: data})
     }
+
+    fn set_data(&mut self, data: &serde_json::Value) -> Result<(), DBError> {
+        let mut changed = false;
+        if let serde_json::Value::Number(num) = &data["Width"] {
+            changed = true;
+            self.width = num.as_f64().unwrap();
+        }
+        if let serde_json::Value::Number(num) = &data["Height"] {
+            changed = true;
+            self.height = num.as_f64().unwrap();
+        }
+        if changed {
+            Ok(())
+        }
+        else {
+            Err(DBError::NotFound)
+        }
+    }
 }
 
 impl RefPoint for Wall {

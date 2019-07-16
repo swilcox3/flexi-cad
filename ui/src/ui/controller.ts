@@ -55,7 +55,7 @@ class UIController
             var mat = mesh.material as BABYLON.StandardMaterial;
             mat.diffuseColor = BABYLON.Color3.Green();
             this.selectedObjs.push(mesh)
-            gui.guiInstance.createObjectOverlay(mesh.metadata)
+            gui.guiInstance.createObjectOverlay(mesh.name, mesh.metadata)
         }
         else if(mesh == null)
         {

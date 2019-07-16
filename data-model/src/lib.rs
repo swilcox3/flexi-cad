@@ -1,7 +1,7 @@
 extern crate uuid;
 pub extern crate cgmath;
 #[macro_use] extern crate query_interface;
-#[macro_use] extern crate serde_json;
+#[macro_use] pub extern crate serde_json;
 
 mod geometry_kernel;
 mod entities;
@@ -34,6 +34,7 @@ pub enum UpdateMsg {
 pub trait Data : Object + Send + Sync {
     fn get_id(&self) -> &Uuid;
     fn update(&self) -> Result<UpdateMsg, DBError>;
+    fn set_data(&mut self, data: &serde_json::Value) -> Result<(), DBError>;
 }
 mopo!(Data);
 

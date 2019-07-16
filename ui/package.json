@@ -11,8 +11,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "babylonjs": "^3.3.0",
-    "babylonjs-gui": "^3.3.0",
+    "babylonjs": "^4.0.0",
+    "babylonjs-gui": "^4.0.0",
     "mousetrap": "^1.6.3",
     "neon-cli": "^0.2.0",
     "uuid": "^3.3.2"
@@ -23,7 +23,7 @@
     "electron": "^3.1.8",
     "electron-build-env": "^0.2.0",
     "jest": "^24.7.1",
-    "jest-extended": "^0.11.1",
+    "jest-extended": "^0.11.2",
     "ts-jest": "^24.0.2",
     "typescript": "^3.0.1"
   },
