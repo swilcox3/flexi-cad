@@ -38,7 +38,10 @@ impl Data for Wall {
         let mut data = MeshData {
             id: self.get_id().clone(),
             positions: Vec::with_capacity(24),
-            indices: Vec::with_capacity(36)
+            indices: Vec::with_capacity(36),
+            metadata: Some(json!({
+                "type": "Wall"
+            }))
         };
         let dir = self.second_pt - self.first_pt;
         let perp = dir.cross(Vector3f::unit_z()).normalize();

@@ -1,7 +1,7 @@
 extern crate uuid;
-extern crate cgmath;
+pub extern crate cgmath;
 #[macro_use] extern crate query_interface;
-extern crate serde_json;
+#[macro_use] extern crate serde_json;
 
 mod geometry_kernel;
 mod entities;

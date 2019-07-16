@@ -21,7 +21,25 @@ export class WallTool {
         this.undoEventId = ''
     }
 
-    onMouseDown(pt: math.Point3d)
+    canJoinToWall(hovered: BABYLON.Mesh) {
+        return hovered && hovered.metadata.type == "Wall" && hovered.name != this.lastId && hovered.name != this.activeTempId;
+    }
+
+    createWall(picked: BABYLON.Mesh)
+    {
+        if(!this.undoEventId) {
+            this.undoEventId = ops.beginUndoEvent("Create Wall")
+        }
+        ops.createWall(this.undoEventId, this.firstPt, this.secondPt, this.activeWidth, this.activeHeight, this.activeTempId)
+        if(this.lastId) {
+            ops.joinWalls(this.undoEventId, this.lastId, this.activeTempId, this.firstPt)
+        }
+        if(this.canJoinToWall(picked)) {
+            ops.joinWalls(this.undoEventId, picked.name, this.activeTempId, this.secondPt);
+        }
+    }
+
+    onMouseDown(pt: math.Point3d, picked: BABYLON.Mesh)
     {
         if(this.firstPt == null)
         {
@@ -31,13 +49,7 @@ export class WallTool {
         }
         else
         {
-            if(!this.undoEventId) {
-                this.undoEventId = ops.beginUndoEvent("Create Wall")
-            }
-            ops.createWall(this.undoEventId, this.firstPt, this.secondPt, this.activeWidth, this.activeHeight, this.activeTempId)
-            if(this.lastId) {
-                ops.joinWalls(this.undoEventId, this.lastId, this.activeTempId, this.firstPt)
-            }
+            this.createWall(picked);
             this.lastId = this.activeTempId;
             this.firstPt = new math.Point3d(pt.x, pt.y, 0)
             this.secondPt = new math.Point3d(pt.x + .1, pt.y + .1, 0)
@@ -45,7 +57,7 @@ export class WallTool {
         }
     }
 
-    onMouseMove(pt: math.Point3d)
+    onMouseMove(pt: math.Point3d, hovered: BABYLON.Mesh)
     {
         if(this.firstPt != null)
         {
@@ -53,6 +65,7 @@ export class WallTool {
             this.secondPt.y = pt.y
             this.drawWall()
         }
+        return this.canJoinToWall(hovered);
     }
 
     cancel()
@@ -68,15 +81,9 @@ export class WallTool {
         ops.renderTempWall(this.firstPt, this.secondPt, this.activeWidth, this.activeHeight, this.activeTempId)
     }
 
-    finish()
+    finish(pt: math.Point3d, picked: BABYLON.Mesh)
     {
-        if(!this.undoEventId) {
-            this.undoEventId = ops.beginUndoEvent("Create Wall")
-        }
-        ops.createWall(this.undoEventId, this.firstPt, this.secondPt, this.activeWidth, this.activeHeight, this.activeTempId)
-        if(this.lastId) {
-            ops.joinWalls(this.undoEventId, this.lastId, this.activeTempId, this.firstPt)
-        }
+        this.createWall(picked);
         if(this.undoEventId) {
             ops.endUndoEvent(this.undoEventId)
         }

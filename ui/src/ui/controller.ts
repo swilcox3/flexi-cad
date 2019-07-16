@@ -5,10 +5,10 @@ import * as ops from '../operations/operations'
 
 interface Tool
 {
-    onMouseDown(pt: math.Point3d, objId?:string):undefined,
-    onMouseMove(pt: math.Point3d, objId?:string):undefined,
+    onMouseDown(pt: math.Point3d, hovered?:BABYLON.Mesh):undefined,
+    onMouseMove(pt: math.Point3d, hovered?:BABYLON.Mesh):boolean,
     cancel():undefined,
-    finish():undefined
+    finish(pt: math.Point3d, picked?:BABYLON.Mesh):undefined
 }
 
 class UIController
@@ -34,52 +34,54 @@ class UIController
         this.activeTool = tool
     }
 
-    leftClick(pt:math.Point3d, mesh: BABYLON.AbstractMesh)
+    deselect()
+    {
+        this.selectedObjs.forEach((obj) => {
+            var mat = obj.material as BABYLON.StandardMaterial;
+            mat.diffuseColor = BABYLON.Color3.Gray();
+        })
+        this.selectedObjs = [];
+    }
+
+    leftClick(pt:math.Point3d, mesh: BABYLON.Mesh)
     {
         if(this.activeTool != null)
         {
-            var id = undefined;
-            if(mesh != null) {
-                id = mesh.name;
-            }
-            this.activeTool.onMouseDown(pt, id)
+            this.activeTool.onMouseDown(pt, mesh)
         }
         else if(mesh != null)
         {
+            this.deselect();
             var mat = mesh.material as BABYLON.StandardMaterial;
             mat.diffuseColor = BABYLON.Color3.Green();
             this.selectedObjs.push(mesh)
         }
         else if(mesh == null)
         {
-            this.selectedObjs.forEach((obj) => {
-                var mat = obj.material as BABYLON.StandardMaterial;
-                mat.diffuseColor = BABYLON.Color3.Gray();
-            })
-            this.selectedObjs = [];
+            this.deselect();
         }
     }
 
-    rightClick(pt:math.Point3d)
-    {
-        this.activeToolComplete()
-    }
-
-    mouseMove(pt:math.Point3d)
+    rightClick(pt:math.Point3d, picked: BABYLON.Mesh)
     {
         if(this.activeTool != null)
         {
-            this.activeTool.onMouseMove(pt)
-        }
-    }
-
-    activeToolComplete()
-    {
-        if(this.activeTool != null)
-        {
-            this.activeTool.finish()
+            this.activeTool.finish(pt, picked)
             this.activeTool = null
         }
+        else if (picked == null)
+        {
+            this.deselect();
+        }
+    }
+
+    mouseMove(pt:math.Point3d, hovered: BABYLON.Mesh)
+    {
+        if(this.activeTool != null)
+        {
+            return this.activeTool.onMouseMove(pt, hovered)
+        }
+        return true;
     }
 
     deleteSelected()

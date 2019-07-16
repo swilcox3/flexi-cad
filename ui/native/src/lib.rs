@@ -180,7 +180,7 @@ fn join_walls(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let id_2 = RefID::from_str(&cx.argument::<JsString>(3)?.value()).unwrap();
     let arg_4 = cx.argument::<JsValue>(4)?;
     let point = neon_serde::from_value(&mut cx, arg_4)?;
-    operations_kernel::join_walls(&PathBuf::from(path), &event, &id_1, &id_2, &point).unwrap();
+    operations_kernel::join_walls(&PathBuf::from(path), &event, &id_1, &id_2, point).unwrap();
     Ok(cx.undefined())
 }
 

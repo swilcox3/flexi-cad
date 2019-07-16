@@ -10,6 +10,16 @@ pub struct MeshData {
     pub id: RefID,
     pub positions: Vec<WorldCoord>,
     pub indices: Vec<u64>,
+    pub metadata: Option<serde_json::Value>,
+}
+
+impl MeshData {
+    pub fn push_pt(&mut self, pt: Point3f) {
+        //Bake in coordinate transformations to graphical space
+        self.positions.push(pt.x);
+        self.positions.push(pt.z);
+        self.positions.push(-pt.y);
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd)]
@@ -24,14 +34,6 @@ impl Reference {
             id: RefID::nil(),
             which_pt: 0
         }
-    }
-}
-
-impl MeshData {
-    pub fn push_pt(&mut self, pt: Point3f) {
-        self.positions.push(pt.x);
-        self.positions.push(pt.z);
-        self.positions.push(-pt.y);
     }
 }
 

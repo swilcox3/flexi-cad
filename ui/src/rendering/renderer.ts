@@ -54,20 +54,28 @@ export class Renderer {
             if (current_hover && hovered != current_hover) {
                 layer.removeMesh(current_hover)
             }
-            if (hovered) {
-                layer.addMesh(hovered as BABYLON.Mesh, BABYLON.Color3.Green());
-                current_hover = hovered as BABYLON.Mesh;
+            if(mouse.onPointerMove(this._scene, ground, hovered)) {
+                if(hovered) {
+                    layer.addMesh(hovered as BABYLON.Mesh, BABYLON.Color3.Green());
+                    current_hover = hovered as BABYLON.Mesh;
+                }
             }
+        }
 
-            mouse.onPointerMove(this._scene, ground)
+        var onEsc = (evt: KeyboardEvent) => {
+            if(evt.keyCode == 27) {
+                camera.attachControl(this._canvas, true);
+            }
         }
 
         canvas.addEventListener("pointerdown", onPointerDown, false);
         canvas.addEventListener("pointermove", onPointerMove, false);
+        canvas.addEventListener("keydown", onEsc, false);
 
         scene.onDispose = function () {
             canvas.removeEventListener("pointerdown", onPointerDown);
             canvas.removeEventListener("pointermove", onPointerMove);
+            canvas.removeEventListener("keyDown", onEsc);
         }
     }
     initialize(canvas: HTMLCanvasElement) {
@@ -111,6 +119,7 @@ export class Renderer {
             pointerDragBehavior.moveAttached = false
             mesh.addBehavior(pointerDragBehavior)
         }
+        mesh.metadata = triangles.metadata;
         var vertexData = new BABYLON.VertexData();
         vertexData.positions = triangles.positions;
         vertexData.indices = triangles.indices;
@@ -122,5 +131,9 @@ export class Renderer {
         if(mesh) {
             mesh.dispose()
         }
+    }
+
+    reattachCamera() {
+
     }
 }

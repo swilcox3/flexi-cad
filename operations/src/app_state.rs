@@ -90,6 +90,13 @@ pub fn add_obj(file: &PathBuf, event: &UndoEventID, obj: DataObject) -> Result<(
     }
 }
 
+pub fn get_obj(file: &PathBuf, id: &RefID, mut callback: impl FnMut(&DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
+    match APP_STATE.files.get(&file) {
+        Some(ops) => ops.get_obj(id, &mut callback),
+        None => Err(DBError::NotFound)
+    }
+}
+
 pub fn modify_obj(file: &PathBuf, event: &UndoEventID, id: &RefID, mut callback: impl FnMut(&mut DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
     match APP_STATE.files.get(&file) {
         Some(ops) => ops.modify_obj(event, id, &mut callback),
