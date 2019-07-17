@@ -24,3 +24,16 @@ pub fn set_obj_data(file: PathBuf, event: UndoEventID, id: RefID, data: serde_js
     app_state::update_deps(file, id);
     Ok(())
 }
+
+pub fn set_objs_data(file: PathBuf, event: UndoEventID, data: Vec<(RefID, serde_json::Value)>) ->Result<(), DBError> {
+    let mut keys = HashSet::new();
+    for (id, val) in data {
+        app_state::modify_obj(&file, &event, &id, |obj| {
+            obj.set_data(&val)
+        })?;
+        keys.insert(id);
+    }
+    app_state::update_all_deps(file, keys.into_iter().collect());
+
+    Ok(())
+}

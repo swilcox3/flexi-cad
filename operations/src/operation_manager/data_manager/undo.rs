@@ -2,7 +2,6 @@ use crate::*;
 use super::database::FileDatabase;
 use std::time::{SystemTime, UNIX_EPOCH};
 use ccl::dhashmap::DHashMap;
-use std::collections::HashSet;
 
 fn get_time() -> u128 {
     SystemTime::now().duration_since(UNIX_EPOCH).expect("Backwards time?").as_millis()
@@ -53,15 +52,15 @@ impl UndoEvent {
 }
 
 pub struct UndoStack {
-    stack: std::collections::VecDeque<UndoEvent>,
-    redo_stack: std::collections::VecDeque<UndoEvent>
+    stack: VecDeque<UndoEvent>,
+    redo_stack: VecDeque<UndoEvent>
 }
 
 impl UndoStack {
     pub fn new() -> UndoStack {
         UndoStack{ 
-            stack: std::collections::VecDeque::new(),
-            redo_stack: std::collections::VecDeque::new()
+            stack: VecDeque::new(),
+            redo_stack: VecDeque::new()
         }
     }
 

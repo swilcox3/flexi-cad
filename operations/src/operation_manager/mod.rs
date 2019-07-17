@@ -7,7 +7,6 @@ use crate::*;
 use data_manager::*;
 use dep_manager::*;
 use crossbeam_channel::Sender;
-use std::collections::HashSet;
 
 pub struct OperationManager {
     data: DataManager,

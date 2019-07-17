@@ -11,18 +11,50 @@ interface Tool
     finish(pt: math.Point3d, picked?:BABYLON.Mesh):undefined
 }
 
-class UIController
+class SelectionController
 {
-    private activeTool: Tool
-    private selectedObjs: Array<BABYLON.AbstractMesh>
+    private selectedObjs: Set<BABYLON.Mesh>;
     constructor() {
-        this.activeTool = null
-        this.selectedObjs = []
+        this.selectedObjs = new Set();
     }
 
     getSelectedObjs()
     {
         return this.selectedObjs
+    }
+
+    deselectAll()
+    {
+        this.selectedObjs.forEach((obj) => {
+            var mat = obj.material as BABYLON.StandardMaterial;
+            mat.diffuseColor = BABYLON.Color3.Gray();
+        })
+        this.selectedObjs.clear();
+    }
+
+    addObject(mesh: BABYLON.Mesh)
+    {
+        var mat = mesh.material as BABYLON.StandardMaterial;
+        mat.diffuseColor = BABYLON.Color3.Green();
+        this.selectedObjs.add(mesh)
+    }
+
+    selectObject(mesh: BABYLON.Mesh)
+    {
+        this.deselectAll();
+        this.addObject(mesh);
+    }
+}
+
+class UIController
+{
+    private activeTool: Tool
+    private selection: SelectionController
+    private ctrlPressed: boolean;
+    constructor() {
+        this.activeTool = null;
+        this.selection = new SelectionController();
+        this.ctrlPressed = false;
     }
 
     setActiveTool(tool:Tool)
@@ -34,15 +66,6 @@ class UIController
         this.activeTool = tool
     }
 
-    deselect()
-    {
-        this.selectedObjs.forEach((obj) => {
-            var mat = obj.material as BABYLON.StandardMaterial;
-            mat.diffuseColor = BABYLON.Color3.Gray();
-        })
-        this.selectedObjs = [];
-    }
-
     leftClick(pt:math.Point3d, mesh: BABYLON.Mesh)
     {
         if(this.activeTool != null)
@@ -51,15 +74,17 @@ class UIController
         }
         else if(mesh != null)
         {
-            this.deselect();
-            var mat = mesh.material as BABYLON.StandardMaterial;
-            mat.diffuseColor = BABYLON.Color3.Green();
-            this.selectedObjs.push(mesh)
-            gui.guiInstance.createObjectOverlay(mesh.name, mesh.metadata)
+            if(!this.ctrlPressed) {
+                this.selection.selectObject(mesh)
+            }
+            else {
+                this.selection.addObject(mesh)
+            }
+            gui.guiInstance.setObjectOverlay(this.selection.getSelectedObjs())
         }
         else if(mesh == null)
         {
-            this.deselect();
+            this.selection.deselectAll();
         }
     }
 
@@ -72,7 +97,7 @@ class UIController
         }
         else if (picked == null)
         {
-            this.deselect();
+            this.selection.deselectAll();
         }
     }
 
@@ -85,14 +110,24 @@ class UIController
         return true;
     }
 
+    ctrlDown()
+    {
+        this.ctrlPressed = true;
+    }
+
+    ctrlUp()
+    {
+        this.ctrlPressed = false;
+    }
+
     deleteSelected()
     {
         var event = ops.beginUndoEvent("Delete objs");
-        this.selectedObjs.forEach((obj) => {
+        this.selection.getSelectedObjs().forEach((obj) => {
             ops.deleteObject(event, obj.name)
         });
         ops.endUndoEvent(event);
-        this.selectedObjs = []
+        this.selection.deselectAll()
     }
 
     cancel()

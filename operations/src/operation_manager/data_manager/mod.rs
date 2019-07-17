@@ -1,6 +1,5 @@
 use std::sync::{Mutex};
 use crate::*;
-use std::collections::HashSet;
 
 #[cfg(test)]
 mod tests;

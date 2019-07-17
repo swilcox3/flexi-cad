@@ -3,6 +3,8 @@ extern crate neon;
 extern crate operations_kernel;
 extern crate crossbeam_channel;
 extern crate ccl;
+extern crate serde;
+extern crate serde_json;
 #[macro_use] extern crate lazy_static;
 
 use neon::prelude::*;
@@ -12,6 +14,7 @@ use operations_kernel::RefID;
 use std::str::FromStr;
 use crossbeam_channel::Receiver;
 use ccl::dhashmap::DHashMap;
+use serde::{Serialize, Deserialize};
 
 lazy_static!{
     static ref UPDATES: DHashMap<PathBuf, Receiver<UpdateMsg>> = DHashMap::default();
@@ -212,6 +215,22 @@ fn set_object_data(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
+#[derive(Serialize, Deserialize)]
+struct UpdateEntry(RefID, serde_json::Value);
+
+fn set_objects_datas(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let path = cx.argument::<JsString>(0)?.value();
+    let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
+    let arg_2 = cx.argument::<JsArray>(2)?;
+    let mut data = Vec::with_capacity(arg_2.len() as usize);
+    for i in 0..arg_2.len() {
+        let val = arg_2.get(&mut cx, i)?;
+        data.push(neon_serde::from_value(&mut cx, val)?);
+    }
+    operations_kernel::set_objs_data(PathBuf::from(path), event, data).unwrap();
+    Ok(cx.undefined())
+}
+
 register_module!(mut cx, {
     cx.export_function("get_updates", get_updates)?;
     cx.export_function("init_file", init_file)?;
@@ -229,5 +248,6 @@ register_module!(mut cx, {
     cx.export_function("move_object", move_object)?;
     cx.export_function("delete_object", delete_object)?;
     cx.export_function("set_object_data", set_object_data)?;
+    cx.export_function("set_objects_datas", set_objects_datas)?;
     Ok(())
 });

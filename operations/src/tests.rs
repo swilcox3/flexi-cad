@@ -90,7 +90,6 @@ impl Position for TestObj {
 }
 
 use std::sync::{Arc, Mutex};
-use std::collections::HashSet;
 use crate::scheduler::Scheduler;
 use tokio::timer::Delay;
 use std::time::{Duration, Instant};
