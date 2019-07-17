@@ -1,8 +1,7 @@
 import * as BABYLON from "babylonjs";
 var gui = require('../ui/gui')
 var mouse = require('../ui/mouse_events')
-import * as ops from '../operations/operations'
-import * as math from '../utils/math'
+var uiController = require('../ui/controller')
 
 function getHoveredMesh(scene: BABYLON.Scene, ground: BABYLON.Mesh)
 {
@@ -44,7 +43,11 @@ export class Renderer {
         gui.guiInstance.init();
 
         var onPointerDown = (evt: MouseEvent) => {
-            mouse.onPointerDown(this._scene, this._canvas, evt, ground, camera)
+            mouse.onPointerDown(this._scene, this._canvas, evt, ground)
+        }
+
+        var onPointerClick = (evt: MouseEvent) => {
+            mouse.onPointerClick(this._scene, this._canvas, evt, ground)
         }
 
         var current_hover: BABYLON.Mesh = null;
@@ -62,21 +65,27 @@ export class Renderer {
             }
         }
 
-        var onEsc = (evt: KeyboardEvent) => {
-            if(evt.keyCode == 27) {
-                camera.attachControl(this._canvas, true);
+        this._scene.onPointerObservable.add((pointerInfo) => {
+            switch(pointerInfo.type) {
+                case BABYLON.PointerEventTypes.POINTERDOWN:
+                    onPointerDown(pointerInfo.event)
+                    break;
+                case BABYLON.PointerEventTypes.POINTERUP:
+                    break;
+                case BABYLON.PointerEventTypes.POINTERMOVE:
+                    onPointerMove(pointerInfo.event)
+                    break;
+                case BABYLON.PointerEventTypes.POINTERWHEEL:
+                    break;
+                case BABYLON.PointerEventTypes.POINTERPICK:
+                    break;
+                case BABYLON.PointerEventTypes.POINTERTAP:
+                    onPointerClick(pointerInfo.event)
+                    break;
+                case BABYLON.PointerEventTypes.POINTERDOUBLETAP:
+                    break;
             }
-        }
-
-        canvas.addEventListener("pointerdown", onPointerDown, false);
-        canvas.addEventListener("pointermove", onPointerMove, false);
-        canvas.addEventListener("keydown", onEsc, false);
-
-        scene.onDispose = function () {
-            canvas.removeEventListener("pointerdown", onPointerDown);
-            canvas.removeEventListener("pointermove", onPointerMove);
-            canvas.removeEventListener("keyDown", onEsc);
-        }
+        });
     }
     initialize(canvas: HTMLCanvasElement) {
         const engine = new BABYLON.Engine(canvas, true, {stencil: true});
@@ -99,22 +108,12 @@ export class Renderer {
             mesh.material = objMaterial;
             var pointerDragBehavior = new BABYLON.PointerDragBehavior({dragPlaneNormal: new BABYLON.Vector3(0,1,0)});
             pointerDragBehavior.useObjectOrienationForDragging = false;
-            var event = '';
+            var uiSingleton = new uiController().getInstance();
             pointerDragBehavior.onDragObservable.add((ev)=>{
-                if(!event) {
-                    event = ops.beginUndoEvent("Move object")
-                    ops.takeUndoSnapshot(event, mesh.name)
-                    ops.suspendEvent(event)
-                }
-                var modelDelta = math.transformGraphicToModelCoords(ev.delta) 
-                ops.moveObj(event, mesh.name, modelDelta)
+                uiSingleton.moveSelected(ev);
             })
             pointerDragBehavior.onDragEndObservable.add((ev)=>{
-                if(event) {
-                    ops.resumeEvent(event)
-                    ops.endUndoEvent(event)
-                }
-                event = ''
+                uiSingleton.endMoveSelected(ev);
             })
             pointerDragBehavior.moveAttached = false
             mesh.addBehavior(pointerDragBehavior)
@@ -131,9 +130,5 @@ export class Renderer {
         if(mesh) {
             mesh.dispose()
         }
-    }
-
-    reattachCamera() {
-
     }
 }

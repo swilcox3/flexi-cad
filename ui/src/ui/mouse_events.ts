@@ -13,7 +13,7 @@ function getGroundPosition(scene: BABYLON.Scene, ground: BABYLON.Mesh)
     return null;
 }
 
-function onPointerDown(scene: BABYLON.Scene, canvas: HTMLCanvasElement, evt: MouseEvent, ground: BABYLON.Mesh, camera: BABYLON.Camera) 
+function onPointerDown(scene: BABYLON.Scene, canvas: HTMLCanvasElement, evt: MouseEvent, ground: BABYLON.Mesh)
 {
     var uiSingleton = new uiController().getInstance()
     var pickInfo = scene.pick(scene.pointerX, scene.pointerY);
@@ -24,12 +24,23 @@ function onPointerDown(scene: BABYLON.Scene, canvas: HTMLCanvasElement, evt: Mou
             currentMesh = null
         }
 
-        if(!currentPoint)
-        {
-            setTimeout(function () {
-                camera.detachControl(canvas);
-            }, 0);
+        if (evt.button == 0 && currentMesh) {
+            uiSingleton.leftDown(currentMesh)
         }
+    }
+} 
+
+function onPointerClick(scene: BABYLON.Scene, canvas: HTMLCanvasElement, evt: MouseEvent, ground: BABYLON.Mesh) 
+{
+    var uiSingleton = new uiController().getInstance()
+    var pickInfo = scene.pick(scene.pointerX, scene.pointerY);
+    if (pickInfo.hit) {
+        var currentMesh = pickInfo.pickedMesh;
+        if(currentMesh == ground)
+        {
+            currentMesh = null
+        }
+
         currentPoint = getGroundPosition(scene, ground);
         if (evt.button == 0) {
             if (currentPoint) {
@@ -39,7 +50,6 @@ function onPointerDown(scene: BABYLON.Scene, canvas: HTMLCanvasElement, evt: Mou
         if (evt.button == 2) {
             if (currentPoint) {
                 uiSingleton.rightClick(currentPoint, currentMesh)
-                camera.attachControl(canvas, true);
                 currentPoint = null;
                 currentMesh = null;
             }
@@ -64,5 +74,6 @@ function onPointerMove(scene: BABYLON.Scene, ground: BABYLON.Mesh, hovered: BABY
 
 module.exports = {
     onPointerDown,
+    onPointerClick,
     onPointerMove
 }

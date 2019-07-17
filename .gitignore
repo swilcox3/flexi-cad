@@ -6,3 +6,4 @@
 /ui/app
 /ui/node_modules
 /ui/native/target
+/ui/native/index.node

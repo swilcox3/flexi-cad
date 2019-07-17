@@ -125,6 +125,12 @@ export function moveObj(event: string, id: string, delta: math.Point3d)
     kernel.move_object(filename, event, id, delta)
 }
 
+export function moveObjs(event: string, ids: Array<string>, delta: math.Point3d)
+{
+    let filename = getFilename()
+    kernel.move_objects(filename, event, ids, delta)
+}
+
 export function setObjectData(event: string, id: string, data:any) 
 {
     let filename = getFilename()

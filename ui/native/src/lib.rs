@@ -231,6 +231,22 @@ fn set_objects_datas(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
+fn move_objects(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let path = cx.argument::<JsString>(0)?.value();
+    let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
+    let arg_2 = cx.argument::<JsArray>(2)?;
+    let arg_3 = cx.argument::<JsValue>(3)?;
+    let delta = neon_serde::from_value(&mut cx, arg_3)?;
+    let mut data = std::collections::HashSet::with_capacity(arg_2.len() as usize);
+    for i in 0..arg_2.len() {
+        let val = arg_2.get(&mut cx, i)?;
+        let val_str:Handle<JsString> = val.downcast().unwrap();
+        data.insert(RefID::from_str(&val_str.value()).unwrap());
+    }
+    operations_kernel::move_objs(PathBuf::from(path), event, data, delta).unwrap();
+    Ok(cx.undefined())
+}
+
 register_module!(mut cx, {
     cx.export_function("get_updates", get_updates)?;
     cx.export_function("init_file", init_file)?;
@@ -246,6 +262,7 @@ register_module!(mut cx, {
     cx.export_function("create_wall", create_wall)?;
     cx.export_function("join_walls", join_walls)?;
     cx.export_function("move_object", move_object)?;
+    cx.export_function("move_objects", move_objects)?;
     cx.export_function("delete_object", delete_object)?;
     cx.export_function("set_object_data", set_object_data)?;
     cx.export_function("set_objects_datas", set_objects_datas)?;

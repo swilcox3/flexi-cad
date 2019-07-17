@@ -136,14 +136,14 @@ export default class GUI
         var labelText = "";
         if(allSame) {
             if(countObjs > 1) {
-                labelText = stringify(countObjs) + " " + type + "s";
+                labelText = countObjs.toString() + " " + type + "s";
             }
             else {
                 labelText = type;
             }
         }
         else {
-            labelText = stringify(countObjs) + " Objects"
+            labelText = countObjs.toString() + " Objects"
         }
         var label = new BABYLONGUI.TextBlock();
         label.text = labelText;
@@ -154,6 +154,11 @@ export default class GUI
         if(type == "Wall" && allSame) {
             this.createWallOverlay(data);
         }
+    }
+    
+    clearObjectOverlay() 
+    {
+        this.objOverlay.clearControls();
     }
 }
 

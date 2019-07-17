@@ -17,6 +17,22 @@ pub fn move_obj(file: PathBuf, event: UndoEventID, id: RefID, delta: Vector3f) -
     Ok(())
 }
 
+pub fn move_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>, delta: Vector3f) -> Result<(), DBError> {
+    for id in &ids {
+        app_state::modify_obj(&file, &event, id, |obj| {
+            match obj.query_mut::<Position>() {
+                Some(movable) => {
+                    movable.move_obj(&delta);
+                    Ok(())
+                }
+                None => Err(DBError::ObjLacksTrait)
+            }
+        })?;
+    }
+    app_state::update_all_deps(file, ids.into_iter().collect());
+    Ok(())
+}
+
 pub fn set_obj_data(file: PathBuf, event: UndoEventID, id: RefID, data: serde_json::Value) -> Result<(), DBError> {
     app_state::modify_obj(&file, &event, &id, |obj| {
         obj.set_data(&data)
@@ -34,6 +50,5 @@ pub fn set_objs_data(file: PathBuf, event: UndoEventID, data: Vec<(RefID, serde_
         keys.insert(id);
     }
     app_state::update_all_deps(file, keys.into_iter().collect());
-
     Ok(())
 }

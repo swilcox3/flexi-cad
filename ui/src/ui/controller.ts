@@ -51,6 +51,7 @@ class UIController
     private activeTool: Tool
     private selection: SelectionController
     private ctrlPressed: boolean;
+    private moveEvent: string;
     constructor() {
         this.activeTool = null;
         this.selection = new SelectionController();
@@ -64,6 +65,16 @@ class UIController
             this.activeTool.cancel()
         }
         this.activeTool = tool
+    }
+
+    leftDown(mesh: BABYLON.Mesh)
+    {
+        if(!this.ctrlPressed) {
+            this.selection.selectObject(mesh)
+        }
+        else {
+            this.selection.addObject(mesh)
+        }
     }
 
     leftClick(pt:math.Point3d, mesh: BABYLON.Mesh)
@@ -85,6 +96,7 @@ class UIController
         else if(mesh == null)
         {
             this.selection.deselectAll();
+            gui.guiInstance.clearObjectOverlay();
         }
     }
 
@@ -128,6 +140,32 @@ class UIController
         });
         ops.endUndoEvent(event);
         this.selection.deselectAll()
+    }
+
+    moveSelected(ev: any)
+    {
+        if(!this.moveEvent) {
+            this.moveEvent = ops.beginUndoEvent("Move objects")
+            this.selection.getSelectedObjs().forEach((mesh) => {
+                ops.takeUndoSnapshot(this.moveEvent, mesh.name)
+            })
+            ops.suspendEvent(this.moveEvent)
+        }
+        var modelDelta = math.transformGraphicToModelCoords(ev.delta) 
+        let names: Array<string> = []
+        this.selection.getSelectedObjs().forEach((mesh) => {
+            names.push(mesh.name)
+        })
+        ops.moveObjs(this.moveEvent, names, modelDelta)
+    }
+
+    endMoveSelected(ev: any)
+    {
+        if(this.moveEvent) {
+            ops.resumeEvent(this.moveEvent)
+            ops.endUndoEvent(this.moveEvent)
+        }
+        this.moveEvent = '';
     }
 
     cancel()
