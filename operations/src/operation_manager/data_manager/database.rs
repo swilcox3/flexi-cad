@@ -94,7 +94,7 @@ mod tests {
         let id = obj.get_id().clone();
         db.add(obj).unwrap();
         db.get(&id, &mut|read:&DataObject| {
-            let data = read.query_ref::<Store>().unwrap().get_data();
+            let data = read.query_ref::<Store>().unwrap().get_store_data();
             assert_eq!(String::from("some data"), data);
             Ok(())
         }).unwrap();
@@ -108,12 +108,12 @@ mod tests {
         db.add(obj).unwrap();
         {
             db.get_mut(&id, &mut|to_modify:&mut DataObject| {
-                to_modify.query_mut::<Store>().unwrap().set_data(String::from("new data"));
+                to_modify.query_mut::<Store>().unwrap().set_store_data(String::from("new data"));
                 Ok(())
             }).unwrap();
         }
         db.get(&id, &mut|read:&DataObject| {
-            let data = read.query_ref::<Store>().unwrap().get_data();
+            let data = read.query_ref::<Store>().unwrap().get_store_data();
             assert_eq!(String::from("new data"), data);
             Ok(())
         }).unwrap();
@@ -126,7 +126,7 @@ mod tests {
         let id = obj.get_id().clone();
         db.add(obj).unwrap();
         let removed = db.remove(&id).unwrap();
-        let data = removed.query_ref::<Store>().unwrap().get_data();
+        let data = removed.query_ref::<Store>().unwrap().get_store_data();
         assert_eq!(String::from("some data"), data);
         assert!(db.get(&id, &mut|_| {Ok(())}).is_err());
     }

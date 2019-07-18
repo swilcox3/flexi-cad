@@ -32,10 +32,10 @@ export class WallTool {
         }
         ops.createWall(this.undoEventId, this.firstPt, this.secondPt, this.activeWidth, this.activeHeight, this.activeTempId)
         if(this.lastId) {
-            ops.joinWalls(this.undoEventId, this.lastId, this.activeTempId, this.firstPt)
+            ops.joinAtPoint(this.undoEventId, this.lastId, this.activeTempId, this.firstPt)
         }
         if(this.canJoinToWall(picked)) {
-            ops.joinWalls(this.undoEventId, picked.name, this.activeTempId, this.secondPt);
+            ops.joinAtPoint(this.undoEventId, picked.name, this.activeTempId, this.secondPt);
         }
     }
 

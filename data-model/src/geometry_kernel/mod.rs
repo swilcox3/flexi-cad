@@ -43,7 +43,8 @@ pub trait Position {
 
 pub trait RefPoint {
     fn get_point(&self, which: u64) -> Option<&Point3f>;
-
+    fn get_reference(&self, which: u64) -> Option<&Reference>;
+    fn get_num_refs(&self) -> u64;
     fn set_point(&mut self, which_self: u64, pt: Point3f, ref_other: Reference);
 }
 

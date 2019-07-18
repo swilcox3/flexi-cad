@@ -32,9 +32,11 @@ pub enum UpdateMsg {
 }
 
 pub trait Data : Object + Send + Sync {
-    fn get_id(&self) -> &Uuid;
+    fn get_id(&self) -> &RefID;
     fn update(&self) -> Result<UpdateMsg, DBError>;
     fn set_data(&mut self, data: &serde_json::Value) -> Result<(), DBError>;
+    //Only use this if you know exactly what you're doing.
+    fn set_id(&mut self, id: RefID);
 }
 mopo!(Data);
 
@@ -83,6 +85,8 @@ pub trait ObjStore {
 
 pub trait Update : Data {
     fn init(&self, deps: &DepStore);
+    fn clear_refs(&mut self);
+    fn get_refs(&self) -> Vec<RefID>;
     fn update_from_refs(&mut self, objs: &ObjStore) -> Result<UpdateMsg, DBError>;
 }
 

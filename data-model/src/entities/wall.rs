@@ -34,6 +34,10 @@ impl Data for Wall {
         &self.id
     }
 
+    fn set_id(&mut self, id: RefID) {
+        self.id = id;
+    }
+
     fn update(&self) -> Result<UpdateMsg, DBError> {
         let mut data = MeshData {
             id: self.get_id().clone(),
@@ -108,6 +112,18 @@ impl RefPoint for Wall {
         }
     }
 
+    fn get_reference(&self, which: u64) -> Option<&Reference> {
+        match which {
+            0 => Some(&self.joined_first),
+            1 => Some(&self.joined_second),
+            _ => None
+        }
+    }
+
+    fn get_num_refs(&self) -> u64 {
+        2
+    }
+
     fn set_point(&mut self, which_self: u64, pt: Point3f, other_ref: Reference) {
         match which_self {
             0 => {
@@ -127,6 +143,22 @@ impl Update for Wall {
     fn init(&self, deps: &DepStore) {
         deps.register_sub(&self.joined_first.id, self.id.clone());
         deps.register_sub(&self.joined_second.id, self.id.clone());
+    }
+
+    fn clear_refs(&mut self) {
+        self.joined_first = Reference::nil();
+        self.joined_second = Reference::nil();
+    }
+
+    fn get_refs(&self) -> Vec<RefID> {
+        let mut results = Vec::new();
+        if self.joined_first.id != RefID::nil() {
+            results.push(self.joined_first.id.clone());
+        }
+        if self.joined_second.id != RefID::nil() {
+            results.push(self.joined_second.id.clone());
+        }
+        results
     }
 
     fn update_from_refs(&mut self, ops: &ObjStore) -> Result<UpdateMsg, DBError> {

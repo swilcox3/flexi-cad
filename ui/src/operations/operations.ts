@@ -113,10 +113,10 @@ export function createWall(event: string, firstPt: math.Point3d, secondPt: math.
     kernel.create_wall(firstPt, secondPt, width, height, filename, event, id)
 }
 
-export function joinWalls(event: string, id_1: string, id_2: string, pt: math.Point3d) 
+export function joinAtPoint(event: string, id_1: string, id_2: string, pt: math.Point3d) 
 {
     let filename = getFilename()
-    kernel.join_walls(filename, event, id_1, id_2, pt)
+    kernel.join_at_point(filename, event, id_1, id_2, pt)
 }
 
 export function moveObj(event: string, id: string, delta: math.Point3d)
@@ -141,4 +141,10 @@ export function setObjectsDatas(event: string, data: Array<[string, any]>)
 {
     let filename = getFilename()
     kernel.set_objects_datas(filename, event, data)
+}
+
+export function copyObjs(event: string, ids:Array<string>, delta: math.Point3d)
+{
+    let filename = getFilename()
+    kernel.copy_objects(filename, event, ids, delta)
 }

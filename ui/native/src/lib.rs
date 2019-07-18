@@ -176,14 +176,14 @@ fn create_wall(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     }
 }
 
-fn join_walls(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+fn join_at_point(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let id_1 = RefID::from_str(&cx.argument::<JsString>(2)?.value()).unwrap();
     let id_2 = RefID::from_str(&cx.argument::<JsString>(3)?.value()).unwrap();
     let arg_4 = cx.argument::<JsValue>(4)?;
     let point = neon_serde::from_value(&mut cx, arg_4)?;
-    operations_kernel::join_walls(PathBuf::from(path), event, id_1, id_2, point).unwrap();
+    operations_kernel::join_at_point(PathBuf::from(path), event, id_1, id_2, point).unwrap();
     Ok(cx.undefined())
 }
 
@@ -231,20 +231,38 @@ fn set_objects_datas(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
+fn get_hash_set_from_arg(mut cx: FunctionContext, input: Handle<JsArray>) -> HashSet<RefID> {
+    let mut data = std::collections::HashSet::with_capacity(input.len() as usize);
+    for i in 0..input.len() {
+        let val = input.get(&mut cx, i).unwrap();
+        let val_str:Handle<JsString> = val.downcast().unwrap();
+        data.insert(RefID::from_str(&val_str.value()).unwrap());
+    }
+    data
+}
+
 fn move_objects(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let arg_2 = cx.argument::<JsArray>(2)?;
     let arg_3 = cx.argument::<JsValue>(3)?;
     let delta = neon_serde::from_value(&mut cx, arg_3)?;
-    let mut data = std::collections::HashSet::with_capacity(arg_2.len() as usize);
-    for i in 0..arg_2.len() {
-        let val = arg_2.get(&mut cx, i)?;
-        let val_str:Handle<JsString> = val.downcast().unwrap();
-        data.insert(RefID::from_str(&val_str.value()).unwrap());
-    }
+    let ret = cx.undefined();
+    let data = get_hash_set_from_arg(cx, arg_2);
     operations_kernel::move_objs(PathBuf::from(path), event, data, delta).unwrap();
-    Ok(cx.undefined())
+    Ok(ret)
+}
+
+fn copy_objects(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let path = cx.argument::<JsString>(0)?.value();
+    let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
+    let arg_2 = cx.argument::<JsArray>(2)?;
+    let arg_3 = cx.argument::<JsValue>(3)?;
+    let delta = neon_serde::from_value(&mut cx, arg_3)?;
+    let ret = cx.undefined();
+    let data = get_hash_set_from_arg(cx, arg_2);
+    operations_kernel::copy_objs(PathBuf::from(path), event, data, delta).unwrap();
+    Ok(ret)
 }
 
 register_module!(mut cx, {
@@ -260,11 +278,12 @@ register_module!(mut cx, {
     cx.export_function("cancel_event", cancel_event)?;
     cx.export_function("get_temp_wall", get_temp_wall)?;
     cx.export_function("create_wall", create_wall)?;
-    cx.export_function("join_walls", join_walls)?;
+    cx.export_function("join_at_point", join_at_point)?;
     cx.export_function("move_object", move_object)?;
     cx.export_function("move_objects", move_objects)?;
     cx.export_function("delete_object", delete_object)?;
     cx.export_function("set_object_data", set_object_data)?;
     cx.export_function("set_objects_datas", set_objects_datas)?;
+    cx.export_function("copy_objects", copy_objects)?;
     Ok(())
 });

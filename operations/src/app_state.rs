@@ -91,21 +91,21 @@ pub fn add_obj(file: &PathBuf, event: &UndoEventID, obj: DataObject) -> Result<(
 }
 
 pub fn get_obj(file: &PathBuf, id: &RefID, mut callback: impl FnMut(&DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
-    match APP_STATE.files.get(&file) {
+    match APP_STATE.files.get(file) {
         Some(ops) => ops.get_obj(id, &mut callback),
         None => Err(DBError::NotFound)
     }
 }
 
 pub fn modify_obj(file: &PathBuf, event: &UndoEventID, id: &RefID, mut callback: impl FnMut(&mut DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
-    match APP_STATE.files.get(&file) {
+    match APP_STATE.files.get(file) {
         Some(ops) => ops.modify_obj(event, id, &mut callback),
         None => Err(DBError::NotFound)
     }
 }
 
 pub fn delete_obj(file: &PathBuf, event: &UndoEventID, id: &RefID) -> Result<DataObject, DBError> {
-    match APP_STATE.files.get(&file) {
+    match APP_STATE.files.get(file) {
         Some(ops) => ops.delete_obj(event, id),
         None => Err(DBError::NotFound)
     }
@@ -143,6 +143,13 @@ pub fn add_dep(file: &PathBuf, publisher: &RefID, subscriber: RefID) -> Result<(
 pub fn remove_dep(file: &PathBuf, publisher: &RefID, subscriber: &RefID) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => Ok(ops.remove_dep(publisher, subscriber)),
+        None => Err(DBError::NotFound)
+    }
+}
+
+pub fn copy_obj(file: &PathBuf, event: &UndoEventID, id: &RefID, delta: &Vector3f) -> Result<RefID, DBError> {
+    match APP_STATE.files.get(file) {
+        Some(ops) => ops.copy_obj(event, id, delta),
         None => Err(DBError::NotFound)
     }
 }

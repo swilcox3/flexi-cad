@@ -23,6 +23,11 @@ class SelectionController
         return this.selectedObjs
     }
 
+    isSelected(mesh: BABYLON.Mesh)
+    {
+        return this.selectedObjs.has(mesh)
+    }
+
     deselectAll()
     {
         this.selectedObjs.forEach((obj) => {
@@ -52,10 +57,12 @@ class UIController
     private selection: SelectionController
     private ctrlPressed: boolean;
     private moveEvent: string;
+    private clipboard: Array<string>;
     constructor() {
         this.activeTool = null;
         this.selection = new SelectionController();
         this.ctrlPressed = false;
+        this.clipboard = new Array<string>();
     }
 
     setActiveTool(tool:Tool)
@@ -67,13 +74,24 @@ class UIController
         this.activeTool = tool
     }
 
+    selectObj(mesh: BABYLON.Mesh)
+    {
+        if(!this.selection.isSelected(mesh))
+        {
+            if(!this.ctrlPressed) {
+                this.selection.selectObject(mesh)
+            }
+            else {
+                this.selection.addObject(mesh)
+            }
+            gui.guiInstance.setObjectOverlay(this.selection.getSelectedObjs())
+        }
+    }
+
     leftDown(mesh: BABYLON.Mesh)
     {
-        if(!this.ctrlPressed) {
-            this.selection.selectObject(mesh)
-        }
-        else {
-            this.selection.addObject(mesh)
+        if(this.activeTool == null) {
+            this.selectObj(mesh)
         }
     }
 
@@ -85,13 +103,7 @@ class UIController
         }
         else if(mesh != null)
         {
-            if(!this.ctrlPressed) {
-                this.selection.selectObject(mesh)
-            }
-            else {
-                this.selection.addObject(mesh)
-            }
-            gui.guiInstance.setObjectOverlay(this.selection.getSelectedObjs())
+            this.selectObj(mesh)
         }
         else if(mesh == null)
         {
@@ -175,6 +187,20 @@ class UIController
             this.activeTool.cancel()
             this.activeTool = null
         }
+    }
+
+    setClipboard()
+    {
+        this.clipboard = []
+        this.selection.getSelectedObjs().forEach((mesh)=> {
+            this.clipboard.push(mesh.name)
+        })
+    }
+
+    pasteClipboard()
+    {
+        const event = ops.beginUndoEvent("copy objs");
+        ops.copyObjs(event, this.clipboard, new math.Point3d(20, 0, 0))
     }
 }
 

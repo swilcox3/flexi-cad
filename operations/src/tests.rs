@@ -3,8 +3,8 @@ use futures::Future;
 use serde::{Serialize, Deserialize};
 
 pub trait Store: Send + Sync {
-    fn set_data(&mut self, data: String);
-    fn get_data(&self) -> String;
+    fn set_store_data(&mut self, data: String);
+    fn get_store_data(&self) -> String;
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -33,20 +33,24 @@ impl Data for TestObj {
         return &self.id;
     }
 
+    fn set_id(&mut self, id: RefID) {
+        self.id = id;
+    }
+
     fn update(&self) -> Result<UpdateMsg, DBError> {
         Ok(UpdateMsg::Other{data: serde_json::to_value(&self).unwrap()})
     }
 
-    fn set_data(&mut self, data: &serde_json::Value) -> Result<(), DBError> {
+    fn set_data(&mut self, _data: &serde_json::Value) -> Result<(), DBError> {
         Ok(())
     }
 }
 
 impl Store for TestObj {
-    fn set_data(&mut self, data: String) {
+    fn set_store_data(&mut self, data: String) {
         self.data = data;
     }
-    fn get_data(&self) -> String {
+    fn get_store_data(&self) -> String {
         self.data.clone()
     }
 }
@@ -54,6 +58,18 @@ impl Store for TestObj {
 impl Update for TestObj {
     fn init(&self, deps: &DepStore) {
         deps.register_sub(&self.refer.id, self.id.clone());
+    }
+
+    fn clear_refs(&mut self) {
+        self.refer = Reference::nil();
+    }
+
+    fn get_refs(&self) -> Vec<RefID> {
+        let mut results = Vec::new();
+        if self.refer != Reference::nil() {
+            results.push(self.refer.id.clone());
+        }
+        results
     }
 
     fn update_from_refs(&mut self, ops: &ObjStore) -> Result<UpdateMsg, DBError> {
@@ -69,6 +85,17 @@ impl RefPoint for TestObj {
         match which {
             0 => Some(&self.point),
             _ => None 
+        }
+    }
+
+    fn get_num_refs(&self) -> u64 {
+        1
+    }
+
+    fn get_reference(&self, which: u64) -> Option<&Reference> {
+        match which {
+            0 => Some(&self.refer),
+            _ => None
         }
     }
 

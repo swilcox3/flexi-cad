@@ -125,7 +125,7 @@ fn test_dep_redo() {
 #[test]
 fn test_channel() {
     test_setup(|ops, rcv| {
-        let event = ops.begin_undo_event(&USER, String::from("dep_undo")).unwrap();
+        let event = ops.begin_undo_event(&USER, String::from("channel")).unwrap();
         let mut obj_1 = TestObj::new("some stuff");
         let id_1 = obj_1.get_id().clone();
         let id_2 = RefID::new_v4();
@@ -147,5 +147,39 @@ fn test_channel() {
         });
         assert_eq!(rcv.recv().unwrap(), UpdateMsg::Other{data: json_1});
         ops.end_undo_event(event).unwrap();
+    });
+}
+
+#[test]
+fn test_copy() {
+    test_setup(|ops, rcv| {
+        let event = ops.begin_undo_event(&USER, String::from("copy")).unwrap();
+        let mut obj_1 = Box::new(TestObj::new("some stuff"));
+        let id_1 = obj_1.get_id().clone();
+        obj_1.move_obj(&Vector3f::new(1.0, 2.0, 3.0));
+        ops.add_object(&event, obj_1).unwrap();
+        let copy_id = ops.copy_obj(&event, &id_1, &Vector3f::new(2.0, 0.0, 0.0)).unwrap();
+        assert!(copy_id != id_1);
+        ops.end_undo_event(event).unwrap();
+        let json_1 = json!({
+            "data": "some stuff",
+            "id": copy_id,
+            "point": {
+                "x": 3.0,
+                "y": 2.0,
+                "z": 3.0,
+            },
+            "refer": {
+                "id": RefID::nil(),
+                "which_pt": 0,
+            }
+        });
+        rcv.recv().unwrap();
+        assert_eq!(rcv.recv().unwrap(), UpdateMsg::Other{data: json_1});
+        ops.get_obj(&copy_id, &mut |copy: &DataObject| {
+            let point_ref = copy.query_ref::<RefPoint>().unwrap();
+            assert_eq!(point_ref.get_point(0), Some(&Point3f::new(3.0, 2.0, 3.0)));
+            Ok(())
+        }).unwrap();
     });
 }

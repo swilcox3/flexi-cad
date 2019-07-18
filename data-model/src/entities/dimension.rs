@@ -34,6 +34,10 @@ impl Data for LinearDimension {
         &self.id
     }
 
+    fn set_id(&mut self, id: RefID) {
+        self.id = id;
+    }
+
     fn update(&self) -> Result<UpdateMsg, DBError> {
         Err(DBError::NotFound)
     }
@@ -47,6 +51,22 @@ impl Update for LinearDimension {
     fn init(&self, deps: &DepStore) {
         deps.register_sub(&self.first.id, self.id.clone());
         deps.register_sub(&self.second.id, self.id.clone());
+    }
+
+    fn clear_refs(&mut self) {
+        self.first = Reference::nil();
+        self.second = Reference::nil();
+    }
+
+    fn get_refs(&self) -> Vec<RefID> {
+        let mut results = Vec::new();
+        if self.first.id != RefID::nil() {
+            results.push(self.first.id.clone());
+        }
+        if self.second.id != RefID::nil() {
+            results.push(self.second.id.clone());
+        }
+        results
     }
 
     fn update_from_refs(&mut self, ops: &ObjStore) -> Result<UpdateMsg, DBError> {

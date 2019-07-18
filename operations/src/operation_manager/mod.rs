@@ -113,6 +113,21 @@ impl OperationManager {
         self.deps.delete_sub(publisher, sub);
     }
 
+    pub fn copy_obj(&self, event: &UndoEventID, id: &RefID, delta: &Vector3f) -> Result<RefID, DBError> {
+        let copy_id = RefID::new_v4();
+        self.data.get_obj(id, &mut |obj: &DataObject| {
+            let mut copy = obj.clone();
+            copy.set_id(copy_id.clone());
+            if let Some(movable) = copy.query_mut::<Position>() {
+                movable.move_obj(delta);
+            }
+            if let Some(updatable) = copy.query_mut::<Update>() {
+                updatable.clear_refs();
+            }
+            self.add_object(event, copy)
+        })?;
+        Ok(copy_id)
+    }
 }
 
 impl ObjStore for OperationManager {
