@@ -1,4 +1,5 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, Menu} from "electron";
+const {dialog, ipcMain} = require('electron');
 import * as path from "path";
 import * as url from "url";
 
@@ -28,6 +29,28 @@ function createWindow() {
     // when you should delete the corresponding element.
     mainWindow = null;
   });
+
+  var menu = Menu.buildFromTemplate([
+    {
+      label: 'File',
+      submenu: [
+        {
+          label:'Open',
+          click() {
+            dialog.showOpenDialog({
+              properties: ['openFile']
+            }, function (file) {
+              if (file != undefined) {
+                ipcMain.emit('openFile', file)
+              }
+            })
+          }
+        },
+        {label:'Save'}
+      ]
+    }
+  ])
+  Menu.setApplicationMenu(menu)
 }
 
 // This method will be called when Electron has finished

@@ -13,24 +13,11 @@ function getGroundPosition(scene: BABYLON.Scene, ground: BABYLON.Mesh)
     return null;
 }
 
-function onPointerDown(scene: BABYLON.Scene, canvas: HTMLCanvasElement, evt: MouseEvent, ground: BABYLON.Mesh)
+function onPointerDown(scene: BABYLON.Scene, evt: MouseEvent, ground: BABYLON.Mesh)
 {
-    var uiSingleton = new uiController().getInstance()
-    var pickInfo = scene.pick(scene.pointerX, scene.pointerY);
-    if (pickInfo.hit) {
-        var currentMesh = pickInfo.pickedMesh;
-        if(currentMesh == ground)
-        {
-            currentMesh = null
-        }
-
-        if (evt.button == 0 && currentMesh) {
-            uiSingleton.leftDown(currentMesh)
-        }
-    }
 } 
 
-function onPointerClick(scene: BABYLON.Scene, canvas: HTMLCanvasElement, evt: MouseEvent, ground: BABYLON.Mesh) 
+function onPointerClick(scene: BABYLON.Scene, evt: MouseEvent, ground: BABYLON.Mesh) 
 {
     var uiSingleton = new uiController().getInstance()
     var pickInfo = scene.pick(scene.pointerX, scene.pointerY);

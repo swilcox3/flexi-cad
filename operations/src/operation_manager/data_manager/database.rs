@@ -2,6 +2,7 @@ use ccl::dhashmap::DHashMap;
 use crate::*;
 use super::undo::{UndoEvent, Change};
 use super::{DBError, DataObject};
+use std::io::{Read, Write};
 
 pub struct FileDatabase {
     db: DHashMap<RefID, DataObject>,
@@ -80,6 +81,30 @@ impl FileDatabase {
         }
         Ok(redo)
     }
+
+    pub fn save(&self, path: &PathBuf) -> Result<(), DBError> {
+        let mut file = std::fs::File::create(path).map_err(error_other)?;
+        let mut vals = Vec::new();
+        for chunk in self.db.chunks() {
+            for (_, val) in chunk.iter() {
+                vals.push(val.clone());
+            }
+        }
+        let buf = bincode::serialize(&vals).map_err(error_other)?;
+        file.write_all(&buf).map_err(error_other)?;
+        Ok(())
+    }
+
+    pub fn open(&self, path: &PathBuf) -> Result<(), DBError> {
+        let mut file = std::fs::File::open(path).map_err(error_other)?;
+        let mut buf = Vec::new();
+        file.read_to_end(&mut buf).map_err(error_other)?;
+        let objects: Vec<DataObject> = bincode::deserialize(&buf).map_err(error_other)?;
+        for obj in objects {
+            self.add(obj)?;
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -138,4 +163,42 @@ mod tests {
         db.add(obj.clone()).unwrap();
         assert!(db.add(obj).is_err());
     }
+
+    #[test]
+    fn test_filing() {
+        let path = PathBuf::from("./test_file.flx");
+        let obj_1 = Box::new(TestObj::new("first"));
+        let obj_2 = Box::new(TestObj::new("second"));
+        let obj_3 = Box::new(TestObj::new("third"));
+        let id_1 = obj_1.get_id().clone();
+        let id_2 = obj_2.get_id().clone();
+        let id_3 = obj_3.get_id().clone();
+        {
+            let db = FileDatabase::new();
+            db.add(obj_1).unwrap();
+            db.add(obj_2).unwrap();
+            db.add(obj_3).unwrap();
+            db.save(&path).unwrap();
+        }
+        let db = FileDatabase::new();
+        db.open(&path).unwrap();
+        db.get(&id_1, &mut|obj:&DataObject| {
+            let data = obj.query_ref::<Store>().unwrap().get_store_data();
+            assert_eq!(String::from("first"), data);
+            Ok(())
+        }).unwrap();
+        db.get(&id_2, &mut|obj:&DataObject| {
+            let data = obj.query_ref::<Store>().unwrap().get_store_data();
+            assert_eq!(String::from("second"), data);
+            Ok(())
+        }).unwrap();
+        db.get(&id_3, &mut|obj:&DataObject| {
+            let data = obj.query_ref::<Store>().unwrap().get_store_data();
+            assert_eq!(String::from("third"), data);
+            Ok(())
+        }).unwrap();
+        std::fs::remove_file(path).unwrap();
+    }
+
+
 }

@@ -10,6 +10,7 @@ extern crate data_model;
 extern crate query_interface;
 #[cfg(test)] #[macro_use]
 extern crate serde_json;
+extern crate bincode;
 
 #[cfg(test)]
 mod tests;
@@ -24,4 +25,4 @@ pub use entity_ops::*;
 
 pub use std::path::PathBuf;
 pub use std::collections::{HashSet, HashMap, VecDeque};
-pub use app_state::{init_file, begin_undo_event, end_undo_event, undo_latest, redo_latest, suspend_event, resume_event, cancel_event, take_undo_snapshot, delete_obj};
+pub use app_state::{init_file, open_file, save_file, save_as_file, begin_undo_event, end_undo_event, undo_latest, redo_latest, suspend_event, resume_event, cancel_event, take_undo_snapshot, delete_obj};

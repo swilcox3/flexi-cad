@@ -2,6 +2,7 @@ extern crate uuid;
 pub extern crate cgmath;
 #[macro_use] extern crate query_interface;
 #[macro_use] pub extern crate serde_json;
+pub extern crate typetag;
 
 mod geometry_kernel;
 mod entities;
@@ -24,6 +25,10 @@ pub enum DBError
     Other{msg: String}
 }
 
+pub fn error_other<T: std::fmt::Debug>(err: T) -> DBError {
+    DBError::Other{msg: format!("{:?}", err)}
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum UpdateMsg {
     Delete{key: RefID},
@@ -31,6 +36,7 @@ pub enum UpdateMsg {
     Other{data: serde_json::Value}
 }
 
+#[typetag::serde]
 pub trait Data : Object + Send + Sync {
     fn get_id(&self) -> &RefID;
     fn update(&self) -> Result<UpdateMsg, DBError>;

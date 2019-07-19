@@ -23,6 +23,19 @@ impl OperationManager {
         }
     }
 
+    pub fn open(path: &PathBuf, sender: Sender<UpdateMsg>) -> Result<OperationManager, DBError> {
+        let data = DataManager::open(path)?;
+        Ok(OperationManager {
+            data: data,
+            deps: DependencyManager::new(),
+            updates: sender,
+        })
+    }
+
+    pub fn save(&self, path: &PathBuf) -> Result<(), DBError> {
+        self.data.save(path)
+    }
+
     pub fn begin_undo_event(&self, user_id: &UserID, desc: String) -> Result<UndoEventID, DBError> {
         self.data.begin_undo_event(user_id, desc)
     }
@@ -80,6 +93,7 @@ impl OperationManager {
 
     fn update_set_from_refs(&self, deps: &HashSet<RefID>) -> Result<(), DBError> {
         for dep_id in deps {
+            println!("{:?}", dep_id);
             if let Err(e) = self.data.get_mut_obj_no_undo(&dep_id, &mut |dep_obj: &mut DataObject| {
                 if let Some(to_update) = dep_obj.query_mut::<Update>() {
                     self.updates.send(to_update.update_from_refs(self)?).unwrap();

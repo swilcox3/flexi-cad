@@ -29,6 +29,7 @@ impl Wall {
     }
 }
 
+#[typetag::serde]
 impl Data for Wall {
     fn get_id(&self) -> &RefID {
         &self.id

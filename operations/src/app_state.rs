@@ -27,6 +27,37 @@ pub fn init_file(file: PathBuf, updates: Sender<UpdateMsg>) {
     APP_STATE.files.insert(file, OperationManager::new(updates));
 }
 
+pub fn open_file(file: PathBuf, updates: Sender<UpdateMsg>) -> Result<(), DBError> {
+    let ops = OperationManager::open(&file, updates)?;
+    APP_STATE.files.insert(file, ops);
+    Ok(())
+}
+
+pub fn save_file(file: &PathBuf) -> Result<(), DBError> {
+    match APP_STATE.files.get(file) {
+        Some(ops) => ops.save(file),
+        None => Err(DBError::NotFound)
+    }
+}
+
+pub fn save_as_file(orig_file: &PathBuf, file_new: PathBuf) -> Result<(), DBError> {
+    match APP_STATE.files.remove(orig_file) {
+        Some((_, ops)) => {
+            match ops.save(&file_new) {
+                Ok(()) => {
+                    APP_STATE.files.insert(file_new, ops);
+                    Ok(())
+                }
+                Err(e) => {
+                    APP_STATE.files.insert(orig_file.clone(), ops);
+                    Err(e)
+                }
+            }
+        }
+        None => Err(DBError::NotFound)
+    }
+}
+
 pub fn begin_undo_event(file: &PathBuf, desc: String) -> Result<UndoEventID, DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.begin_undo_event(&APP_STATE.user_id, desc),

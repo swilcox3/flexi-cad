@@ -60,13 +60,38 @@ fn get_updates(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
-fn init_file(mut cx: FunctionContext) -> JsResult<JsBoolean> {
+fn init_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let (s, r) = crossbeam_channel::unbounded();
     let pathbuf = PathBuf::from(path);
     operations_kernel::init_file(pathbuf.clone(), s);
     UPDATES.insert(pathbuf, r);
-    Ok(cx.boolean(true))
+    Ok(cx.undefined())
+}
+
+fn open_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let path = cx.argument::<JsString>(0)?.value();
+    let (s, r) = crossbeam_channel::unbounded();
+    let pathbuf = PathBuf::from(path);
+    operations_kernel::open_file(pathbuf.clone(), s).unwrap();
+    UPDATES.insert(pathbuf, r);
+    Ok(cx.undefined())
+}
+
+fn save_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let path = cx.argument::<JsString>(0)?.value();
+    let pathbuf = PathBuf::from(path);
+    operations_kernel::save_file(&pathbuf).unwrap();
+    Ok(cx.undefined())
+}
+
+fn save_as_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let orig_path = PathBuf::from(cx.argument::<JsString>(0)?.value());
+    let new_path = PathBuf::from(cx.argument::<JsString>(1)?.value());
+    operations_kernel::save_as_file(&orig_path, new_path.clone()).unwrap();
+    let (_, r) = UPDATES.remove(orig_path).unwrap();
+    UPDATES.insert(new_path, r);
+    Ok(cx.undefined())
 }
 
 fn begin_undo_event(mut cx: FunctionContext) -> JsResult<JsString> {
@@ -268,6 +293,9 @@ fn copy_objects(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 register_module!(mut cx, {
     cx.export_function("get_updates", get_updates)?;
     cx.export_function("init_file", init_file)?;
+    cx.export_function("open_file", open_file)?;
+    cx.export_function("save_file", save_file)?;
+    cx.export_function("save_as_file", save_as_file)?;
     cx.export_function("begin_undo_event", begin_undo_event)?;
     cx.export_function("end_undo_event", end_undo_event)?;
     cx.export_function("undo_latest", undo_latest)?;

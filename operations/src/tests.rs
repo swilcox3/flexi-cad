@@ -28,6 +28,7 @@ impl TestObj {
     }
 }
 
+#[typetag::serde]
 impl Data for TestObj {
     fn get_id(&self) -> &RefID {
         return &self.id;

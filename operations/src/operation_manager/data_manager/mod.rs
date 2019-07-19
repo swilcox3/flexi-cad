@@ -22,6 +22,20 @@ impl DataManager {
         }
     }
 
+    pub fn open(path: &PathBuf) -> Result<DataManager, DBError> {
+        let db = database::FileDatabase::new();
+        db.open(path)?;
+        Ok(DataManager {
+            db: db,
+            pending: undo::PendingEvents::new(),
+            undo: Mutex::new(undo::UndoStack::new())
+        })
+    }
+
+    pub fn save(&self, path: &PathBuf) -> Result<(), DBError> {
+        self.db.save(path)
+    }
+
     pub fn begin_undo_event(&self, user: &UserID, desc: String) -> Result<UndoEventID, DBError> {
         self.pending.begin_event(user, desc)
     }

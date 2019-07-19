@@ -44,6 +44,13 @@ class SelectionController
         this.selectedObjs.add(mesh)
     }
 
+    removeObject(mesh: BABYLON.Mesh)
+    {
+        var mat = mesh.material as BABYLON.StandardMaterial;
+        mat.diffuseColor = BABYLON.Color3.Gray();
+        this.selectedObjs.delete(mesh);
+    }
+
     selectObject(mesh: BABYLON.Mesh)
     {
         this.deselectAll();
@@ -86,12 +93,10 @@ class UIController
             }
             gui.guiInstance.setObjectOverlay(this.selection.getSelectedObjs())
         }
-    }
-
-    leftDown(mesh: BABYLON.Mesh)
-    {
-        if(this.activeTool == null) {
-            this.selectObj(mesh)
+        else {
+            if(this.ctrlPressed) {
+                this.selection.removeObject(mesh)
+            }
         }
     }
 
@@ -195,12 +200,15 @@ class UIController
         this.selection.getSelectedObjs().forEach((mesh)=> {
             this.clipboard.push(mesh.name)
         })
+        console.log("copy")
     }
 
     pasteClipboard()
     {
+        console.log("paste")
         const event = ops.beginUndoEvent("copy objs");
         ops.copyObjs(event, this.clipboard, new math.Point3d(20, 0, 0))
+        ops.endUndoEvent(event);
     }
 }
 

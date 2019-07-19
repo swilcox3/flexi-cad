@@ -43,11 +43,11 @@ export class Renderer {
         gui.guiInstance.init();
 
         var onPointerDown = (evt: MouseEvent) => {
-            mouse.onPointerDown(this._scene, this._canvas, evt, ground)
+            mouse.onPointerDown(this._scene, evt, ground)
         }
 
         var onPointerClick = (evt: MouseEvent) => {
-            mouse.onPointerClick(this._scene, this._canvas, evt, ground)
+            mouse.onPointerClick(this._scene, evt, ground)
         }
 
         var current_hover: BABYLON.Mesh = null;
@@ -110,6 +110,7 @@ export class Renderer {
             pointerDragBehavior.useObjectOrienationForDragging = false;
             var uiSingleton = new uiController().getInstance();
             pointerDragBehavior.onDragObservable.add((ev)=>{
+                uiSingleton.selectObj(mesh)
                 uiSingleton.moveSelected(ev);
             })
             pointerDragBehavior.onDragEndObservable.add((ev)=>{

@@ -29,6 +29,7 @@ impl LinearDimension {
     }
 }
 
+#[typetag::serde]
 impl Data for LinearDimension {
     fn get_id(&self) -> &RefID {
         &self.id
