@@ -36,6 +36,15 @@ impl FileDatabase {
         }
     }
 
+    pub fn iterate_all(&self, callback: &mut FnMut(&DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
+        for chunk in self.db.chunks() {
+            for (_, val) in chunk.iter() {
+                callback(val)?;
+            }
+        }
+        Ok(())
+    }
+
     pub fn remove(&self, key: &RefID) -> Result<DataObject, DBError> {
         match self.db.remove(key) {
             Some(val) => Ok(val.1),
@@ -83,6 +92,7 @@ impl FileDatabase {
     }
 
     pub fn save(&self, path: &PathBuf) -> Result<(), DBError> {
+        println!("{:?}", path);
         let mut file = std::fs::File::create(path).map_err(error_other)?;
         let mut vals = Vec::new();
         for chunk in self.db.chunks() {

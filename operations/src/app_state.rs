@@ -29,7 +29,13 @@ pub fn init_file(file: PathBuf, updates: Sender<UpdateMsg>) {
 
 pub fn open_file(file: PathBuf, updates: Sender<UpdateMsg>) -> Result<(), DBError> {
     let ops = OperationManager::open(&file, updates)?;
-    APP_STATE.files.insert(file, ops);
+    APP_STATE.files.insert(file.clone(), ops);
+    Scheduler::spawn(move || {
+        match APP_STATE.files.get(&file) {
+            Some(ops) => ops.update_all(),
+            None => Err(DBError::NotFound)
+        }
+    });
     Ok(())
 }
 

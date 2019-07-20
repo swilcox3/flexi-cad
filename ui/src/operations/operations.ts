@@ -22,6 +22,7 @@ export function initFile(canvas: HTMLCanvasElement)
 
 export function openFile(in_file:string, canvas:HTMLCanvasElement)
 {
+    console.log(in_file)
     filename = in_file;
     kernel.open_file(filename)
     renderers.set(filename, initRenderer(canvas))

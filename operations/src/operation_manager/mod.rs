@@ -30,6 +30,7 @@ impl OperationManager {
             deps: DependencyManager::new(),
             updates: sender,
         })
+
     }
 
     pub fn save(&self, path: &PathBuf) -> Result<(), DBError> {
@@ -74,6 +75,14 @@ impl OperationManager {
         self.update_all_deps(set.iter())
     }
 
+    pub fn update_all(&self) -> Result<(), DBError> {
+        let mut set = HashSet::new();
+        self.data.iterate_all(&mut |obj: &DataObject| {
+            set.insert(obj.get_id().clone());
+            Ok(())
+        })?;
+        self.update_set(&set)
+    }
 
     fn update_set(&self, set: &HashSet<RefID>) -> Result<(), DBError> {
         //println!("{:?}", set);

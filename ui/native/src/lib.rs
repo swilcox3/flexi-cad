@@ -89,7 +89,7 @@ fn save_as_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let orig_path = PathBuf::from(cx.argument::<JsString>(0)?.value());
     let new_path = PathBuf::from(cx.argument::<JsString>(1)?.value());
     operations_kernel::save_as_file(&orig_path, new_path.clone()).unwrap();
-    let (_, r) = UPDATES.remove(orig_path).unwrap();
+    let (_, r) = UPDATES.remove(&orig_path).unwrap();
     UPDATES.insert(new_path, r);
     Ok(cx.undefined())
 }
