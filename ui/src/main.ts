@@ -1,5 +1,5 @@
 import { app, BrowserWindow, Menu} from "electron";
-const {dialog, ipcMain} = require('electron');
+const {dialog} = require('electron');
 import * as path from "path";
 import * as url from "url";
 
@@ -41,12 +41,21 @@ function createWindow() {
               properties: ['openFile']
             }, function (file) {
               if (file != undefined) {
-                ipcMain.emit('openFile', file)
+                mainWindow.webContents.send('openFile', file)
               }
             })
           }
         },
-        {label:'Save'}
+        {
+          label:'Save As...',
+          click() {
+            dialog.showSaveDialog({}, (file) => {
+              if (file != undefined) {
+                mainWindow.webContents.send('saveAsFile', file)
+              }
+            })
+          }
+        }
       ]
     }
   ])

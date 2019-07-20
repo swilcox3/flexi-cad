@@ -14,6 +14,7 @@ function initRenderer(canvas: HTMLCanvasElement)
 
 export function initFile(canvas: HTMLCanvasElement)
 {
+    renderers.delete(filename)
     filename = "defaultNew.flx"
     kernel.init_file(filename)
     renderers.set(filename, initRenderer(canvas))
@@ -22,6 +23,7 @@ export function initFile(canvas: HTMLCanvasElement)
 
 export function openFile(in_file:string, canvas:HTMLCanvasElement)
 {
+    renderers.delete(filename)
     console.log(in_file)
     filename = in_file;
     kernel.open_file(filename)
@@ -36,8 +38,12 @@ export function saveFile()
 
 export function saveAsFile(in_file:string)
 {
+    console.log(in_file)
     kernel.save_as_file(filename, in_file)
+    var renderer = renderers.get(filename)
+    renderers.delete(filename)
     filename = in_file
+    renderers.set(filename, renderer)
 }
 
 export function getCurrentFile()

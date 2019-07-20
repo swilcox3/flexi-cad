@@ -29,12 +29,14 @@
         ops.initFile(document.getElementById('render-canvas'))
         var {ipcRenderer} = require('electron');
         ipcRenderer.on('openFile', function(event, path) {
-            ops.openFile(path, document.getElementById('render-canvas'))
+            ops.openFile(path[0], document.getElementById('render-canvas'))
         });
         ipcRenderer.on('saveFile', function(event) {
             ops.saveFile()
         });
         ipcRenderer.on('saveAsFile', function(event, path) {
+            console.log(event)
+            console.log(path)
             ops.saveAsFile(path)
         });
         ipcRenderer.on('getCurrentFile', function(event) {
