@@ -4,6 +4,8 @@ use super::undo::{UndoEvent, Change};
 use super::{DBError, DataObject};
 use std::io::{Read, Write};
 
+const TIMEOUT: u128 = 100;
+
 pub struct FileDatabase {
     db: DHashMap<RefID, DataObject>,
 }
@@ -49,7 +51,7 @@ impl FileDatabase {
                 }
             }
             if let Ok(elapsed) = now.elapsed() {
-                if elapsed.as_millis() > 2000 {
+                if elapsed.as_millis() > TIMEOUT {
                     return Err(DBError::TimedOut);
                 }
             }
@@ -95,7 +97,7 @@ impl FileDatabase {
                 }
             }
             if let Ok(elapsed) = now.elapsed() {
-                if elapsed.as_millis() > 2000 {
+                if elapsed.as_millis() > TIMEOUT {
                     return Err(DBError::TimedOut);
                 }
             }

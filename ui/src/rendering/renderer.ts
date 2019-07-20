@@ -102,7 +102,7 @@ export class Renderer {
         this._engine.stopRenderLoop();
     }
 
-    renderMesh(triangles: any, id: string) {
+    renderMesh(triangles: any, id: string, temp?:boolean) {
         var mesh = this._scene.getMeshByName(id) as BABYLON.Mesh
         if(!mesh) {
             mesh = new BABYLON.Mesh(id, this._scene);
@@ -110,18 +110,22 @@ export class Renderer {
             objMaterial.diffuseColor = BABYLON.Color3.Gray();
             objMaterial.backFaceCulling = false;
             mesh.material = objMaterial;
-            var pointerDragBehavior = new BABYLON.PointerDragBehavior({dragPlaneNormal: new BABYLON.Vector3(0,1,0)});
-            pointerDragBehavior.useObjectOrienationForDragging = false;
-            var uiSingleton = new uiController().getInstance();
-            pointerDragBehavior.onDragObservable.add((ev)=>{
-                uiSingleton.selectObj(mesh)
-                uiSingleton.moveSelected(ev);
-            })
-            pointerDragBehavior.onDragEndObservable.add((ev)=>{
-                uiSingleton.endMoveSelected(ev);
-            })
-            pointerDragBehavior.moveAttached = false
-            mesh.addBehavior(pointerDragBehavior)
+            if(!temp) {
+                var pointerDragBehavior = new BABYLON.PointerDragBehavior({dragPlaneNormal: new BABYLON.Vector3(0,1,0)});
+                pointerDragBehavior.useObjectOrienationForDragging = false;
+                var uiSingleton = new uiController().getInstance();
+                pointerDragBehavior.onDragStartObservable.add((ev)=>{
+                    uiSingleton.selectObj(mesh)
+                })
+                pointerDragBehavior.onDragObservable.add((ev)=>{
+                    uiSingleton.moveSelected(ev);
+                })
+                pointerDragBehavior.onDragEndObservable.add((ev)=>{
+                    uiSingleton.endMoveSelected(ev);
+                })
+                pointerDragBehavior.moveAttached = false
+                mesh.addBehavior(pointerDragBehavior)
+            }
         }
         mesh.metadata = triangles.metadata;
         var vertexData = new BABYLON.VertexData();

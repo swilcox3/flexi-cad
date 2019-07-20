@@ -41,7 +41,7 @@ impl DataManager {
     }
 
     pub fn end_undo_event(&self, event_id: UndoEventID) -> Result<(), DBError> {
-        let mut stack = self.undo.lock().unwrap();
+        let mut stack = self.undo.lock().expect("Poisoned mutex");
         self.pending.end_event(&mut stack, &event_id)
     }
 
