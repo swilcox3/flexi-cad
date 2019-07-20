@@ -23,7 +23,11 @@ export function initFile(canvas: HTMLCanvasElement)
 
 export function openFile(in_file:string, canvas:HTMLCanvasElement)
 {
-    renderers.delete(filename)
+    var existing = renderers.get(filename)
+    if(existing) {
+        existing.stop()
+        renderers.delete(filename)
+    }
     console.log(in_file)
     filename = in_file;
     kernel.open_file(filename)
@@ -166,5 +170,6 @@ export function setObjectsDatas(event: string, data: Array<[string, any]>)
 
 export function copyObjs(event: string, ids:Array<string>, delta: math.Point3d)
 {
+    console.log("Going into rust")
     kernel.copy_objects(filename, event, ids, delta)
 }

@@ -22,6 +22,7 @@ pub enum DBError
     Overwrite,
     NoUndoEvent,
     ObjLacksTrait,
+    TimedOut,
     Other{msg: String}
 }
 

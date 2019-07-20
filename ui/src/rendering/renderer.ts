@@ -98,6 +98,10 @@ export class Renderer {
         });
     }
 
+    stop() {
+        this._engine.stopRenderLoop();
+    }
+
     renderMesh(triangles: any, id: string) {
         var mesh = this._scene.getMeshByName(id) as BABYLON.Mesh
         if(!mesh) {

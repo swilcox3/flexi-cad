@@ -1,4 +1,4 @@
-use ccl::dhashmap::DHashMap;
+use ccl::dhashmap::{DHashMap, TryGetError};
 use crate::*;
 use super::undo::{UndoEvent, Change};
 use super::{DBError, DataObject};
@@ -30,9 +30,29 @@ impl FileDatabase {
         if *key == RefID::nil() {
             return Err(DBError::NotFound);
         }
-        match self.db.get(key) {
-            Some(obj) => callback(&(*obj)),
-            None => Err(DBError::NotFound)
+        let mut try_get = || {
+            match self.db.try_get(key) {
+                Ok(obj) => callback(&(*obj)),
+                Err(TryGetError::InvalidKey) => Err(DBError::NotFound),
+                Err(TryGetError::WouldBlock) => Err(DBError::TimedOut)
+            }
+        };
+        let now = std::time::SystemTime::now();
+        loop {
+            match try_get() {
+                Ok(()) => {
+                    return Ok(());
+                }
+                Err(DBError::TimedOut) => (),
+                Err(e) => {
+                    return Err(e);
+                }
+            }
+            if let Ok(elapsed) = now.elapsed() {
+                if elapsed.as_millis() > 2000 {
+                    return Err(DBError::TimedOut);
+                }
+            }
         }
     }
 
@@ -56,8 +76,43 @@ impl FileDatabase {
         if *key == RefID::nil() {
             return Err(DBError::NotFound);
         }
-        match self.db.get_mut(key) {
-            Some(mut obj) => callback(&mut (*obj)),
+        let mut try_get = || {
+            match self.db.try_get_mut(key) {
+                Ok(mut obj) => callback(&mut (*obj)),
+                Err(TryGetError::InvalidKey) => Err(DBError::NotFound),
+                Err(TryGetError::WouldBlock) => Err(DBError::TimedOut)
+            }
+        };
+        let now = std::time::SystemTime::now();
+        loop {
+            match try_get() {
+                Ok(()) => {
+                    return Ok(());
+                }
+                Err(DBError::TimedOut) => (),
+                Err(e) => {
+                    return Err(e);
+                }
+            }
+            if let Ok(elapsed) = now.elapsed() {
+                if elapsed.as_millis() > 2000 {
+                    return Err(DBError::TimedOut);
+                }
+            }
+        }
+    }
+
+    pub fn duplicate(&self, key: &RefID) -> Result<DataObject, DBError> {
+        if *key == RefID::nil() {
+            return Err(DBError::NotFound);
+        }
+        match self.db.get(key) {
+            Some(obj) => {
+                let mut copy = obj.clone();
+                let id = RefID::new_v4();
+                copy.set_id(id);
+                Ok(copy)
+            }
             None => Err(DBError::NotFound)
         }
     }
@@ -92,7 +147,6 @@ impl FileDatabase {
     }
 
     pub fn save(&self, path: &PathBuf) -> Result<(), DBError> {
-        println!("{:?}", path);
         let mut file = std::fs::File::create(path).map_err(error_other)?;
         let mut vals = Vec::new();
         for chunk in self.db.chunks() {

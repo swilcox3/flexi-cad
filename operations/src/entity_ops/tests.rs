@@ -45,7 +45,6 @@ fn test_copy_objs() {
             Ok(())
         }).unwrap();
         app_state::get_obj(&file, orig_to_dups.get(&id_2).unwrap(), |obj| {
-            println!("{:?}", obj);
             let point_ref = obj.query_ref::<RefPoint>().unwrap();
             assert_eq!(point_ref.get_point(0), Some(&Point3f::new(2.0, 2.0, 4.0)));
             Ok(())

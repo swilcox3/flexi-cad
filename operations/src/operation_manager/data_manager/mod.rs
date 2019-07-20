@@ -81,6 +81,10 @@ impl DataManager {
         self.db.get_mut(key, callback)
     }
 
+    pub fn duplicate_obj(&self, key: &RefID) -> Result<DataObject, DBError> {
+        self.db.duplicate(key)
+    }
+
     pub fn undo_latest(&self, user: &UserID) -> Result<HashSet<RefID>, DBError> {
         let mut stack = self.undo.lock().expect("Poisoned mutex");
         stack.undo_latest(user, &self.db)

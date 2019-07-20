@@ -25,12 +25,20 @@ impl OperationManager {
 
     pub fn open(path: &PathBuf, sender: Sender<UpdateMsg>) -> Result<OperationManager, DBError> {
         let data = DataManager::open(path)?;
-        Ok(OperationManager {
+        let ops = OperationManager {
             data: data,
             deps: DependencyManager::new(),
             updates: sender,
-        })
-
+        };
+        ops.data.iterate_all(&mut |obj: &DataObject| {
+            if let Some(dep_obj) = obj.query_ref::<Update>() {
+                dep_obj.init(&ops.deps);
+            }
+            let msg = obj.update()?;
+            ops.updates.send(msg).unwrap();
+            Ok(())
+        })?;
+        Ok(ops)
     }
 
     pub fn save(&self, path: &PathBuf) -> Result<(), DBError> {
@@ -102,7 +110,6 @@ impl OperationManager {
 
     fn update_set_from_refs(&self, deps: &HashSet<RefID>) -> Result<(), DBError> {
         for dep_id in deps {
-            println!("{:?}", dep_id);
             if let Err(e) = self.data.get_mut_obj_no_undo(&dep_id, &mut |dep_obj: &mut DataObject| {
                 if let Some(to_update) = dep_obj.query_mut::<Update>() {
                     self.updates.send(to_update.update_from_refs(self)?).unwrap();
@@ -137,18 +144,15 @@ impl OperationManager {
     }
 
     pub fn copy_obj(&self, event: &UndoEventID, id: &RefID, delta: &Vector3f) -> Result<RefID, DBError> {
-        let copy_id = RefID::new_v4();
-        self.data.get_obj(id, &mut |obj: &DataObject| {
-            let mut copy = obj.clone();
-            copy.set_id(copy_id.clone());
-            if let Some(movable) = copy.query_mut::<Position>() {
-                movable.move_obj(delta);
-            }
-            if let Some(updatable) = copy.query_mut::<Update>() {
-                updatable.clear_refs();
-            }
-            self.add_object(event, copy)
-        })?;
+        let mut copy = self.data.duplicate_obj(id)?;
+        if let Some(movable) = copy.query_mut::<Position>() {
+            movable.move_obj(delta);
+        }
+        if let Some(updatable) = copy.query_mut::<Update>() {
+            updatable.clear_refs();
+        }
+        let copy_id = copy.get_id().clone();
+        self.add_object(event, copy)?;
         Ok(copy_id)
     }
 }

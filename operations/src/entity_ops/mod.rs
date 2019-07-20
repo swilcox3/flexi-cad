@@ -63,12 +63,10 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>, delta: 
         orig_to_copy.insert(id.clone(), copy_id.clone());
     }
     let mut to_update = Vec::new();
-    println!("made it");
     //Reattach dependencies
     for id in ids {
         let mut refs_to_set = Vec::new();
         app_state::get_obj(&file, &id, |obj| {
-            println!("made it get");
             if let Some(has_ref) = obj.query_ref::<RefPoint>() {
                 let num_refs = has_ref.get_num_refs();
                 for i in 0..num_refs {
@@ -87,7 +85,6 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>, delta: 
         if refs_to_set.len() > 0 {
             if let Some(copy_id) = orig_to_copy.get(&id) {
                 app_state::modify_obj(&file, &event, copy_id, |obj| {
-                    println!("made it modify");
                     if let Some(has_ref) = obj.query_mut::<RefPoint>() {
                         for (which, pt, ref_to_set) in &refs_to_set {
                             app_state::add_dep(&file, &ref_to_set.id, copy_id.clone())?;
@@ -100,7 +97,6 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>, delta: 
         }
         to_update.push(id);
     }
-    println!("About to update");
     app_state::update_all_deps(file, to_update);
     Ok(orig_to_copy)
 }

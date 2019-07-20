@@ -207,6 +207,7 @@ class UIController
     {
         console.log("paste")
         const event = ops.beginUndoEvent("copy objs");
+        console.log("undo started")
         ops.copyObjs(event, this.clipboard, new math.Point3d(20, 0, 0))
         ops.endUndoEvent(event);
     }

@@ -26,7 +26,7 @@
     <canvas id="render-canvas"></canvas>
     <script>
         var ops = require('./app/operations/operations')
-        ops.initFile(document.getElementById('render-canvas'))
+        ops.openFile("../test_file.flx", document.getElementById('render-canvas'))
         var {ipcRenderer} = require('electron');
         ipcRenderer.on('openFile', function(event, path) {
             ops.openFile(path[0], document.getElementById('render-canvas'))
