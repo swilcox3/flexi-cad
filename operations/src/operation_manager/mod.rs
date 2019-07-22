@@ -110,6 +110,7 @@ impl OperationManager {
 
     fn update_set_from_refs(&self, deps: &HashSet<RefID>) -> Result<(), DBError> {
         for dep_id in deps {
+            println!("Getting dep: {:?}", dep_id);
             if let Err(e) = self.data.get_mut_obj_no_undo(&dep_id, &mut |dep_obj: &mut DataObject| {
                 if let Some(to_update) = dep_obj.query_mut::<Update>() {
                     self.updates.send(to_update.update_from_refs(self)?).unwrap();
@@ -154,6 +155,13 @@ impl OperationManager {
         let copy_id = copy.get_id().clone();
         self.add_object(event, copy)?;
         Ok(copy_id)
+    }
+
+    pub fn debug_state(&self, output: &mut String) {
+        self.data.debug_state(output);
+        output.push_str(&"\n");
+        self.deps.debug_state(output);
+        output.push_str(&"\n");
     }
 }
 

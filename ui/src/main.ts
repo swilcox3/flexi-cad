@@ -53,7 +53,6 @@ app.on("ready", () => {
               properties: ['openFile']
             }, function (files) {
               if (files != undefined) {
-                console.log(files)
                 files.forEach((file) => {
                   createWindow(file)
                 })

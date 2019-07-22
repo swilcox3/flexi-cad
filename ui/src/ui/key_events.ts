@@ -5,6 +5,7 @@ var Mousetrap = require('mousetrap')
 
 Mousetrap.bind('mod+z', () => ops.undoLatest())
 Mousetrap.bind('mod+y', () => ops.redoLatest())
+Mousetrap.bind('d', () => ops.debugState())
 Mousetrap.bind('del', () => mySingleton.onDeleteKey())
 Mousetrap.bind('esc', () => mySingleton.cancel())
 Mousetrap.bind('escape', () => mySingleton.cancel())

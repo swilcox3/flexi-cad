@@ -1,6 +1,6 @@
 const gui = require('./gui')
+import * as BABYLON from "babylonjs";
 import * as math from '../utils/math'
-import { openSync } from 'fs';
 import * as ops from '../operations/operations'
 
 interface Tool
@@ -243,8 +243,14 @@ class UIController
         if(this.activeTool == null)
         {
             const event = ops.beginUndoEvent("copy objs");
-            ops.copyObjs(event, this.clipboard, new math.Point3d(20, 0, 0))
+            var copyIds = ops.copyObjs(event, this.clipboard, new math.Point3d(20, 0, 0))
             ops.endUndoEvent(event);
+            this.selection.deselectAll();
+            copyIds.forEach((pair: any) => {
+                ops.addPendingCallback(pair[1], (mesh: BABYLON.Mesh) => {
+                    this.selection.addObject(mesh);
+                })
+            })
         }
     }
 }

@@ -191,3 +191,13 @@ pub fn copy_obj(file: &PathBuf, event: &UndoEventID, id: &RefID, delta: &Vector3
     }
 }
 
+pub fn debug_state() -> String {
+    let mut total = String::from("");
+    for chunk in APP_STATE.files.chunks() {
+        for (path, ops) in chunk.iter() {
+            total.push_str(&format!("File: {:?}\n", path));
+            ops.debug_state(&mut total);
+        }
+    }
+    return total;
+}

@@ -95,6 +95,13 @@ impl UndoStack {
         }
         Err(DBError::NoUndoEvent)
     }
+
+    pub fn debug_state(&self, output: &mut String) {
+        output.push_str(&format!("Undo Stack:\n{:?}", self.stack));
+        output.push_str(&"\n");
+        output.push_str(&format!("Redo Stack:\n{:?}", self.redo_stack));
+        output.push_str(&"\n");
+    }
 }
 
 pub struct PendingEvents {
@@ -246,6 +253,15 @@ impl PendingEvents {
                 db.get_mut(key, callback)
             }
             None => Err(DBError::NoUndoEvent),
+        }
+    }
+
+    pub fn debug_state(&self, output: &mut String) {
+        output.push_str(&format!("Pending:\n"));
+        for chunk in self.events.chunks() {
+            for (id, event) in chunk.iter() {
+                output.push_str(&format!("{:?} -> {:?}\n", id, event));
+            }
         }
     }
 }

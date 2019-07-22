@@ -30,6 +30,15 @@ impl DependencyManager {
         }
         results
     }
+
+    pub fn debug_state(&self, output: &mut String) {
+        output.push_str(&format!("{:?} Dependencies:\n", self.pub_subs.len()));
+        for chunk in self.pub_subs.chunks() {
+            for (id, set) in chunk.iter() {
+                output.push_str(&format!("{:?} -> {:?}\n", id, set));
+            }
+        }
+    }
 }
 
 impl DepStore for DependencyManager {
@@ -60,4 +69,5 @@ impl DepStore for DependencyManager {
             set.remove(publisher);
         });
     }
+
 }

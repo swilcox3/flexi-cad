@@ -7,7 +7,7 @@ use std::time::Duration;
 
 fn run_timeout(mut callback: impl FnMut() -> Result<(), DBError>) -> Result<(), DBError> {
     let now = std::time::SystemTime::now();
-    let timeout = 100;
+    let timeout = 10000;
     let wait = Duration::from_millis(10);
     loop {
         match callback() {
@@ -58,7 +58,10 @@ impl FileDatabase {
             match self.db.try_get(key) {
                 Ok(obj) => callback(&(*obj)),
                 Err(TryGetError::InvalidKey) => Err(DBError::NotFound),
-                Err(TryGetError::WouldBlock) => Err(DBError::TimedOut)
+                Err(TryGetError::WouldBlock) => {
+                    println!("Key blocked: {:?}", key);
+                    Err(DBError::TimedOut)
+                }
             }
         };
         run_timeout(try_get)
@@ -160,6 +163,15 @@ impl FileDatabase {
             self.add(obj)?;
         }
         Ok(())
+    }
+
+    pub fn debug_state(&self, output: &mut String) {
+        output.push_str(&format!("{:?} Objects:\n", self.db.len()));
+        for chunk in self.db.chunks() {
+            for (_, obj) in chunk.iter() {
+                output.push_str(&format!("{:?}\n", obj));
+            }
+        }
     }
 }
 

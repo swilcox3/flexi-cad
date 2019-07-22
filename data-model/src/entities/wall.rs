@@ -163,6 +163,7 @@ impl Update for Wall {
     }
 
     fn update_from_refs(&mut self, ops: &ObjStore) -> Result<UpdateMsg, DBError> {
+        //std::thread::sleep(std::time::Duration::from_secs(5));
         if let Ok(pt) = ops.get_ref_point(&mut self.joined_first) {
             self.first_pt = pt;
         }

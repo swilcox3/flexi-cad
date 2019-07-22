@@ -256,16 +256,6 @@ fn set_objects_datas(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
-fn get_hash_set_from_arg(mut cx: FunctionContext, input: Handle<JsArray>) -> HashSet<RefID> {
-    let mut data = std::collections::HashSet::with_capacity(input.len() as usize);
-    for i in 0..input.len() {
-        let val = input.get(&mut cx, i).unwrap();
-        let val_str:Handle<JsString> = val.downcast().unwrap();
-        data.insert(RefID::from_str(&val_str.value()).unwrap());
-    }
-    data
-}
-
 fn move_objects(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
@@ -273,21 +263,43 @@ fn move_objects(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let arg_3 = cx.argument::<JsValue>(3)?;
     let delta = neon_serde::from_value(&mut cx, arg_3)?;
     let ret = cx.undefined();
-    let data = get_hash_set_from_arg(cx, arg_2);
+    let mut data = std::collections::HashSet::with_capacity(arg_2.len() as usize);
+    for i in 0..arg_2.len() {
+        let val = arg_2.get(&mut cx, i).unwrap();
+        let val_str:Handle<JsString> = val.downcast().unwrap();
+        data.insert(RefID::from_str(&val_str.value()).unwrap());
+    }
     operations_kernel::move_objs(PathBuf::from(path), event, data, delta).unwrap();
     Ok(ret)
 }
 
-fn copy_objects(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+fn copy_objects(mut cx: FunctionContext) -> JsResult<JsArray> {
     let path = cx.argument::<JsString>(0)?.value();
     let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let arg_2 = cx.argument::<JsArray>(2)?;
     let arg_3 = cx.argument::<JsValue>(3)?;
     let delta = neon_serde::from_value(&mut cx, arg_3)?;
-    let ret = cx.undefined();
-    let data = get_hash_set_from_arg(cx, arg_2);
-    operations_kernel::copy_objs(PathBuf::from(path), event, data, delta).unwrap();
-    Ok(ret)
+    let mut data = std::collections::HashSet::with_capacity(arg_2.len() as usize);
+    for i in 0..arg_2.len() {
+        let val = arg_2.get(&mut cx, i).unwrap();
+        let val_str:Handle<JsString> = val.downcast().unwrap();
+        data.insert(RefID::from_str(&val_str.value()).unwrap());
+    }
+    let copy_ids = operations_kernel::copy_objs(PathBuf::from(path), event, data, delta).unwrap();
+    let js_array = JsArray::new(&mut cx, copy_ids.len() as u32);
+    let mut i: u32 = 0;
+    for pair in copy_ids {
+        let js_value = neon_serde::to_value(&mut cx, &pair)?;
+        js_array.set(&mut cx, i, js_value).unwrap();
+        i = i + 1;
+    }
+    Ok(js_array)
+}
+
+fn debug_state(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let debug = operations_kernel::debug_state();
+    println!("{}", debug);
+    Ok(cx.undefined())
 }
 
 register_module!(mut cx, {
@@ -313,5 +325,6 @@ register_module!(mut cx, {
     cx.export_function("set_object_data", set_object_data)?;
     cx.export_function("set_objects_datas", set_objects_datas)?;
     cx.export_function("copy_objects", copy_objects)?;
+    cx.export_function("debug_state", debug_state)?;
     Ok(())
 });

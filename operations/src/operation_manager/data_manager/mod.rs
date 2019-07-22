@@ -98,6 +98,15 @@ impl DataManager {
         let mut stack = self.undo.lock().expect("Poisoned mutex");
         stack.redo_latest(user, &self.db)
     }
+
+    pub fn debug_state(&self, output: &mut String) {
+        self.db.debug_state(output);
+        output.push_str(&"\n");
+        self.pending.debug_state(output);
+        output.push_str(&"\n");
+        self.undo.lock().expect("Poisoned mtuex").debug_state(output);
+        output.push_str(&"\n");
+    }
 }
 
 

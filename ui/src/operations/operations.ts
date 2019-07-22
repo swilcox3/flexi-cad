@@ -1,9 +1,11 @@
 var kernel = require('../../native/index.node')
 import {Renderer} from '../rendering/renderer'
 import * as math from '../utils/math'
+import * as BABYLON from "babylonjs";
 
 var renderers: Map<String, Renderer> = new Map()
 var filename: string
+var pendingCallbacks: Map<String, Array<(obj: BABYLON.Mesh) => void>> = new Map()
 
 function initRenderer(canvas: HTMLCanvasElement)
 {
@@ -23,15 +25,20 @@ export function initFile(canvas: HTMLCanvasElement)
 
 export function openFile(in_file:string, canvas:HTMLCanvasElement)
 {
-    var existing = renderers.get(filename)
-    if(existing) {
-        existing.stop()
-        renderers.delete(filename)
-    }
     filename = in_file;
     kernel.open_file(filename)
     renderers.set(filename, initRenderer(canvas))
     renderNext(filename)
+}
+
+export function addPendingCallback(id: string, callback: (obj: BABYLON.Mesh) => void) 
+{
+    var arr = pendingCallbacks.get(id)
+    if(!arr) {
+        arr = []
+    }
+    arr.push(callback)
+    pendingCallbacks.set(id, arr)
 }
 
 export function saveFile()
@@ -41,12 +48,7 @@ export function saveFile()
 
 export function saveAsFile(in_file:string)
 {
-    console.log(in_file)
     kernel.save_as_file(filename, in_file)
-    var renderer = renderers.get(filename)
-    renderers.delete(filename)
-    filename = in_file
-    renderers.set(filename, renderer)
 }
 
 export function beginUndoEvent(desc: string)
@@ -117,6 +119,14 @@ function renderNext(filename: string)
                 //console.log(msg);
                 if(msg.Mesh) {
                     renderers.get(filename).renderMesh(msg.Mesh.data, msg.Mesh.data.id)
+                    let callbacks = pendingCallbacks.get(msg.Mesh.data.id)
+                    if(callbacks) {
+                        let mesh = renderers.get(filename).getMesh(msg.Mesh.data.id)
+                        callbacks.forEach((callback) => {
+                            callback(mesh)
+                        })
+                        callbacks.length = 0;
+                    }
                 }
                 if(msg.Delete) {
                     renderers.get(filename).deleteMesh(msg.Delete.key)
@@ -157,8 +167,17 @@ export function setObjectsDatas(event: string, data: Array<[string, any]>)
     kernel.set_objects_datas(filename, event, data)
 }
 
+export function getMeshByID(id: string)
+{
+    return renderers.get(filename).getMesh(id)
+}
+
 export function copyObjs(event: string, ids:Array<string>, delta: math.Point3d)
 {
-    console.log("Going into rust")
-    kernel.copy_objects(filename, event, ids, delta)
+    return kernel.copy_objects(filename, event, ids, delta)
+}
+
+export function debugState()
+{
+    kernel.debug_state();
 }

@@ -134,4 +134,8 @@ export class Renderer {
             mesh.dispose()
         }
     }
+
+    getMesh(id:string) {
+        return this._scene.getMeshByName(id) as BABYLON.Mesh
+    }
 }
