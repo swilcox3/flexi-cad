@@ -14,8 +14,10 @@ interface Tool
 class SelectionController
 {
     private selectedObjs: Set<BABYLON.Mesh>;
+    ctrlPressed: boolean;
     constructor() {
         this.selectedObjs = new Set();
+        this.ctrlPressed = false;
     }
 
     getSelectedObjs()
@@ -51,10 +53,70 @@ class SelectionController
         this.selectedObjs.delete(mesh);
     }
 
-    selectObject(mesh: BABYLON.Mesh)
+    deleteSelected()
     {
-        this.deselectAll();
-        this.addObject(mesh);
+        if(this.selectedObjs.size > 0) {
+            var event = ops.beginUndoEvent("Delete objs");
+            this.selectedObjs.forEach((obj) => {
+                ops.deleteObject(event, obj.name)
+            });
+            ops.endUndoEvent(event);
+            this.deselectAll()
+        }
+    }
+
+    selectObj(mesh: BABYLON.Mesh)
+    {
+        if(!this.isSelected(mesh))
+        {
+            if(!this.ctrlPressed) {
+                this.deselectAll();
+                this.addObject(mesh);
+            }
+            else {
+                this.addObject(mesh)
+            }
+            gui.guiInstance.setObjectOverlay(this.selectedObjs)
+        }
+        else {
+            if(this.ctrlPressed) {
+                this.removeObject(mesh)
+            }
+        }
+    }
+}
+
+class MoveObjectsController
+{
+    private moveEvent: string;
+    constructor() {
+        this.moveEvent = '';
+    }
+
+    move(ev: any, objs: Set<BABYLON.Mesh>)
+    {
+        if(!this.moveEvent) {
+            this.moveEvent = ops.beginUndoEvent("Move objects")
+            objs.forEach((mesh) => {
+                ops.takeUndoSnapshot(this.moveEvent, mesh.name)
+            })
+            ops.suspendEvent(this.moveEvent)
+        }
+        var modelDelta = math.transformGraphicToModelCoords(ev.delta) 
+        let names: Array<string> = []
+        objs.forEach((mesh) => {
+            names.push(mesh.name)
+        })
+        ops.moveObjs(this.moveEvent, names, modelDelta)
+    }
+
+    endMove(ev: any)
+    {
+        if(this.moveEvent) {
+            ops.resumeEvent(this.moveEvent)
+            ops.endUndoEvent(this.moveEvent)
+        }
+        this.moveEvent = '';
     }
 }
 
@@ -62,12 +124,13 @@ class UIController
 {
     private activeTool: Tool
     private selection: SelectionController
+    private moveObjs: MoveObjectsController
     private ctrlPressed: boolean;
-    private moveEvent: string;
     private clipboard: Array<string>;
     constructor() {
         this.activeTool = null;
         this.selection = new SelectionController();
+        this.moveObjs = new MoveObjectsController();
         this.ctrlPressed = false;
         this.clipboard = new Array<string>();
     }
@@ -81,25 +144,6 @@ class UIController
         this.activeTool = tool
     }
 
-    selectObj(mesh: BABYLON.Mesh)
-    {
-        if(!this.selection.isSelected(mesh))
-        {
-            if(!this.ctrlPressed) {
-                this.selection.selectObject(mesh)
-            }
-            else {
-                this.selection.addObject(mesh)
-            }
-            gui.guiInstance.setObjectOverlay(this.selection.getSelectedObjs())
-        }
-        else {
-            if(this.ctrlPressed) {
-                this.selection.removeObject(mesh)
-            }
-        }
-    }
-
     leftClick(pt:math.Point3d, mesh: BABYLON.Mesh)
     {
         if(this.activeTool != null)
@@ -108,7 +152,7 @@ class UIController
         }
         else if(mesh != null)
         {
-            this.selectObj(mesh)
+            this.selection.selectObj(mesh)
         }
         else if(mesh == null)
         {
@@ -139,50 +183,39 @@ class UIController
         return true;
     }
 
+    objDrag(ev: any, mesh: BABYLON.Mesh)
+    {
+        if(this.activeTool == null)
+        {
+            this.selection.selectObj(mesh);
+            this.moveObjs.move(ev, this.selection.getSelectedObjs());
+        }
+    }
+
+    objDragEnd(ev: any)
+    {
+        if(this.activeTool == null)
+        {
+            this.moveObjs.endMove(ev);
+        }
+    }
+
     ctrlDown()
     {
-        this.ctrlPressed = true;
+        this.selection.ctrlPressed = true;
     }
 
     ctrlUp()
     {
-        this.ctrlPressed = false;
+        this.selection.ctrlPressed = false;
     }
 
-    deleteSelected()
+    onDeleteKey()
     {
-        var event = ops.beginUndoEvent("Delete objs");
-        this.selection.getSelectedObjs().forEach((obj) => {
-            ops.deleteObject(event, obj.name)
-        });
-        ops.endUndoEvent(event);
-        this.selection.deselectAll()
-    }
-
-    moveSelected(ev: any)
-    {
-        if(!this.moveEvent) {
-            this.moveEvent = ops.beginUndoEvent("Move objects")
-            this.selection.getSelectedObjs().forEach((mesh) => {
-                ops.takeUndoSnapshot(this.moveEvent, mesh.name)
-            })
-            ops.suspendEvent(this.moveEvent)
+        if(this.activeTool == null)
+        {
+            this.selection.deleteSelected();
         }
-        var modelDelta = math.transformGraphicToModelCoords(ev.delta) 
-        let names: Array<string> = []
-        this.selection.getSelectedObjs().forEach((mesh) => {
-            names.push(mesh.name)
-        })
-        ops.moveObjs(this.moveEvent, names, modelDelta)
-    }
-
-    endMoveSelected(ev: any)
-    {
-        if(this.moveEvent) {
-            ops.resumeEvent(this.moveEvent)
-            ops.endUndoEvent(this.moveEvent)
-        }
-        this.moveEvent = '';
     }
 
     cancel()
@@ -196,20 +229,23 @@ class UIController
 
     setClipboard()
     {
-        this.clipboard = []
-        this.selection.getSelectedObjs().forEach((mesh)=> {
-            this.clipboard.push(mesh.name)
-        })
-        console.log("copy")
+        if(this.activeTool == null)
+        {
+            this.clipboard = []
+            this.selection.getSelectedObjs().forEach((mesh)=> {
+                this.clipboard.push(mesh.name)
+            });
+        }
     }
 
     pasteClipboard()
     {
-        console.log("paste")
-        const event = ops.beginUndoEvent("copy objs");
-        console.log("undo started")
-        ops.copyObjs(event, this.clipboard, new math.Point3d(20, 0, 0))
-        ops.endUndoEvent(event);
+        if(this.activeTool == null)
+        {
+            const event = ops.beginUndoEvent("copy objs");
+            ops.copyObjs(event, this.clipboard, new math.Point3d(20, 0, 0))
+            ops.endUndoEvent(event);
+        }
     }
 }
 

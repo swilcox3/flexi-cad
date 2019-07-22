@@ -3,8 +3,30 @@ use crate::*;
 use super::undo::{UndoEvent, Change};
 use super::{DBError, DataObject};
 use std::io::{Read, Write};
+use std::time::Duration;
 
-const TIMEOUT: u128 = 100;
+fn run_timeout(mut callback: impl FnMut() -> Result<(), DBError>) -> Result<(), DBError> {
+    let now = std::time::SystemTime::now();
+    let timeout = 100;
+    let wait = Duration::from_millis(10);
+    loop {
+        match callback() {
+            Ok(()) => {
+                return Ok(());
+            }
+            Err(DBError::TimedOut) => (),
+            Err(e) => {
+                return Err(e);
+            }
+        }
+        if let Ok(elapsed) = now.elapsed() {
+            if elapsed.as_millis() > timeout {
+                return Err(DBError::TimedOut);
+            }
+        }
+        std::thread::sleep(wait);
+    }
+}
 
 pub struct FileDatabase {
     db: DHashMap<RefID, DataObject>,
@@ -32,30 +54,14 @@ impl FileDatabase {
         if *key == RefID::nil() {
             return Err(DBError::NotFound);
         }
-        let mut try_get = || {
+        let try_get = || {
             match self.db.try_get(key) {
                 Ok(obj) => callback(&(*obj)),
                 Err(TryGetError::InvalidKey) => Err(DBError::NotFound),
                 Err(TryGetError::WouldBlock) => Err(DBError::TimedOut)
             }
         };
-        let now = std::time::SystemTime::now();
-        loop {
-            match try_get() {
-                Ok(()) => {
-                    return Ok(());
-                }
-                Err(DBError::TimedOut) => (),
-                Err(e) => {
-                    return Err(e);
-                }
-            }
-            if let Ok(elapsed) = now.elapsed() {
-                if elapsed.as_millis() > TIMEOUT {
-                    return Err(DBError::TimedOut);
-                }
-            }
-        }
+        run_timeout(try_get)
     }
 
     pub fn iterate_all(&self, callback: &mut FnMut(&DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
@@ -78,30 +84,14 @@ impl FileDatabase {
         if *key == RefID::nil() {
             return Err(DBError::NotFound);
         }
-        let mut try_get = || {
+        let try_get = || {
             match self.db.try_get_mut(key) {
                 Ok(mut obj) => callback(&mut (*obj)),
                 Err(TryGetError::InvalidKey) => Err(DBError::NotFound),
                 Err(TryGetError::WouldBlock) => Err(DBError::TimedOut)
             }
         };
-        let now = std::time::SystemTime::now();
-        loop {
-            match try_get() {
-                Ok(()) => {
-                    return Ok(());
-                }
-                Err(DBError::TimedOut) => (),
-                Err(e) => {
-                    return Err(e);
-                }
-            }
-            if let Ok(elapsed) = now.elapsed() {
-                if elapsed.as_millis() > TIMEOUT {
-                    return Err(DBError::TimedOut);
-                }
-            }
-        }
+        run_timeout(try_get)
     }
 
     pub fn duplicate(&self, key: &RefID) -> Result<DataObject, DBError> {

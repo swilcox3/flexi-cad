@@ -27,6 +27,8 @@ export class Renderer {
         this._scene = scene;
         // This creates and positions a free camera (non-mesh)
         const camera = new BABYLON.ArcRotateCamera("camera1", -Math.PI / 2, 1.0, 110, BABYLON.Vector3.Zero(), scene);
+        camera.panningSensibility = 50;
+        camera.panningInertia = .7;
         // This attaches the camera to the canvas
         camera.attachControl(canvas, true);
         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
@@ -41,10 +43,6 @@ export class Renderer {
         ground.material = groundMaterial;
 
         gui.guiInstance.init();
-
-        var onPointerDown = (evt: MouseEvent) => {
-            mouse.onPointerDown(this._scene, evt, ground)
-        }
 
         var onPointerClick = (evt: MouseEvent) => {
             mouse.onPointerClick(this._scene, evt, ground)
@@ -68,7 +66,6 @@ export class Renderer {
         this._scene.onPointerObservable.add((pointerInfo) => {
             switch(pointerInfo.type) {
                 case BABYLON.PointerEventTypes.POINTERDOWN:
-                    onPointerDown(pointerInfo.event)
                     break;
                 case BABYLON.PointerEventTypes.POINTERUP:
                     break;
@@ -114,14 +111,11 @@ export class Renderer {
                 var pointerDragBehavior = new BABYLON.PointerDragBehavior({dragPlaneNormal: new BABYLON.Vector3(0,1,0)});
                 pointerDragBehavior.useObjectOrienationForDragging = false;
                 var uiSingleton = new uiController().getInstance();
-                pointerDragBehavior.onDragStartObservable.add((ev)=>{
-                    uiSingleton.selectObj(mesh)
-                })
                 pointerDragBehavior.onDragObservable.add((ev)=>{
-                    uiSingleton.moveSelected(ev);
+                    uiSingleton.objDrag(ev, mesh)
                 })
                 pointerDragBehavior.onDragEndObservable.add((ev)=>{
-                    uiSingleton.endMoveSelected(ev);
+                    uiSingleton.objDragEnd(ev)
                 })
                 pointerDragBehavior.moveAttached = false
                 mesh.addBehavior(pointerDragBehavior)

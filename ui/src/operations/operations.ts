@@ -28,7 +28,6 @@ export function openFile(in_file:string, canvas:HTMLCanvasElement)
         existing.stop()
         renderers.delete(filename)
     }
-    console.log(in_file)
     filename = in_file;
     kernel.open_file(filename)
     renderers.set(filename, initRenderer(canvas))
@@ -48,16 +47,6 @@ export function saveAsFile(in_file:string)
     renderers.delete(filename)
     filename = in_file
     renderers.set(filename, renderer)
-}
-
-export function getCurrentFile()
-{
-    return filename;
-}
-
-export function setCurrentFile(in_file:string)
-{
-    filename = in_file;
 }
 
 export function beginUndoEvent(desc: string)

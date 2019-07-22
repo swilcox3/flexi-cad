@@ -3,7 +3,6 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Babylon JS Electron App</title>
     <style>
         html,
         body {
@@ -26,19 +25,18 @@
     <canvas id="render-canvas"></canvas>
     <script>
         var ops = require('./app/operations/operations')
-        ops.initFile(document.getElementById('render-canvas'))
         var {ipcRenderer} = require('electron');
+        ipcRenderer.on('newFile', function(event) {
+            ops.initFile(document.getElementById('render-canvas'))
+        })
         ipcRenderer.on('openFile', function(event, path) {
-            ops.openFile(path[0], document.getElementById('render-canvas'))
+            ops.openFile(path, document.getElementById('render-canvas'))
         });
         ipcRenderer.on('saveFile', function(event) {
             ops.saveFile()
         });
         ipcRenderer.on('saveAsFile', function(event, path) {
             ops.saveAsFile(path)
-        });
-        ipcRenderer.on('getCurrentFile', function(event) {
-            ipcRenderer.send(ops.getCurrentFile())
         });
 
         var keys = require('./app/ui/key_events')
