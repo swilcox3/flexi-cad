@@ -31,7 +31,7 @@ impl OperationManager {
             updates: sender,
         };
         ops.data.iterate_all(&mut |obj: &DataObject| {
-            if let Some(dep_obj) = obj.query_ref::<Update>() {
+            if let Some(dep_obj) = obj.query_ref::<Refer>() {
                 dep_obj.init(&ops.deps);
             }
             let msg = obj.update()?;
@@ -93,7 +93,6 @@ impl OperationManager {
     }
 
     fn update_set(&self, set: &HashSet<RefID>) -> Result<(), DBError> {
-        //println!("{:?}", set);
         for obj_id in set {
             if let Err(e) = self.data.get_mut_obj_no_undo(&obj_id, &mut |obj: &mut DataObject| {
                 self.updates.send(obj.update()?).unwrap();
@@ -108,18 +107,71 @@ impl OperationManager {
         Ok(())
     }
 
+    fn get_ref_point(&self, refer_opt: &Option<Reference>) -> Option<Point3f> {
+        match refer_opt {
+            Some(refer) => {
+                let mut pt = None;
+                match self.get_obj(&refer.id, |obj| {
+                    match obj.query_ref::<UpdateFromPoint>() {
+                        Some(update_from) => {
+                            if let Some(ref_pt) = update_from.get_point(refer.which_pt) {
+                                pt = Some(ref_pt.clone());
+                            }
+                            Ok(())
+                        }
+                        None => Err(DBError::ObjLacksTrait)
+                    }
+                }) {
+                    Ok(()) => pt,
+                    Err(_) => None,
+                }
+            }
+            None => None,
+        }
+    }
+
+    fn update_from_points(&self, obj_id: &RefID) -> Result<UpdateMsg, DBError> {
+        let mut refs = Vec::new();
+        self.get_obj(obj_id, &mut |obj: &DataObject| {
+            match obj.query_ref::<UpdateFromPoint>() {
+                Some(updatable) => {
+                    refs = updatable.get_refs();
+                    Ok(())
+                }
+                None => Err(DBError::ObjLacksTrait)
+            }
+        })?;
+        let mut pts = Vec::new();
+        for refer in refs {
+            pts.push(self.get_ref_point(&refer));
+        }
+        let mut msg = UpdateMsg::Empty;
+        self.data.get_mut_obj_no_undo(obj_id, |obj| {
+            match obj.query_mut::<UpdateFromPoint>() {
+                Some(updatable) => {
+                    msg = updatable.update_from_points(&pts)?;
+                    Ok(())
+                }
+                None => Err(DBError::ObjLacksTrait)
+            }
+        })?;
+        Ok(msg)
+    }
+
     fn update_set_from_refs(&self, deps: &HashSet<RefID>) -> Result<(), DBError> {
         for dep_id in deps {
-            println!("Getting dep: {:?}", dep_id);
-            if let Err(e) = self.data.get_mut_obj_no_undo(&dep_id, &mut |dep_obj: &mut DataObject| {
-                if let Some(to_update) = dep_obj.query_mut::<Update>() {
-                    self.updates.send(to_update.update_from_refs(self)?).unwrap();
+            match self.update_from_points(&dep_id) {
+                Ok(msg) => {
+                    self.updates.send(msg).unwrap();
                 }
-                Ok(())
-            }) {
-                match e {
-                    DBError::NotFound => self.updates.send(UpdateMsg::Delete{key: *dep_id}).unwrap(),
-                    _ => return Err(e)
+                Err(DBError::NotFound) => {
+                    self.updates.send(UpdateMsg::Delete{key: dep_id.clone()}).unwrap();
+                }
+                Err(DBError::ObjLacksTrait) => {
+                    //Check other update traits
+                }
+                Err(e) => {
+                    return Err(e);
                 }
             }
         }
@@ -149,7 +201,7 @@ impl OperationManager {
         if let Some(movable) = copy.query_mut::<Position>() {
             movable.move_obj(delta);
         }
-        if let Some(updatable) = copy.query_mut::<Update>() {
+        if let Some(updatable) = copy.query_mut::<Refer>() {
             updatable.clear_refs();
         }
         let copy_id = copy.get_id().clone();
@@ -163,11 +215,9 @@ impl OperationManager {
         self.deps.debug_state(output);
         output.push_str(&"\n");
     }
-}
 
-impl ObjStore for OperationManager {
-    fn add_object(&self, event: &UndoEventID, obj: DataObject) -> Result<(), DBError> {
-        if let Some(dep_obj) = obj.query_ref::<Update>() {
+    pub fn add_object(&self, event: &UndoEventID, obj: DataObject) -> Result<(), DBError> {
+        if let Some(dep_obj) = obj.query_ref::<Refer>() {
             dep_obj.init(&self.deps);
         }
         let msg = obj.update()?;
@@ -176,7 +226,7 @@ impl ObjStore for OperationManager {
         Ok(())
     }
 
-    fn delete_obj(&self, event: &UndoEventID, id: &RefID) -> Result<DataObject, DBError> {
+    pub fn delete_obj(&self, event: &UndoEventID, id: &RefID) -> Result<DataObject, DBError> {
         let obj = self.data.delete_obj(event, id)?;
         self.updates.send(UpdateMsg::Delete{key: *id}).unwrap();
         self.update_deps(id)?;
@@ -184,15 +234,15 @@ impl ObjStore for OperationManager {
         Ok(obj)
     }
 
-    fn modify_obj(&self, event: &UndoEventID, id: &RefID, callback: &mut FnMut(&mut DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
-        self.data.get_mut_obj(event, id, &mut |mut obj| {
+    pub fn modify_obj(&self, event: &UndoEventID, id: &RefID, mut callback: impl FnMut(&mut DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
+        self.data.get_mut_obj(event, id, |mut obj| {
             callback(&mut obj)?;
             self.updates.send(obj.update()?).unwrap();
             Ok(())
         })
     }
 
-    fn get_obj(&self, id: &RefID, callback: &mut FnMut(&DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
+    pub fn get_obj(&self, id: &RefID, callback: impl FnMut(&DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
         self.data.get_obj(id, callback)
     }
 }

@@ -33,19 +33,19 @@ fn test_dep_update() {
             Ok(())
         }).unwrap();
         ops.end_undo_event(event).unwrap();
-        ops.get_obj(&id_1, &mut |read_1: &DataObject| {
-            let point_ref = read_1.query_ref::<RefPoint>().unwrap();
+        ops.get_obj(&id_1, |read_1| {
+            let point_ref = read_1.query_ref::<UpdateFromPoint>().unwrap();
             assert_eq!(point_ref.get_point(0), Some(&Point3f::new(3.0, 3.0, 3.0)));
             Ok(())
         }).unwrap();
-        ops.get_obj(&id_2, &mut |read_2: &DataObject| {
-            let point_ref = read_2.query_ref::<RefPoint>().unwrap();
+        ops.get_obj(&id_2, |read_2| {
+            let point_ref = read_2.query_ref::<UpdateFromPoint>().unwrap();
             assert_eq!(point_ref.get_point(0), Some(&Point3f::new(2.0, 1.0, 0.0)));
             Ok(())
         }).unwrap();
         ops.update_deps(&id_1).unwrap();
-        ops.get_obj(&id_2, &mut |read_2: &DataObject| {
-            let point_ref = read_2.query_ref::<RefPoint>().unwrap();
+        ops.get_obj(&id_2, |read_2| {
+            let point_ref = read_2.query_ref::<UpdateFromPoint>().unwrap();
             assert_eq!(point_ref.get_point(0), Some(&Point3f::new(3.0, 3.0, 3.0)));
             Ok(())
         }).unwrap();
@@ -76,13 +76,13 @@ fn test_dep_undo() {
         ops.end_undo_event(event).unwrap();
         ops.update_deps(&id_1).unwrap();
         ops.undo_latest(&USER).unwrap();
-        ops.get_obj(&id_1, &mut |read_1: &DataObject| {
-            let point_ref = read_1.query_ref::<RefPoint>().unwrap();
+        ops.get_obj(&id_1, |read_1| {
+            let point_ref = read_1.query_ref::<UpdateFromPoint>().unwrap();
             assert_eq!(point_ref.get_point(0), Some(&Point3f::new(0.0, 1.0, 2.0)));
             Ok(())
         }).unwrap();
-        ops.get_obj(&id_2, &mut |read_2: &DataObject| {
-            let point_ref = read_2.query_ref::<RefPoint>().unwrap();
+        ops.get_obj(&id_2, |read_2| {
+            let point_ref = read_2.query_ref::<UpdateFromPoint>().unwrap();
             assert_eq!(point_ref.get_point(0), Some(&Point3f::new(0.0, 1.0, 2.0)));
             Ok(())
         }).unwrap();
@@ -109,13 +109,13 @@ fn test_dep_redo() {
         assert_eq!(ops.get_obj(&id_1, &mut |_: &DataObject| {Ok(())}), Err(DBError::NotFound));
         assert_eq!(ops.get_obj(&id_2, &mut |_: &DataObject| {Ok(())}), Err(DBError::NotFound));
         ops.redo_latest(&USER).unwrap();
-        ops.get_obj(&id_1, &mut |read_1: &DataObject| {
-            let point_ref = read_1.query_ref::<RefPoint>().unwrap();
+        ops.get_obj(&id_1, |read_1| {
+            let point_ref = read_1.query_ref::<UpdateFromPoint>().unwrap();
             assert_eq!(point_ref.get_point(0), Some(&Point3f::new(0.0, 1.0, 2.0)));
             Ok(())
         }).unwrap();
-        ops.get_obj(&id_2, &mut |read_1: &DataObject| {
-            let point_ref = read_1.query_ref::<RefPoint>().unwrap();
+        ops.get_obj(&id_2, |read_1| {
+            let point_ref = read_1.query_ref::<UpdateFromPoint>().unwrap();
             assert_eq!(point_ref.get_point(0), Some(&Point3f::new(0.0, 1.0, 2.0)));
             Ok(())
         }).unwrap();
@@ -169,15 +169,12 @@ fn test_copy() {
                 "y": 2.0,
                 "z": 3.0,
             },
-            "refer": {
-                "id": RefID::nil(),
-                "which_pt": 0,
-            }
+            "refer": serde_json::Value::Null,
         });
         rcv.recv().unwrap();
         assert_eq!(rcv.recv().unwrap(), UpdateMsg::Other{data: json_1});
-        ops.get_obj(&copy_id, &mut |copy: &DataObject| {
-            let point_ref = copy.query_ref::<RefPoint>().unwrap();
+        ops.get_obj(&copy_id, |copy| {
+            let point_ref = copy.query_ref::<UpdateFromPoint>().unwrap();
             assert_eq!(point_ref.get_point(0), Some(&Point3f::new(3.0, 2.0, 3.0)));
             Ok(())
         }).unwrap();

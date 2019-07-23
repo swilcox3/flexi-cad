@@ -40,12 +40,12 @@ fn test_copy_objs() {
         move_obj(file.clone(), event.clone(), orig_to_dups.get(&id_1).unwrap().clone(), Vector3f::new(0.0, 0.0, 1.0)).unwrap();
         empty_receiver(&rcv);
         app_state::get_obj(&file, orig_to_dups.get(&id_1).unwrap(), |obj| {
-            let point_ref = obj.query_ref::<RefPoint>().unwrap();
+            let point_ref = obj.query_ref::<UpdateFromPoint>().unwrap();
             assert_eq!(point_ref.get_point(0), Some(&Point3f::new(2.0, 2.0, 4.0)));
             Ok(())
         }).unwrap();
         app_state::get_obj(&file, orig_to_dups.get(&id_2).unwrap(), |obj| {
-            let point_ref = obj.query_ref::<RefPoint>().unwrap();
+            let point_ref = obj.query_ref::<UpdateFromPoint>().unwrap();
             assert_eq!(point_ref.get_point(0), Some(&Point3f::new(2.0, 2.0, 4.0)));
             Ok(())
         }).unwrap();

@@ -12,10 +12,10 @@ pub struct TestObj {
     id: RefID,
     data: String,
     point: Point3f,
-    refer: Reference,
+    refer: Option<Reference>,
 }
 
-interfaces!(TestObj: Store, query_interface::ObjectClone, std::fmt::Debug, Data, RefPoint, Update, Position);
+interfaces!(TestObj: Store, query_interface::ObjectClone, std::fmt::Debug, Data, UpdateFromPoint, Refer, Position);
 
 impl TestObj {
     pub fn new(dat: &str) -> TestObj {
@@ -23,7 +23,7 @@ impl TestObj {
             id: RefID::new_v4(), 
             data: String::from(dat), 
             point: Point3f::new(0.0, 0.0, 0.0),
-            refer: Reference::nil(),
+            refer: None,
         }
     }
 }
@@ -56,32 +56,19 @@ impl Store for TestObj {
     }
 }
 
-impl Update for TestObj {
+impl Refer for TestObj {
     fn init(&self, deps: &DepStore) {
-        deps.register_sub(&self.refer.id, self.id.clone());
+        if let Some(refer) = &self.refer {
+            deps.register_sub(&refer.id, self.id.clone());
+        }
     }
 
     fn clear_refs(&mut self) {
-        self.refer = Reference::nil();
-    }
-
-    fn get_refs(&self) -> Vec<RefID> {
-        let mut results = Vec::new();
-        if self.refer != Reference::nil() {
-            results.push(self.refer.id.clone());
-        }
-        results
-    }
-
-    fn update_from_refs(&mut self, ops: &ObjStore) -> Result<UpdateMsg, DBError> {
-        if let Ok(pt) = ops.get_ref_point(&mut self.refer) {
-            self.point = pt;
-        }
-        self.update()
+        self.refer = None;
     }
 }
 
-impl RefPoint for TestObj {
+impl UpdateFromPoint for TestObj {
     fn get_point(&self, which: u64) -> Option<&Point3f> {
         match which {
             0 => Some(&self.point),
@@ -89,25 +76,29 @@ impl RefPoint for TestObj {
         }
     }
 
-    fn get_num_refs(&self) -> u64 {
-        1
-    }
-
-    fn get_reference(&self, which: u64) -> Option<&Reference> {
-        match which {
-            0 => Some(&self.refer),
-            _ => None
-        }
+    fn get_refs(&self) -> Vec<Option<Reference>> {
+        let mut results = Vec::new();
+        results.push(self.refer.clone());
+        results
     }
 
     fn set_point(&mut self, which_self: u64, pt: Point3f, other_ref: Reference) {
         match which_self {
             0 => {
                 self.point = pt;
-                self.refer = other_ref;
+                self.refer = Some(other_ref);
             }
             _ => ()
         }
+    }
+
+    fn update_from_points(&mut self, pts: &Vec<Option<Point3f>>) -> Result<UpdateMsg, DBError> {
+        if let Some(refer) = pts.get(0) {
+            if let Some(pt) = refer {
+                self.point = *pt;
+            }
+        }
+        self.update()
     }
 }
 

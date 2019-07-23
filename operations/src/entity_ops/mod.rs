@@ -67,10 +67,10 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>, delta: 
     for id in ids {
         let mut refs_to_set = Vec::new();
         app_state::get_obj(&file, &id, |obj| {
-            if let Some(has_ref) = obj.query_ref::<RefPoint>() {
-                let num_refs = has_ref.get_num_refs();
-                for i in 0..num_refs {
-                    if let Some(this_ref) = has_ref.get_reference(i) {
+            if let Some(has_ref) = obj.query_ref::<UpdateFromPoint>() {
+                let mut i = 0;
+                for this_ref in has_ref.get_refs() {
+                    if let Some(this_ref) = this_ref {
                         if let Some(ref_copy) = orig_to_copy.get(&this_ref.id) {
                             if let Some(pt) = has_ref.get_point(i) {
                                 let shifted = pt + delta;
@@ -78,6 +78,7 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>, delta: 
                             }
                         }
                     }
+                    i = i + 1;
                 }
             }
             Ok(())
@@ -85,7 +86,7 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>, delta: 
         if refs_to_set.len() > 0 {
             if let Some(copy_id) = orig_to_copy.get(&id) {
                 app_state::modify_obj(&file, &event, copy_id, |obj| {
-                    if let Some(has_ref) = obj.query_mut::<RefPoint>() {
+                    if let Some(has_ref) = obj.query_mut::<UpdateFromPoint>() {
                         for (which, pt, ref_to_set) in &refs_to_set {
                             app_state::add_dep(&file, &ref_to_set.id, copy_id.clone())?;
                             has_ref.set_point(*which, *pt, ref_to_set.clone());
@@ -105,7 +106,7 @@ pub fn join_at_point(file: PathBuf, event: UndoEventID, id_1: RefID, id_2: RefID
     let mut which_1 = 0;
     let mut which_2 = 0;
     app_state::get_obj(&file, &id_1, |first| {
-        match first.query_ref::<RefPoint>() {
+        match first.query_ref::<UpdateFromPoint>() {
             Some(joinable) => {
                 let dist_0 = joinable.get_point(0).unwrap().distance2(pt);
                 let dist_1 = joinable.get_point(1).unwrap().distance2(pt);
@@ -123,7 +124,7 @@ pub fn join_at_point(file: PathBuf, event: UndoEventID, id_1: RefID, id_2: RefID
         }
     })?;
     app_state::get_obj(&file, &id_2, |second| {
-        match second.query_ref::<RefPoint>() {
+        match second.query_ref::<UpdateFromPoint>() {
             Some(joinable) => {
                 let dist_0 = joinable.get_point(0).unwrap().distance2(pt);
                 let dist_1 = joinable.get_point(1).unwrap().distance2(pt);
@@ -139,7 +140,7 @@ pub fn join_at_point(file: PathBuf, event: UndoEventID, id_1: RefID, id_2: RefID
         }
     })?;
     app_state::modify_obj(&file, &event, &id_1, |first| {
-        match first.query_mut::<RefPoint>() {
+        match first.query_mut::<UpdateFromPoint>() {
             Some(joinable) => {
                 joinable.set_point(which_1, pt.clone(), Reference{id: id_2.clone(), which_pt: which_2});
                 Ok(())
@@ -148,7 +149,7 @@ pub fn join_at_point(file: PathBuf, event: UndoEventID, id_1: RefID, id_2: RefID
         }
     })?;
     app_state::modify_obj(&file, &event, &id_2, |second| {
-        match second.query_mut::<RefPoint>() {
+        match second.query_mut::<UpdateFromPoint>() {
             Some(joinable) => {
                 joinable.set_point(which_2, pt.clone(), Reference{id: id_1.clone(), which_pt: which_1});
                 Ok(())

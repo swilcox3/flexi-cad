@@ -32,6 +32,7 @@ pub fn error_other<T: std::fmt::Debug>(err: T) -> DBError {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum UpdateMsg {
+    Empty,
     Delete{key: RefID},
     Mesh{data: MeshData},
     Other{data: serde_json::Value}
@@ -58,43 +59,16 @@ pub trait DepStore {
     fn delete_obj(&self, publisher: &RefID);
 }
 
-pub trait ObjStore {
-    fn get_obj(&self, id: &RefID, callback: &mut FnMut(&DataObject) -> Result<(), DBError>) -> Result<(), DBError>;
-    fn modify_obj(&self, event: &UndoEventID, id: &RefID, callback: &mut FnMut(&mut DataObject) -> Result<(), DBError>) -> Result<(), DBError>;
-    fn delete_obj(&self, event: &UndoEventID, id: &RefID) -> Result<DataObject, DBError>;
-    fn add_object(&self, event: &UndoEventID, obj: DataObject) -> Result<(), DBError>;
-    fn get_ref_point(&self, refer: &mut Reference) -> Result<Point3f, DBError> {
-        let mut result = Point3f::new(0.0, 0.0, 0.0);
-        if let Err(e) = self.get_obj(&refer.id, &mut |obj: &DataObject| {
-            match obj.query_ref::<RefPoint>() {
-                Some(ref_obj) => {
-                    match ref_obj.get_point(refer.which_pt) {
-                        Some(pt) => {
-                            result = pt.clone();
-                            Ok(())
-                        }
-                        None => {
-                            Err(DBError::NotFound)
-                        }
-                    }
-                }
-                None => Err(DBError::ObjLacksTrait)
-            }
-        }) {
-            if e == DBError::NotFound {
-                refer.id = RefID::nil();
-            }
-            return Err(e);
-        }
-        Ok(result)
-    }
-}
-
-pub trait Update : Data {
+pub trait Refer : Data {
     fn init(&self, deps: &DepStore);
     fn clear_refs(&mut self);
-    fn get_refs(&self) -> Vec<RefID>;
-    fn update_from_refs(&mut self, objs: &ObjStore) -> Result<UpdateMsg, DBError>;
+}
+
+pub trait UpdateFromPoint {
+    fn get_refs(&self) -> Vec<Option<Reference>>;
+    fn set_point(&mut self, which_self: u64, pt: Point3f, ref_other: Reference);
+    fn get_point(&self, which: u64) -> Option<&Point3f>;
+    fn update_from_points(&mut self, pts: &Vec<Option<Point3f>>) -> Result<UpdateMsg, DBError>;
 }
 
 #[cfg(test)]

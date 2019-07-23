@@ -5,9 +5,21 @@ use super::{DBError, DataObject};
 use std::io::{Read, Write};
 use std::time::Duration;
 
+fn print_stacktrace() {
+    backtrace::trace(|frame| {
+        backtrace::resolve_frame(frame, |symbol| {
+            if let Some(name) = symbol.name() {
+                println!("{:?}", name);
+            }
+        });
+
+        true // keep going to the next frame
+    });
+}
+
 fn run_timeout(mut callback: impl FnMut() -> Result<(), DBError>) -> Result<(), DBError> {
     let now = std::time::SystemTime::now();
-    let timeout = 10000;
+    let timeout = 5000;
     let wait = Duration::from_millis(10);
     loop {
         match callback() {
@@ -50,7 +62,7 @@ impl FileDatabase {
         }
     }
 
-    pub fn get(&self, key: &RefID, callback: &mut FnMut(&DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
+    pub fn get(&self, key: &RefID, mut callback: impl FnMut(&DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
         if *key == RefID::nil() {
             return Err(DBError::NotFound);
         }
@@ -59,7 +71,6 @@ impl FileDatabase {
                 Ok(obj) => callback(&(*obj)),
                 Err(TryGetError::InvalidKey) => Err(DBError::NotFound),
                 Err(TryGetError::WouldBlock) => {
-                    println!("Key blocked: {:?}", key);
                     Err(DBError::TimedOut)
                 }
             }
@@ -67,7 +78,7 @@ impl FileDatabase {
         run_timeout(try_get)
     }
 
-    pub fn iterate_all(&self, callback: &mut FnMut(&DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
+    pub fn iterate_all(&self, mut callback: impl FnMut(&DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
         for chunk in self.db.chunks() {
             for (_, val) in chunk.iter() {
                 callback(val)?;
@@ -83,7 +94,7 @@ impl FileDatabase {
         }
     }
 
-    pub fn get_mut(&self, key: &RefID, callback: &mut FnMut(&mut DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
+    pub fn get_mut(&self, key: &RefID, mut callback: impl FnMut(&mut DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
         if *key == RefID::nil() {
             return Err(DBError::NotFound);
         }
@@ -221,7 +232,7 @@ mod tests {
         let removed = db.remove(&id).unwrap();
         let data = removed.query_ref::<Store>().unwrap().get_store_data();
         assert_eq!(String::from("some data"), data);
-        assert!(db.get(&id, &mut|_| {Ok(())}).is_err());
+        assert!(db.get(&id, |_| {Ok(())}).is_err());
     }
 
     #[test]

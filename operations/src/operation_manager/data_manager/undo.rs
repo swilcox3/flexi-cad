@@ -241,7 +241,7 @@ impl PendingEvents {
         }
     }
 
-    pub fn get_mut_obj(&self, db: &FileDatabase, event_id: &UndoEventID, key: &RefID, callback: &mut FnMut(&mut DataObject)->Result<(), DBError>) -> Result<(), DBError> {
+    pub fn get_mut_obj(&self, db: &FileDatabase, event_id: &UndoEventID, key: &RefID, callback: impl FnMut(&mut DataObject)->Result<(), DBError>) -> Result<(), DBError> {
         match self.events.get_mut(&event_id) {
             Some(mut event) => {
                 db.get(key, &mut |obj: &DataObject| {

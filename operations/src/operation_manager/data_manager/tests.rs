@@ -14,7 +14,7 @@ fn test_add() {
     let obj = Box::new(TestObj::new("some data"));
     let id = obj.get_id().clone();
     DB.add_obj(&event, obj).unwrap();
-    DB.get_obj(&id, &mut|read: &DataObject| {
+    DB.get_obj(&id, |read| {
         let data = read.query_ref::<Store>().unwrap().get_store_data();
         assert_eq!(String::from("some data"), data);
         DB.end_undo_event(event).unwrap();
@@ -31,7 +31,7 @@ fn test_delete() {
     DB.add_obj(&event, obj).unwrap();
     DB.delete_obj(&event, &id).unwrap();
     DB.end_undo_event(event).unwrap();
-    assert!(DB.get_obj(&id, &mut|_|{Ok(())}).is_err());
+    assert!(DB.get_obj(&id, |_|{Ok(())}).is_err());
 }
 
 #[test]
@@ -41,11 +41,11 @@ fn test_modify() {
     let obj = Box::new(TestObj::new("some data"));
     let id = obj.get_id().clone();
     DB.add_obj(&event, obj).unwrap();
-    DB.get_mut_obj(&event, &id, &mut|write: &mut DataObject| {
+    DB.get_mut_obj(&event, &id, |write| {
         write.query_mut::<Store>().unwrap().set_store_data(String::from("new data"));
         Ok(())
     }).unwrap();
-    DB.get_obj(&id, &mut|read:&DataObject| {
+    DB.get_obj(&id, |read| {
         let data = read.query_ref::<Store>().unwrap().get_store_data();
         assert_eq!(String::from("new data"), data);
         DB.end_undo_event(event).unwrap();
@@ -62,7 +62,7 @@ fn test_add_undo() {
     DB.add_obj(&event, obj).unwrap();
     DB.end_undo_event(event).unwrap();
     DB.undo_latest(&user).unwrap();
-    assert!(DB.get_obj(&id, &mut|_|{Ok(())}).is_err());
+    assert!(DB.get_obj(&id, |_|{Ok(())}).is_err());
 }
 
 #[test]
@@ -77,7 +77,7 @@ fn test_delete_undo() {
     DB.delete_obj(&event2, &id).unwrap();
     DB.end_undo_event(event2).unwrap();
     DB.undo_latest(&user).unwrap();
-    DB.get_obj(&id, &mut |read:&DataObject| {
+    DB.get_obj(&id, |read| {
         let data = read.query_ref::<Store>().unwrap().get_store_data();
         assert_eq!(String::from("some data"), data);
         Ok(())
@@ -93,13 +93,13 @@ fn test_modify_undo() {
     DB.add_obj(&event, obj).unwrap();
     DB.end_undo_event(event).unwrap();
     let event_2 = DB.begin_undo_event(&user, String::from("modify obj")).unwrap();
-    DB.get_mut_obj(&event_2, &id, &mut|write:&mut DataObject| {
+    DB.get_mut_obj(&event_2, &id, |write| {
         write.query_mut::<Store>().unwrap().set_store_data(String::from("new data"));
         Ok(())
     }).unwrap();
     DB.end_undo_event(event_2).unwrap();
     DB.undo_latest(&user).unwrap();
-    DB.get_obj(&id, &mut|read:&DataObject| {
+    DB.get_obj(&id, |read| {
         let data = read.query_ref::<Store>().unwrap().get_store_data();
         assert_eq!(String::from("some data"), data);
         Ok(())
@@ -115,14 +115,14 @@ fn test_modify_redo() {
     DB.add_obj(&event, obj).unwrap();
     DB.end_undo_event(event).unwrap();
     let event_2 = DB.begin_undo_event(&user, String::from("modify obj")).unwrap();
-    DB.get_mut_obj(&event_2, &id, &mut|write: &mut DataObject| {
+    DB.get_mut_obj(&event_2, &id, |write| {
         write.query_mut::<Store>().unwrap().set_store_data(String::from("new data"));
         Ok(())
     }).unwrap();
     DB.end_undo_event(event_2).unwrap();
     DB.undo_latest(&user).unwrap();
     DB.redo_latest(&user).unwrap();
-    DB.get_obj(&id, &mut|read:&DataObject| {
+    DB.get_obj(&id, |read| {
         let data = read.query_ref::<Store>().unwrap().get_store_data();
         assert_eq!(String::from("new data"), data);
         Ok(())
@@ -141,7 +141,7 @@ fn test_contest() {
     let a_clone = a_id.clone();
     let a_clone_2 = a_id.clone();
     let t_1 = std::thread::spawn(move || {
-        DB.get_obj(&a_id, &mut|_| {
+        DB.get_obj(&a_id, |_| {
             std::thread::sleep(std::time::Duration::from_millis(1000));
             Ok(())
         }).unwrap();
@@ -149,7 +149,7 @@ fn test_contest() {
     let t_2 = std::thread::spawn(move || {
         let user_2 = RefID::new_v4();
         let event_2 = DB.begin_undo_event(&user_2, String::from("Op 2")).unwrap();
-        DB.get_mut_obj(&event_2, &a_clone, &mut|_| {
+        DB.get_mut_obj(&event_2, &a_clone, |_| {
             std::thread::sleep(std::time::Duration::from_millis(1000));
             Ok(())
         }).unwrap();
@@ -158,7 +158,7 @@ fn test_contest() {
     let t_3 = std::thread::spawn(move || {
         let user_3 = RefID::new_v4();
         let event_3 = DB.begin_undo_event(&user_3, String::from("Op 3")).unwrap();
-        DB.get_mut_obj(&event_3, &a_clone_2, &mut|_| {
+        DB.get_mut_obj(&event_3, &a_clone_2, |_| {
             std::thread::sleep(std::time::Duration::from_millis(1000));
             Ok(())
         }).unwrap();
