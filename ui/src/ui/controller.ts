@@ -243,12 +243,12 @@ class UIController
         if(this.activeTool == null)
         {
             const event = ops.beginUndoEvent("copy objs");
-            var copyIds = ops.copyObjs(event, this.clipboard, new math.Point3d(20, 0, 0))
+            var copyIdsPromise = ops.copyObjs(event, this.clipboard, new math.Point3d(20, 0, 0))
             ops.endUndoEvent(event);
             this.selection.deselectAll();
-            copyIds.forEach((pair: any) => {
-                ops.addPendingCallback(pair[1], (mesh: BABYLON.Mesh) => {
-                    this.selection.addObject(mesh);
+            copyIdsPromise.then((meshes: Array<BABYLON.Mesh>) => {
+                meshes.forEach((mesh: BABYLON.Mesh) => {
+                    this.selection.addObject(mesh)
                 })
             })
         }

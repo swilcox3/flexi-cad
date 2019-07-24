@@ -31,16 +31,6 @@ export function openFile(in_file:string, canvas:HTMLCanvasElement)
     renderNext(filename)
 }
 
-export function addPendingCallback(id: string, callback: (obj: BABYLON.Mesh) => void) 
-{
-    var arr = pendingCallbacks.get(id)
-    if(!arr) {
-        arr = []
-    }
-    arr.push(callback)
-    pendingCallbacks.set(id, arr)
-}
-
 export function saveFile()
 {
     kernel.save_file(filename)
@@ -125,8 +115,8 @@ function renderNext(filename: string)
                         callbacks.forEach((callback) => {
                             callback(mesh)
                         })
-                        callbacks.length = 0;
                     }
+                    pendingCallbacks.delete(msg.Mesh.data.id)
                 }
                 if(msg.Delete) {
                     renderers.get(filename).deleteMesh(msg.Delete.key)
@@ -137,34 +127,68 @@ function renderNext(filename: string)
     })
 }
 
+function addPendingCallback(id: string, callback: (obj: BABYLON.Mesh) => void) 
+{
+    var arr = pendingCallbacks.get(id)
+    if(!arr) {
+        arr = []
+    }
+    arr.push(callback)
+    pendingCallbacks.set(id, arr)
+}
+
+function waitForUpdate(id: string)
+{
+    return new Promise((resolve: (value: BABYLON.Mesh)=>void, reject) => {
+        addPendingCallback(id, (mesh: BABYLON.Mesh) => {
+            resolve(mesh)
+        })
+    })
+}
+
+function waitForAllUpdates(ids: Array<string>)
+{
+    var promises: Array<Promise<BABYLON.Mesh>> = [];
+    ids.forEach((id) => {
+        promises.push(waitForUpdate(id))
+    })
+    return Promise.all(promises)
+}
+
 export function createWall(event: string, firstPt: math.Point3d, secondPt: math.Point3d, width: number, height: number, id?: string)
 {
     kernel.create_wall(firstPt, secondPt, width, height, filename, event, id)
+    return waitForUpdate(id)
 }
 
 export function joinAtPoint(event: string, id_1: string, id_2: string, pt: math.Point3d) 
 {
     kernel.join_at_point(filename, event, id_1, id_2, pt)
+    return waitForAllUpdates([id_1, id_2])
 }
 
 export function moveObj(event: string, id: string, delta: math.Point3d)
 {
     kernel.move_object(filename, event, id, delta)
+    return waitForUpdate(id)
 }
 
 export function moveObjs(event: string, ids: Array<string>, delta: math.Point3d)
 {
     kernel.move_objects(filename, event, ids, delta)
+    return waitForAllUpdates(ids)
 }
 
 export function setObjectData(event: string, id: string, data:any) 
 {
     kernel.set_object_data(filename, event, id, JSON.stringify(data))
+    return waitForUpdate(id)
 }
 
 export function setObjectsDatas(event: string, data: Array<[string, any]>)
 {
     kernel.set_objects_datas(filename, event, data)
+    return waitForAllUpdates(data.map(val => val[0]))
 }
 
 export function getMeshByID(id: string)
@@ -174,7 +198,8 @@ export function getMeshByID(id: string)
 
 export function copyObjs(event: string, ids:Array<string>, delta: math.Point3d)
 {
-    return kernel.copy_objects(filename, event, ids, delta)
+    var copyIds: Array<[string, string]> = kernel.copy_objects(filename, event, ids, delta);
+    return waitForAllUpdates(copyIds.map(val => val[1]))
 }
 
 export function debugState()
