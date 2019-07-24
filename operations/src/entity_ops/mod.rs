@@ -1,8 +1,6 @@
-mod wall_ops;
 #[cfg(test)]
 mod tests;
 
-pub use wall_ops::*;
 use crate::*;
 use data_model::cgmath::MetricSpace;
 

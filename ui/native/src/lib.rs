@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate neon;
 extern crate operations_kernel;
+extern crate data_model;
 extern crate crossbeam_channel;
 extern crate ccl;
 extern crate serde;
@@ -168,13 +169,10 @@ fn get_temp_wall(mut cx: FunctionContext) -> JsResult<JsValue> {
         }
         None => RefID::new_v4()
     };
-    match operations_kernel::get_temp_wall(id, point_1, point_2, width, height) {
-        Ok(data) => {
-            let val = neon_serde::to_value(&mut cx, &data)?;
-            Ok(val)
-        }
-        Err(e) => panic!("{:?}", e)
-    }
+    let wall = data_model::Wall::new(id, point_1, point_2, width, height);
+    let data = wall.update().unwrap();
+    let val = neon_serde::to_value(&mut cx, &data)?;
+    Ok(val)
 }
 
 fn create_wall(mut cx: FunctionContext) -> JsResult<JsUndefined> {
@@ -193,12 +191,9 @@ fn create_wall(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         }
         None => RefID::new_v4()
     };
-    if let Err(e) = operations_kernel::create_wall(PathBuf::from(path), RefID::from_str(&event).unwrap(), id, point_1, point_2, width, height) {
-        panic!("{:?}", e);
-    }
-    else {
-        Ok(cx.undefined())
-    }
+    let wall = data_model::Wall::new(id, point_1, point_2, width, height);
+    operations_kernel::add_obj(&PathBuf::from(path), &RefID::from_str(&event).unwrap(), Box::new(wall)).unwrap();
+    Ok(cx.undefined())
 }
 
 fn join_at_point(mut cx: FunctionContext) -> JsResult<JsUndefined> {
