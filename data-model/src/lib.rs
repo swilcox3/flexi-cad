@@ -59,16 +59,19 @@ pub trait DepStore {
     fn delete_obj(&self, publisher: &RefID);
 }
 
-pub trait Refer : Data {
+pub trait HasRefs : Data {
     fn init(&self, deps: &DepStore);
     fn clear_refs(&mut self);
 }
 
-pub trait UpdateFromPoint {
+pub trait ReferTo {
+    fn get_result(&self, which: &RefType) -> Option<RefResult>;
+}
+
+pub trait UpdateFromRefs {
     fn get_refs(&self) -> Vec<Option<Reference>>;
-    fn set_point(&mut self, which_self: u64, pt: Point3f, ref_other: Reference);
-    fn get_point(&self, which: u64) -> Option<&Point3f>;
-    fn update_from_points(&mut self, pts: &Vec<Option<Point3f>>) -> Result<UpdateMsg, DBError>;
+    fn set_ref(&mut self, which_self: &RefType, result: &RefResult, other_ref: Reference);
+    fn update_from_refs(&mut self, results: &Vec<Option<RefResult>>) -> Result<UpdateMsg, DBError>;
 }
 
 #[cfg(test)]

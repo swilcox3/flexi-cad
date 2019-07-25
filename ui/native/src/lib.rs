@@ -203,7 +203,10 @@ fn join_at_point(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let id_2 = RefID::from_str(&cx.argument::<JsString>(3)?.value()).unwrap();
     let arg_4 = cx.argument::<JsValue>(4)?;
     let point = neon_serde::from_value(&mut cx, arg_4)?;
-    operations_kernel::join_at_point(PathBuf::from(path), event, id_1, id_2, point).unwrap();
+    let ref_1 = Reference{id: id_1, ref_type: RefType::Point{which_pt: 1}};
+    let ref_2 = Reference{id: id_2, ref_type: RefType::Point{which_pt: 0}};
+    let res = RefResult::Point{pt: point};
+    operations_kernel::join_references(PathBuf::from(path), event, ref_1, ref_2, res).unwrap();
     Ok(cx.undefined())
 }
 
@@ -272,15 +275,13 @@ fn copy_objects(mut cx: FunctionContext) -> JsResult<JsArray> {
     let path = cx.argument::<JsString>(0)?.value();
     let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let arg_2 = cx.argument::<JsArray>(2)?;
-    let arg_3 = cx.argument::<JsValue>(3)?;
-    let delta = neon_serde::from_value(&mut cx, arg_3)?;
     let mut data = std::collections::HashSet::with_capacity(arg_2.len() as usize);
     for i in 0..arg_2.len() {
         let val = arg_2.get(&mut cx, i).unwrap();
         let val_str:Handle<JsString> = val.downcast().unwrap();
         data.insert(RefID::from_str(&val_str.value()).unwrap());
     }
-    let copy_ids = operations_kernel::copy_objs(PathBuf::from(path), event, data, delta).unwrap();
+    let copy_ids = operations_kernel::copy_objs(PathBuf::from(path), event, data).unwrap();
     let js_array = JsArray::new(&mut cx, copy_ids.len() as u32);
     let mut i: u32 = 0;
     for pair in copy_ids {

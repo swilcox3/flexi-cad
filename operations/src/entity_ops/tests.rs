@@ -25,7 +25,7 @@ fn test_copy_objs() {
         first.move_obj(&Vector3f::new(1.0, 2.0, 3.0));
         let mut second = Box::new(TestObj::new("second"));
         let id_2 = second.get_id().clone();
-        second.set_point(0, Point3f::new(1.0, 2.0, 3.0), Reference{id: id_1.clone(), which_pt: 0});
+        second.set_ref(&RefType::Point{which_pt: 0}, &RefResult::Point{pt:Point3f::new(1.0, 2.0, 3.0)}, Reference{id: id_1.clone(), ref_type: RefType::Point{which_pt: 0}});
 
         let event = app_state::begin_undo_event(&file, String::from("add objs")).unwrap();
         app_state::add_obj(&file, &event, first).unwrap();
@@ -35,18 +35,18 @@ fn test_copy_objs() {
         copy_set.insert(id_1);
         copy_set.insert(id_2);
         let event = app_state::begin_undo_event(&file, String::from("copy objs")).unwrap();
-        let orig_to_dups = copy_objs(file.clone(), event.clone(), copy_set, Vector3f::new(1.0, 0.0, 0.0)).unwrap();
+        let orig_to_dups = copy_objs(file.clone(), event.clone(), copy_set).unwrap();
         assert_eq!(orig_to_dups.len(), 2);
         move_obj(file.clone(), event.clone(), orig_to_dups.get(&id_1).unwrap().clone(), Vector3f::new(0.0, 0.0, 1.0)).unwrap();
         empty_receiver(&rcv);
         app_state::get_obj(&file, orig_to_dups.get(&id_1).unwrap(), |obj| {
-            let point_ref = obj.query_ref::<UpdateFromPoint>().unwrap();
-            assert_eq!(point_ref.get_point(0), Some(&Point3f::new(2.0, 2.0, 4.0)));
+            let point_ref = obj.query_ref::<ReferTo>().unwrap();
+            assert_eq!(point_ref.get_result(&RefType::Point{which_pt:0}), Some(RefResult::Point{pt: Point3f::new(1.0, 2.0, 4.0)}));
             Ok(())
         }).unwrap();
         app_state::get_obj(&file, orig_to_dups.get(&id_2).unwrap(), |obj| {
-            let point_ref = obj.query_ref::<UpdateFromPoint>().unwrap();
-            assert_eq!(point_ref.get_point(0), Some(&Point3f::new(2.0, 2.0, 4.0)));
+            let point_ref = obj.query_ref::<ReferTo>().unwrap();
+            assert_eq!(point_ref.get_result(&RefType::Point{which_pt:0}), Some(RefResult::Point{pt: Point3f::new(1.0, 2.0, 4.0)}));
             Ok(())
         }).unwrap();
     });

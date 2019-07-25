@@ -31,7 +31,7 @@ impl OperationManager {
             updates: sender,
         };
         ops.data.iterate_all(&mut |obj: &DataObject| {
-            if let Some(dep_obj) = obj.query_ref::<Refer>() {
+            if let Some(dep_obj) = obj.query_ref::<HasRefs>() {
                 dep_obj.init(&ops.deps);
             }
             let msg = obj.update()?;
@@ -107,22 +107,20 @@ impl OperationManager {
         Ok(())
     }
 
-    fn get_ref_point(&self, refer_opt: &Option<Reference>) -> Option<Point3f> {
+    fn get_ref_result(&self, refer_opt: &Option<Reference>) -> Option<RefResult> {
         match refer_opt {
             Some(refer) => {
-                let mut pt = None;
+                let mut result = None;
                 match self.get_obj(&refer.id, |obj| {
-                    match obj.query_ref::<UpdateFromPoint>() {
+                    match obj.query_ref::<ReferTo>() {
                         Some(update_from) => {
-                            if let Some(ref_pt) = update_from.get_point(refer.which_pt) {
-                                pt = Some(ref_pt.clone());
-                            }
+                            result = update_from.get_result(&refer.ref_type);
                             Ok(())
                         }
                         None => Err(DBError::ObjLacksTrait)
                     }
                 }) {
-                    Ok(()) => pt,
+                    Ok(()) => result,
                     Err(_) => None,
                 }
             }
@@ -130,26 +128,23 @@ impl OperationManager {
         }
     }
 
-    fn update_from_points(&self, obj_id: &RefID) -> Result<UpdateMsg, DBError> {
+    fn update_from_refs(&self, obj_id: &RefID) -> Result<UpdateMsg, DBError> {
         let mut refs = Vec::new();
         self.get_obj(obj_id, &mut |obj: &DataObject| {
-            match obj.query_ref::<UpdateFromPoint>() {
-                Some(updatable) => {
-                    refs = updatable.get_refs();
-                    Ok(())
-                }
-                None => Err(DBError::ObjLacksTrait)
+            if let Some(updatable) = obj.query_ref::<UpdateFromRefs>() {
+                refs = updatable.get_refs();
             }
+            Ok(())
         })?;
-        let mut pts = Vec::new();
+        let mut results = Vec::new();
         for refer in refs {
-            pts.push(self.get_ref_point(&refer));
+            results.push(self.get_ref_result(&refer));
         }
         let mut msg = UpdateMsg::Empty;
         self.data.get_mut_obj_no_undo(obj_id, |obj| {
-            match obj.query_mut::<UpdateFromPoint>() {
+            match obj.query_mut::<UpdateFromRefs>() {
                 Some(updatable) => {
-                    msg = updatable.update_from_points(&pts)?;
+                    msg = updatable.update_from_refs(&results)?;
                     Ok(())
                 }
                 None => Err(DBError::ObjLacksTrait)
@@ -160,7 +155,7 @@ impl OperationManager {
 
     fn update_set_from_refs(&self, deps: &HashSet<RefID>) -> Result<(), DBError> {
         for dep_id in deps {
-            match self.update_from_points(&dep_id) {
+            match self.update_from_refs(&dep_id) {
                 Ok(msg) => {
                     self.updates.send(msg).unwrap();
                 }
@@ -196,12 +191,9 @@ impl OperationManager {
         self.deps.delete_sub(publisher, sub);
     }
 
-    pub fn copy_obj(&self, event: &UndoEventID, id: &RefID, delta: &Vector3f) -> Result<RefID, DBError> {
+    pub fn copy_obj(&self, event: &UndoEventID, id: &RefID) -> Result<RefID, DBError> {
         let mut copy = self.data.duplicate_obj(id)?;
-        if let Some(movable) = copy.query_mut::<Position>() {
-            movable.move_obj(delta);
-        }
-        if let Some(updatable) = copy.query_mut::<Refer>() {
+        if let Some(updatable) = copy.query_mut::<HasRefs>() {
             updatable.clear_refs();
         }
         let copy_id = copy.get_id().clone();
@@ -217,7 +209,7 @@ impl OperationManager {
     }
 
     pub fn add_object(&self, event: &UndoEventID, obj: DataObject) -> Result<(), DBError> {
-        if let Some(dep_obj) = obj.query_ref::<Refer>() {
+        if let Some(dep_obj) = obj.query_ref::<HasRefs>() {
             dep_obj.init(&self.deps);
         }
         let msg = obj.update()?;

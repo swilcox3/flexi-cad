@@ -23,16 +23,39 @@ impl MeshData {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd)]
-pub struct Reference {
-    pub id: RefID,
-    pub which_pt: u64
+pub enum RefType {
+    Point{which_pt: u64},
+    Line{pts: (u64, u64), t: Interp}
 }
 
-impl Reference {
-    pub fn nil() -> Reference {
-        Reference {
-            id: RefID::nil(),
-            which_pt: 0
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd)]
+pub struct Reference {
+    pub id: RefID,
+    pub ref_type: RefType
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum RefResult {
+    Point{pt: Point3f},
+    Line
+}
+
+//A value between 0 and 1
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, PartialOrd)]
+pub struct Interp {
+    val: f64,
+}
+
+impl Interp {
+    pub fn new(mut in_val: f64) -> Interp {
+        if in_val > 1.0 {
+            in_val = 1.0;
+        }
+        if in_val < 0.0 {
+            in_val = 0.0;
+        }
+        Interp {
+            val: in_val,
         }
     }
 }

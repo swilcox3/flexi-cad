@@ -184,9 +184,9 @@ pub fn remove_dep(file: &PathBuf, publisher: &RefID, subscriber: &RefID) -> Resu
     }
 }
 
-pub fn copy_obj(file: &PathBuf, event: &UndoEventID, id: &RefID, delta: &Vector3f) -> Result<RefID, DBError> {
+pub fn copy_obj(file: &PathBuf, event: &UndoEventID, id: &RefID) -> Result<RefID, DBError> {
     match APP_STATE.files.get(file) {
-        Some(ops) => ops.copy_obj(event, id, delta),
+        Some(ops) => ops.copy_obj(event, id),
         None => Err(DBError::NotFound)
     }
 }

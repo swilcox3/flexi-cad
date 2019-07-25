@@ -21,10 +21,10 @@ fn test_dep_update() {
         let mut obj_2 = TestObj::new("other stuff");
         let id_1 = obj_1.get_id().clone();
         let id_2 = obj_2.get_id().clone();
-        let ref_1 = Reference {id: id_1.clone(), which_pt: 0};
-        let ref_2 = Reference {id: id_2.clone(), which_pt: 0};
-        obj_1.set_point(0, Point3f::new(0.0, 1.0, 2.0), ref_2);
-        obj_2.set_point(0, Point3f::new(2.0, 1.0, 0.0), ref_1);
+        let ref_1 = Reference{id: id_1.clone(), ref_type: RefType::Point{which_pt: 0}};
+        let ref_2 = Reference{id: id_2.clone(), ref_type: RefType::Point{which_pt: 0}};
+        obj_1.set_ref(&RefType::Point{which_pt: 0}, &RefResult::Point{pt: Point3f::new(0.0, 1.0, 2.0)}, ref_2);
+        obj_2.set_ref(&RefType::Point{which_pt: 0}, &RefResult::Point{pt: Point3f::new(2.0, 1.0, 0.0)}, ref_1);
         ops.add_object(&event, Box::new(obj_1)).unwrap();
         ops.add_object(&event, Box::new(obj_2)).unwrap();
         ops.modify_obj(&event, &id_1, &mut |write_1: &mut DataObject| {
@@ -34,19 +34,19 @@ fn test_dep_update() {
         }).unwrap();
         ops.end_undo_event(event).unwrap();
         ops.get_obj(&id_1, |read_1| {
-            let point_ref = read_1.query_ref::<UpdateFromPoint>().unwrap();
-            assert_eq!(point_ref.get_point(0), Some(&Point3f::new(3.0, 3.0, 3.0)));
+            let point_ref = read_1.query_ref::<ReferTo>().unwrap();
+            assert_eq!(point_ref.get_result(&RefType::Point{which_pt: 0}), Some(RefResult::Point{pt: Point3f::new(3.0, 3.0, 3.0)}));
             Ok(())
         }).unwrap();
         ops.get_obj(&id_2, |read_2| {
-            let point_ref = read_2.query_ref::<UpdateFromPoint>().unwrap();
-            assert_eq!(point_ref.get_point(0), Some(&Point3f::new(2.0, 1.0, 0.0)));
+            let point_ref = read_2.query_ref::<ReferTo>().unwrap();
+            assert_eq!(point_ref.get_result(&RefType::Point{which_pt: 0}), Some(RefResult::Point{pt: Point3f::new(2.0, 1.0, 0.0)}));
             Ok(())
         }).unwrap();
         ops.update_deps(&id_1).unwrap();
         ops.get_obj(&id_2, |read_2| {
-            let point_ref = read_2.query_ref::<UpdateFromPoint>().unwrap();
-            assert_eq!(point_ref.get_point(0), Some(&Point3f::new(3.0, 3.0, 3.0)));
+            let point_ref = read_2.query_ref::<ReferTo>().unwrap();
+            assert_eq!(point_ref.get_result(&RefType::Point{which_pt: 0}), Some(RefResult::Point{pt: Point3f::new(3.0, 3.0, 3.0)}));
             Ok(())
         }).unwrap();
     });
@@ -60,10 +60,10 @@ fn test_dep_undo() {
         let mut obj_2 = TestObj::new("other stuff");
         let id_1 = obj_1.get_id().clone();
         let id_2 = obj_2.get_id().clone();
-        let ref_1 = Reference {id: id_1.clone(), which_pt: 0};
-        let ref_2 = Reference {id: id_2.clone(), which_pt: 0};
-        obj_1.set_point(0, Point3f::new(0.0, 1.0, 2.0), ref_2);
-        obj_2.set_point(0, Point3f::new(2.0, 1.0, 0.0), ref_1);
+        let ref_1 = Reference{id: id_1.clone(), ref_type: RefType::Point{which_pt: 0}};
+        let ref_2 = Reference{id: id_2.clone(), ref_type: RefType::Point{which_pt: 0}};
+        obj_1.set_ref(&RefType::Point{which_pt: 0}, &RefResult::Point{pt: Point3f::new(0.0, 1.0, 2.0)}, ref_2);
+        obj_2.set_ref(&RefType::Point{which_pt: 0}, &RefResult::Point{pt: Point3f::new(2.0, 1.0, 0.0)}, ref_1);
         ops.add_object(&event, Box::new(obj_1)).unwrap();
         ops.add_object(&event, Box::new(obj_2)).unwrap();
         ops.end_undo_event(event).unwrap();
@@ -77,13 +77,13 @@ fn test_dep_undo() {
         ops.update_deps(&id_1).unwrap();
         ops.undo_latest(&USER).unwrap();
         ops.get_obj(&id_1, |read_1| {
-            let point_ref = read_1.query_ref::<UpdateFromPoint>().unwrap();
-            assert_eq!(point_ref.get_point(0), Some(&Point3f::new(0.0, 1.0, 2.0)));
+            let point_ref = read_1.query_ref::<ReferTo>().unwrap();
+            assert_eq!(point_ref.get_result(&RefType::Point{which_pt: 0}), Some(RefResult::Point{pt: Point3f::new(0.0, 1.0, 2.0)}));
             Ok(())
         }).unwrap();
         ops.get_obj(&id_2, |read_2| {
-            let point_ref = read_2.query_ref::<UpdateFromPoint>().unwrap();
-            assert_eq!(point_ref.get_point(0), Some(&Point3f::new(0.0, 1.0, 2.0)));
+            let point_ref = read_2.query_ref::<ReferTo>().unwrap();
+            assert_eq!(point_ref.get_result(&RefType::Point{which_pt: 0}), Some(RefResult::Point{pt: Point3f::new(0.0, 1.0, 2.0)}));
             Ok(())
         }).unwrap();
     });
@@ -97,10 +97,10 @@ fn test_dep_redo() {
         let mut obj_2 = TestObj::new("other stuff");
         let id_1 = obj_1.get_id().clone();
         let id_2 = obj_2.get_id().clone();
-        let ref_1 = Reference {id: id_1.clone(), which_pt: 0};
-        let ref_2 = Reference {id: id_2.clone(), which_pt: 0};
-        obj_1.set_point(0, Point3f::new(0.0, 1.0, 2.0), ref_2);
-        obj_2.set_point(0, Point3f::new(2.0, 1.0, 0.0), ref_1);
+        let ref_1 = Reference{id: id_1.clone(), ref_type: RefType::Point{which_pt: 0}};
+        let ref_2 = Reference{id: id_2.clone(), ref_type: RefType::Point{which_pt: 0}};
+        obj_1.set_ref(&RefType::Point{which_pt: 0}, &RefResult::Point{pt: Point3f::new(0.0, 1.0, 2.0)}, ref_2);
+        obj_2.set_ref(&RefType::Point{which_pt: 0}, &RefResult::Point{pt: Point3f::new(2.0, 1.0, 0.0)}, ref_1);
         ops.add_object(&event, Box::new(obj_1)).unwrap();
         ops.add_object(&event, Box::new(obj_2)).unwrap();
         ops.end_undo_event(event).unwrap();
@@ -110,13 +110,13 @@ fn test_dep_redo() {
         assert_eq!(ops.get_obj(&id_2, &mut |_: &DataObject| {Ok(())}), Err(DBError::NotFound));
         ops.redo_latest(&USER).unwrap();
         ops.get_obj(&id_1, |read_1| {
-            let point_ref = read_1.query_ref::<UpdateFromPoint>().unwrap();
-            assert_eq!(point_ref.get_point(0), Some(&Point3f::new(0.0, 1.0, 2.0)));
+            let point_ref = read_1.query_ref::<ReferTo>().unwrap();
+            assert_eq!(point_ref.get_result(&RefType::Point{which_pt: 0}), Some(RefResult::Point{pt: Point3f::new(0.0, 1.0, 2.0)}));
             Ok(())
         }).unwrap();
         ops.get_obj(&id_2, |read_1| {
-            let point_ref = read_1.query_ref::<UpdateFromPoint>().unwrap();
-            assert_eq!(point_ref.get_point(0), Some(&Point3f::new(0.0, 1.0, 2.0)));
+            let point_ref = read_1.query_ref::<ReferTo>().unwrap();
+            assert_eq!(point_ref.get_result(&RefType::Point{which_pt: 0}), Some(RefResult::Point{pt: Point3f::new(0.0, 1.0, 2.0)}));
             Ok(())
         }).unwrap();
     });
@@ -129,8 +129,8 @@ fn test_channel() {
         let mut obj_1 = TestObj::new("some stuff");
         let id_1 = obj_1.get_id().clone();
         let id_2 = RefID::new_v4();
-        let ref_2 = Reference {id: id_2.clone(), which_pt: 0};
-        obj_1.set_point(0, Point3f::new(0.0, 1.0, 2.0), ref_2);
+        let ref_2 = Reference{id: id_2.clone(), ref_type: RefType::Point{which_pt: 0}};
+        obj_1.set_ref(&RefType::Point{which_pt: 0}, &RefResult::Point{pt: Point3f::new(0.0, 1.0, 2.0)}, ref_2);
         ops.add_object(&event, Box::new(obj_1)).unwrap();
         let json_1 = json!({
             "data": "some stuff",
@@ -142,7 +142,11 @@ fn test_channel() {
             },
             "refer": {
                 "id": id_2,
-                "which_pt": 0,
+                "ref_type": {
+                    "Point": {
+                        "which_pt": 0
+                    }
+                }
             }
         });
         assert_eq!(rcv.recv().unwrap(), UpdateMsg::Other{data: json_1});
@@ -158,14 +162,14 @@ fn test_copy() {
         let id_1 = obj_1.get_id().clone();
         obj_1.move_obj(&Vector3f::new(1.0, 2.0, 3.0));
         ops.add_object(&event, obj_1).unwrap();
-        let copy_id = ops.copy_obj(&event, &id_1, &Vector3f::new(2.0, 0.0, 0.0)).unwrap();
+        let copy_id = ops.copy_obj(&event, &id_1).unwrap();
         assert!(copy_id != id_1);
         ops.end_undo_event(event).unwrap();
         let json_1 = json!({
             "data": "some stuff",
             "id": copy_id,
             "point": {
-                "x": 3.0,
+                "x": 1.0,
                 "y": 2.0,
                 "z": 3.0,
             },
@@ -174,8 +178,8 @@ fn test_copy() {
         rcv.recv().unwrap();
         assert_eq!(rcv.recv().unwrap(), UpdateMsg::Other{data: json_1});
         ops.get_obj(&copy_id, |copy| {
-            let point_ref = copy.query_ref::<UpdateFromPoint>().unwrap();
-            assert_eq!(point_ref.get_point(0), Some(&Point3f::new(3.0, 2.0, 3.0)));
+            let point_ref = copy.query_ref::<ReferTo>().unwrap();
+            assert_eq!(point_ref.get_result(&RefType::Point{which_pt: 0}), Some(RefResult::Point{pt: Point3f::new(1.0, 2.0, 3.0)}));
             Ok(())
         }).unwrap();
     });

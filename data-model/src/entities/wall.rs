@@ -13,7 +13,7 @@ pub struct Wall {
     id: RefID
 }
 
-interfaces!(Wall: query_interface::ObjectClone, std::fmt::Debug, Data, Refer, Position, UpdateFromPoint);
+interfaces!(Wall: query_interface::ObjectClone, std::fmt::Debug, Data, ReferTo, HasRefs, Position, UpdateFromRefs);
 
 impl Wall {
     pub fn new(id: RefID, first: Point3f, second: Point3f, width: WorldCoord, height: WorldCoord) -> Wall {
@@ -104,15 +104,22 @@ impl Data for Wall {
     }
 }
 
-impl UpdateFromPoint for Wall {
-    fn get_point(&self, which: u64) -> Option<&Point3f> {
+impl ReferTo for Wall {
+    fn get_result(&self, which: &RefType) -> Option<RefResult> {
         match which {
-            0 => Some(&self.first_pt),
-            1 => Some(&self.second_pt),
-            _ => None 
+            RefType::Point{which_pt} => {
+                match which_pt {
+                    0 => Some(RefResult::Point{pt: self.first_pt}),
+                    1 => Some(RefResult::Point{pt: self.second_pt}),
+                    _ => None 
+                }
+            }
+            _ => None
         }
     }
+}
 
+impl UpdateFromRefs for Wall {
     fn get_refs(&self) -> Vec<Option<Reference>> {
         let mut results = Vec::new(); 
         results.push(self.joined_first.clone());
@@ -120,32 +127,45 @@ impl UpdateFromPoint for Wall {
         results
     }
 
-    fn set_point(&mut self, which_self: u64, pt: Point3f, other_ref: Reference) {
+    fn set_ref(&mut self, which_self: &RefType, result: &RefResult, other_ref: Reference) {
         match which_self {
-            0 => {
-                self.first_pt = pt;
-                self.joined_first = Some(other_ref);
-            }
-            1 => {
-                self.second_pt = pt;
-                self.joined_second = Some(other_ref);
+            RefType::Point{which_pt} => {
+                match which_pt {
+                    0 => {
+                        if let RefResult::Point{pt} = result {
+                            self.first_pt = *pt;
+                        }
+                        if let RefType::Point{..} = other_ref.ref_type {
+                            self.joined_first = Some(other_ref);
+                        }
+                    }
+                    1 => {
+                        if let RefResult::Point{pt} = result {
+                            self.second_pt = *pt;
+                        }
+                        if let RefType::Point{..} = other_ref.ref_type {
+                            self.joined_second = Some(other_ref);
+                        }
+                    }
+                    _ => ()
+                }
             }
             _ => ()
         }
     }
 
-    fn update_from_points(&mut self, pts: &Vec<Option<Point3f>>) -> Result<UpdateMsg, DBError> {
+    fn update_from_refs(&mut self, results: &Vec<Option<RefResult>>) -> Result<UpdateMsg, DBError> {
         //std::thread::sleep(std::time::Duration::from_secs(1));
-        if let Some(refer) = pts.get(0) {
-            if let Some(pt) = refer {
+        if let Some(refer) = results.get(0) {
+            if let Some(RefResult::Point{pt}) = refer {
                 self.first_pt = *pt;
             }
             else {
                 self.joined_first = None;
             }
         }
-        if let Some(refer) = pts.get(1) {
-            if let Some(pt) = refer {
+        if let Some(refer) = results.get(1) {
+            if let Some(RefResult::Point{pt}) = refer {
                 self.second_pt = *pt;
             }
             else {
@@ -156,7 +176,7 @@ impl UpdateFromPoint for Wall {
     }
 }
 
-impl Refer for Wall {
+impl HasRefs for Wall {
     fn init(&self, deps: &DepStore) {
         if let Some(refer) = &self.joined_first {
             deps.register_sub(&refer.id, self.id.clone());
@@ -170,47 +190,6 @@ impl Refer for Wall {
         self.joined_first = None;
         self.joined_second = None;
     }
-
-    /*fn update_from_refs(event: &RefID, self_id: &RefID, ops: &ObjStore) -> Result<UpdateMsg, DBError> {
-        //std::thread::sleep(std::time::Duration::from_secs(5));
-        let mut first_ref = None;
-        let mut second_ref = None;
-        ops.get_obj(self_id, &mut |obj: &DataObject| {
-            match obj.downcast_ref::<Wall>() {
-                Some(wall) => {
-                    first_ref = wall.joined_first.clone();
-                    second_ref = wall.joined_second.clone();
-                    Ok(())
-                }
-                None => Err(DBError::ObjWrongType)
-            }
-        })?;
-        let mut first_pt = None;
-        let mut second_pt = None;
-        if let Some(refer) = first_ref {
-            first_pt = ops.get_ref_point(&refer);
-        }
-        if let Some(refer) = second_ref {
-            second_pt = ops.get_ref_point(&refer);
-        }
-        let mut msg = UpdateMsg::Empty;
-        ops.modify_obj(event, self_id, &mut |obj: &mut DataObject| {
-            match obj.downcast_mut::<Wall>() {
-                Some(wall) => {
-                    if let Some(pt) = first_pt {
-                        wall.first_pt = pt;
-                    }
-                    if let Some(pt) = second_pt {
-                        wall.second_pt = pt;
-                    }
-                    msg = wall.update()?;
-                    Ok(())
-                }
-                None => Err(DBError::ObjWrongType)
-            }
-        })?;
-        Ok(msg)
-    }*/
 }
 
 impl Position for Wall {
