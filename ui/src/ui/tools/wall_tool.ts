@@ -35,7 +35,7 @@ export class WallTool {
             ops.joinAtPoint(this.undoEventId, this.lastId, this.activeTempId, this.firstPt)
         }
         if(this.canJoinToWall(picked)) {
-            ops.joinAtPoint(this.undoEventId, picked.name, this.activeTempId, this.secondPt);
+            ops.joinAtPoint(this.undoEventId, this.activeTempId, picked.name, this.secondPt);
         }
     }
 

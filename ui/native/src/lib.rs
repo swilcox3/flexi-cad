@@ -206,7 +206,8 @@ fn join_at_point(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let ref_1 = Reference{id: id_1, ref_type: RefType::Point{which_pt: 1}};
     let ref_2 = Reference{id: id_2, ref_type: RefType::Point{which_pt: 0}};
     let res = RefResult::Point{pt: point};
-    operations_kernel::join_references(PathBuf::from(path), event, ref_1, ref_2, res).unwrap();
+    operations_kernel::snap_ref_to_result(PathBuf::from(&path).clone(), event.clone(), ref_1.clone(), ref_2.clone(), res.clone()).unwrap();
+    operations_kernel::snap_ref_to_result(PathBuf::from(path), event, ref_2, ref_1, res).unwrap();
     Ok(cx.undefined())
 }
 

@@ -13,6 +13,7 @@ use serde::{Serialize, Deserialize};
 
 pub use geometry_kernel::*;
 pub use entities::wall::Wall;
+pub use entities::door::Door;
 
 #[derive(Debug, PartialEq)]
 pub enum DBError

@@ -1,37 +1,34 @@
 use crate::*;
-use serde::{Deserialize, Serialize};
+use serde::{Serialize, Deserialize};
+use cgmath::InnerSpace;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Wall {
-    pub first_pt: Point3f,
-    pub second_pt: Point3f,
-    pub width: WorldCoord,
-    pub height: WorldCoord,
-    joined_first: Option<Reference>,
-    joined_second: Option<Reference>,
-    openings: Vec<Reference>,
-    id: RefID
+pub struct Door {
+    id: RefID,
+    first_pt: Point3f,
+    second_pt: Point3f,
+    width: WorldCoord,
+    height: WorldCoord,
+    line_ref: Option<Reference>
 }
 
-interfaces!(Wall: query_interface::ObjectClone, std::fmt::Debug, Data, ReferTo, HasRefs, Position, UpdateFromRefs);
-
-impl Wall {
-    pub fn new(id: RefID, first: Point3f, second: Point3f, width: WorldCoord, height: WorldCoord) -> Wall {
-        Wall {
-            first_pt: first,
-            second_pt: second,
+impl Door {
+    pub fn new(id: RefID, first_pt: Point3f, second_pt: Point3f, width: WorldCoord, height: WorldCoord) -> Door {
+        Door {
+            id: id,
+            first_pt: first_pt,
+            second_pt: second_pt,
             width: width,
             height: height,
-            joined_first: None,
-            joined_second: None,
-            openings: Vec::new(),
-            id: id
+            line_ref: None
         }
     }
 }
 
+interfaces!(Door: query_interface::ObjectClone, std::fmt::Debug, Data, ReferTo, HasRefs, Position, UpdateFromRefs);
+
 #[typetag::serde]
-impl Data for Wall {
+impl Data for Door {
     fn get_id(&self) -> &RefID {
         &self.id
     }
@@ -46,7 +43,7 @@ impl Data for Wall {
             positions: Vec::with_capacity(24),
             indices: Vec::with_capacity(36),
             metadata: Some(json!({
-                "type": "Wall",
+                "type": "Door",
                 "width": self.width,
                 "height": self.height,
             }))
@@ -74,7 +71,7 @@ impl Data for Wall {
     }
 }
 
-impl ReferTo for Wall {
+impl ReferTo for Door {
     fn get_result(&self, which: &RefType) -> Option<RefResult> {
         match which {
             RefType::Point{which_pt} => {
@@ -141,33 +138,24 @@ impl ReferTo for Wall {
     }
 }
 
-impl UpdateFromRefs for Wall {
+impl UpdateFromRefs for Door {
     fn get_refs(&self) -> Vec<Option<Reference>> {
         let mut results = Vec::new(); 
-        results.push(self.joined_first.clone());
-        results.push(self.joined_second.clone());
+        results.push(self.line_ref.clone());
         results
     }
 
     fn set_ref(&mut self, which_self: &RefType, result: &RefResult, other_ref: Reference) {
         match which_self {
-            RefType::Point{which_pt} => {
-                match which_pt {
-                    0 => {
-                        if let RefResult::Point{pt} = result {
-                            self.first_pt = *pt;
-                        }
-                        if let RefType::Point{..} = other_ref.ref_type {
-                            self.joined_first = Some(other_ref);
-                        }
-                    }
-                    1 => {
-                        if let RefResult::Point{pt} = result {
-                            self.second_pt = *pt;
-                        }
-                        if let RefType::Point{..} = other_ref.ref_type {
-                            self.joined_second = Some(other_ref);
-                        }
+            RefType::Line{..} => {
+                match result {
+                    RefResult::Line{pts} => {
+                        let other_dir = pts.1 - pts.0;
+                        let proj_1 = (self.first_pt - ORIGIN).project_on(other_dir);
+                        let proj_2 = (self.second_pt - ORIGIN).project_on(other_dir);
+                        self.first_pt = Point3f::new(proj_1.x, proj_1.y, proj_1.z);
+                        self.second_pt = Point3f::new(proj_2.x, proj_2.y, proj_2.z);
+                        self.line_ref = Some(other_ref);
                     }
                     _ => ()
                 }
@@ -179,42 +167,34 @@ impl UpdateFromRefs for Wall {
     fn update_from_refs(&mut self, results: &Vec<Option<RefResult>>) -> Result<UpdateMsg, DBError> {
         //std::thread::sleep(std::time::Duration::from_secs(1));
         if let Some(refer) = results.get(0) {
-            if let Some(RefResult::Point{pt}) = refer {
-                self.first_pt = *pt;
+            if let Some(RefResult::Line{pts}) = refer {
+                let other_dir = pts.1 - pts.0;
+                let proj_1 = (self.first_pt - ORIGIN).project_on(other_dir);
+                let proj_2 = (self.second_pt - ORIGIN).project_on(other_dir);
+                self.first_pt = Point3f::new(proj_1.x, proj_1.y, proj_1.z);
+                self.second_pt = Point3f::new(proj_2.x, proj_2.y, proj_2.z);
             }
             else {
-                self.joined_first = None;
-            }
-        }
-        if let Some(refer) = results.get(1) {
-            if let Some(RefResult::Point{pt}) = refer {
-                self.second_pt = *pt;
-            }
-            else {
-                self.joined_second = None;
+                self.line_ref = None;
             }
         }
         self.update()
     }
 }
 
-impl HasRefs for Wall {
+impl HasRefs for Door {
     fn init(&self, deps: &DepStore) {
-        if let Some(refer) = &self.joined_first {
-            deps.register_sub(&refer.id, self.id.clone());
-        }
-        if let Some(refer) = &self.joined_second {
+        if let Some(refer) = &self.line_ref {
             deps.register_sub(&refer.id, self.id.clone());
         }
     }
 
     fn clear_refs(&mut self) {
-        self.joined_first = None;
-        self.joined_second = None;
+        self.line_ref = None;
     }
 }
 
-impl Position for Wall {
+impl Position for Door {
     fn move_obj(&mut self, delta: &Vector3f) {
         self.first_pt += *delta;
         self.second_pt += *delta;
