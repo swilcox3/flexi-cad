@@ -123,40 +123,8 @@ fn test_dep_redo() {
 }
 
 #[test]
-fn test_channel() {
-    test_setup(|ops, rcv| {
-        let event = ops.begin_undo_event(&USER, String::from("channel")).unwrap();
-        let mut obj_1 = TestObj::new("some stuff");
-        let id_1 = obj_1.get_id().clone();
-        let id_2 = RefID::new_v4();
-        let ref_2 = Reference{id: id_2.clone(), ref_type: RefType::Point{which_pt: 0}};
-        obj_1.set_ref(&RefType::Point{which_pt: 0}, &RefResult::Point{pt: Point3f::new(0.0, 1.0, 2.0)}, ref_2);
-        ops.add_object(&event, Box::new(obj_1)).unwrap();
-        let json_1 = json!({
-            "data": "some stuff",
-            "id": id_1,
-            "point": {
-                "x": 0.0,
-                "y": 1.0,
-                "z": 2.0,
-            },
-            "refer": {
-                "id": id_2,
-                "ref_type": {
-                    "Point": {
-                        "which_pt": 0
-                    }
-                }
-            }
-        });
-        assert_eq!(rcv.recv().unwrap(), UpdateMsg::Other{data: json_1});
-        ops.end_undo_event(event).unwrap();
-    });
-}
-
-#[test]
 fn test_copy() {
-    test_setup(|ops, rcv| {
+    test_setup(|ops, _| {
         let event = ops.begin_undo_event(&USER, String::from("copy")).unwrap();
         let mut obj_1 = Box::new(TestObj::new("some stuff"));
         let id_1 = obj_1.get_id().clone();
@@ -165,18 +133,6 @@ fn test_copy() {
         let copy_id = ops.copy_obj(&event, &id_1).unwrap();
         assert!(copy_id != id_1);
         ops.end_undo_event(event).unwrap();
-        let json_1 = json!({
-            "data": "some stuff",
-            "id": copy_id,
-            "point": {
-                "x": 1.0,
-                "y": 2.0,
-                "z": 3.0,
-            },
-            "refer": serde_json::Value::Null,
-        });
-        rcv.recv().unwrap();
-        assert_eq!(rcv.recv().unwrap(), UpdateMsg::Other{data: json_1});
         ops.get_obj(&copy_id, |copy| {
             let point_ref = copy.query_ref::<ReferTo>().unwrap();
             assert_eq!(point_ref.get_result(&RefType::Point{which_pt: 0}), Some(RefResult::Point{pt: Point3f::new(1.0, 2.0, 3.0)}));

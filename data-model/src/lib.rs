@@ -66,6 +66,7 @@ pub trait HasRefs : Data {
 
 pub trait ReferTo {
     fn get_result(&self, which: &RefType) -> Option<RefResult>;
+    fn get_results_for_type(&self, which: &RefType) -> Vec<RefResult>;
 }
 
 pub trait UpdateFromRefs {

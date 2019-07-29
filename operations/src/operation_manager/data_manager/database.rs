@@ -69,10 +69,8 @@ impl FileDatabase {
         let try_get = || {
             match self.db.try_get(key) {
                 Ok(obj) => callback(&(*obj)),
-                Err(TryGetError::InvalidKey) => Err(DBError::NotFound),
-                Err(TryGetError::WouldBlock) => {
-                    Err(DBError::TimedOut)
-                }
+                Err(TryGetError::WouldBlock) => Err(DBError::TimedOut),
+                _ => Err(DBError::NotFound),
             }
         };
         run_timeout(try_get)
@@ -101,8 +99,8 @@ impl FileDatabase {
         let try_get = || {
             match self.db.try_get_mut(key) {
                 Ok(mut obj) => callback(&mut (*obj)),
-                Err(TryGetError::InvalidKey) => Err(DBError::NotFound),
-                Err(TryGetError::WouldBlock) => Err(DBError::TimedOut)
+                Err(TryGetError::WouldBlock) => Err(DBError::TimedOut),
+                _ => Err(DBError::NotFound),
             }
         };
         run_timeout(try_get)

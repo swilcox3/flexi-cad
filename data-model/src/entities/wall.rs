@@ -117,6 +117,18 @@ impl ReferTo for Wall {
             _ => None
         }
     }
+
+    fn get_results_for_type(&self, which: &RefType) -> Vec<RefResult> {
+        let mut results = Vec::new();
+        match which {
+            RefType::Point{..} => {
+                results.push(RefResult::Point{pt: self.first_pt});
+                results.push(RefResult::Point{pt: self.second_pt});
+            }
+            _ => ()
+        }
+        results
+    }
 }
 
 impl UpdateFromRefs for Wall {

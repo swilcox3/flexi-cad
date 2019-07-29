@@ -51,3 +51,31 @@ fn test_copy_objs() {
         }).unwrap();
     });
 }
+
+#[test]
+fn test_snap_ref() {
+    test_setup("snap_ref", |file, rcv| {
+        let mut first = Box::new(TestObj::new("first"));
+        let id_1 = first.get_id().clone();
+        first.move_obj(&Vector3f::new(1.0, 2.0, 3.0));
+        let second = Box::new(TestObj::new("second"));
+        let id_2 = second.get_id().clone();
+
+        let event = app_state::begin_undo_event(&file, String::from("add objs")).unwrap();
+        app_state::add_obj(&file, &event, first).unwrap();
+        app_state::add_obj(&file, &event, second).unwrap();
+        app_state::end_undo_event(&file, event).unwrap();
+
+        let event = app_state::begin_undo_event(&file, String::from("snap objs")).unwrap();
+        let snapped = snap_ref_to_result(file.clone(), event.clone(), &id_2, 
+            Reference{ 
+                id: id_1, 
+                ref_type: RefType::Point{ which_pt: 0 }
+            },
+            RefResult::Point{
+                pt: Point3f::new(0.0, 0.0, 0.0)
+            }).unwrap();
+        assert_eq!(snapped, Some(RefResult::Point{pt: Point3f::new(1.0, 2.0, 3.0)}));
+        empty_receiver(&rcv);
+    });
+}

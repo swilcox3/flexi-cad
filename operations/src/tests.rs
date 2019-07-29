@@ -12,6 +12,7 @@ pub struct TestObj {
     id: RefID,
     data: String,
     point: Point3f,
+    point_2: Point3f,
     refer: Option<Reference>,
 }
 
@@ -23,6 +24,7 @@ impl TestObj {
             id: RefID::new_v4(), 
             data: String::from(dat), 
             point: Point3f::new(0.0, 0.0, 0.0),
+            point_2: Point3f::new(1.0, 0.0, 0.0),
             refer: None,
         }
     }
@@ -75,6 +77,18 @@ impl ReferTo for TestObj {
             _ => None 
         }
     }
+
+    fn get_results_for_type(&self, which: &RefType) -> Vec<RefResult> {
+        let mut results = Vec::new();
+        match which {
+            RefType::Point{..} => {
+                results.push(RefResult::Point{pt: self.point});
+                results.push(RefResult::Point{pt: self.point_2});
+            }
+            _ => ()
+        }
+        results
+    }
 }
 
 impl UpdateFromRefs for TestObj {
@@ -96,6 +110,14 @@ impl UpdateFromRefs for TestObj {
                             self.refer = Some(other_ref);
                         }
                     }
+                    1 => {
+                        if let RefResult::Point{pt} = result {
+                            self.point_2 = *pt;
+                        }
+                        if let RefType::Point{..} = other_ref.ref_type {
+                            self.refer = Some(other_ref);
+                        }
+                    }
                     _ => ()
                 }
             }
@@ -109,6 +131,11 @@ impl UpdateFromRefs for TestObj {
                 self.point = *pt;
             }
         }
+        if let Some(refer) = results.get(1) {
+            if let Some(RefResult::Point{pt}) = refer {
+                self.point_2 = *pt;
+            }
+        }
         self.update()
     }
 }
@@ -116,6 +143,7 @@ impl UpdateFromRefs for TestObj {
 impl Position for TestObj {
     fn move_obj(&mut self, delta: &Vector3f) {
         self.point = self.point + delta;
+        self.point_2 = self.point + delta;
     }
 }
 

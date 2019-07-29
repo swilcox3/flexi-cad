@@ -102,87 +102,49 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>) -> Resu
     Ok(orig_to_copy)
 }
 
-pub fn join_references(file: PathBuf, event: UndoEventID, ref_1: Reference, ref_2: Reference, mut res: RefResult) -> Result<(), DBError> {
-    let mut which_opt_1 = None;
-    let mut which_opt_2 = None;
-    app_state::get_obj(&file, &ref_1.id, |first| {
-        match first.query_ref::<ReferTo>() {
+pub fn snap_ref_to_result(file: PathBuf, event: UndoEventID, ref_owner: &RefID, refer: Reference, res: RefResult) -> Result<Option<RefResult>, DBError> {
+    let mut which_opt = None;
+    let mut res_opt = None;
+    app_state::get_obj(&file, &refer.id, |refer_obj| {
+        match refer_obj.query_ref::<ReferTo>() {
             Some(joinable) => {
-                let res_opt_1 = joinable.get_result(&ref_1.ref_type);
-                let res_opt_2 = joinable.get_result(&ref_2.ref_type);
-                if let Some(RefResult::Point{pt}) = res_opt_1 {
-                    let pt_1 = pt;
-                    if let Some(RefResult::Point{pt}) = res_opt_2 {
-                        let pt_2 = pt;
-                        if let RefResult::Point{pt} = res {
-                            let dist_1 = pt_1.distance2(pt);
-                            let dist_2 = pt_2.distance2(pt);
-                            if dist_1 > dist_2 {
-                                res = RefResult::Point{pt: pt_2};
-                                which_opt_1 = Some(RefType::Point{which_pt: 1});
-                            }
-                            else {
-                                res = RefResult::Point{pt: pt_1};
-                                which_opt_1 = Some(RefType::Point{which_pt: 0});
+                let results = joinable.get_results_for_type(&refer.ref_type);
+                let mut dist = std::f64::MAX;
+                let mut index = 0;
+                for ref_res in results {
+                    match ref_res {
+                        RefResult::Point{pt} => {
+                            let refer_pt = pt;
+                            if let RefResult::Point{pt} = res {
+                                let cur_dist = refer_pt.distance2(pt);
+                                if cur_dist < dist {
+                                    res_opt = Some(ref_res);
+                                    which_opt = Some(RefType::Point{which_pt: index});
+                                    dist = cur_dist;
+                                }
                             }
                         }
+                        _ => ()
                     }
+                    index += 1;
                 }
                 Ok(())
             }
             None => Err(DBError::ObjLacksTrait)
         }
     })?;
-    app_state::get_obj(&file, &ref_2.id, |second| {
-        match second.query_ref::<ReferTo>() {
-            Some(joinable) => {
-                let res_opt_1 = joinable.get_result(&ref_1.ref_type);
-                let res_opt_2 = joinable.get_result(&ref_2.ref_type);
-                if let Some(RefResult::Point{pt}) = res_opt_1 {
-                    let pt_1 = pt;
-                    if let Some(RefResult::Point{pt}) = res_opt_2 {
-                        let pt_2 = pt;
-                        if let RefResult::Point{pt} = res {
-                            let dist_1 = pt_1.distance2(pt);
-                            let dist_2 = pt_2.distance2(pt);
-                            if dist_1 > dist_2 {
-                                which_opt_2 = Some(RefType::Point{which_pt: 1});
-                            }
-                            else {
-                                which_opt_2 = Some(RefType::Point{which_pt: 0});
-                            }
-                        }
-                    }
+    if let Some(which) = which_opt {
+        app_state::modify_obj(&file, &event, ref_owner, |owner| {
+            match owner.query_mut::<UpdateFromRefs>() {
+                Some(joinable) => {
+                    joinable.set_ref(&which, &res, Reference{id: refer.id, ref_type: which.clone()});
+                    Ok(())
                 }
-                Ok(())
+                None => Err(DBError::ObjLacksTrait)
             }
-            None => Err(DBError::ObjLacksTrait)
-        }
-    })?;
-    if let Some(which_1) = which_opt_1 {
-        if let Some(which_2) = which_opt_2 {
-            app_state::modify_obj(&file, &event, &ref_1.id, |first| {
-                match first.query_mut::<UpdateFromRefs>() {
-                    Some(joinable) => {
-                        joinable.set_ref(&which_1, &res, Reference{id: ref_2.id, ref_type: which_2.clone()});
-                        Ok(())
-                    }
-                    None => Err(DBError::ObjLacksTrait)
-                }
-            })?;
-            app_state::modify_obj(&file, &event, &ref_2.id, |second| {
-                match second.query_mut::<UpdateFromRefs>() {
-                    Some(joinable) => {
-                        joinable.set_ref(&which_2, &res, Reference{id: ref_1.id, ref_type: which_1.clone()});
-                        Ok(())
-                    }
-                    None => Err(DBError::ObjLacksTrait)
-                }
-            })?;
-            app_state::add_dep(&file, &ref_1.id, ref_2.id.clone())?;
-            app_state::add_dep(&file, &ref_2.id, ref_1.id.clone())?;
-            app_state::update_all_deps(file, vec!(ref_1.id, ref_2.id));
-        }
+        })?;
+        app_state::add_dep(&file, &refer.id, refer.id.clone())?;
+        app_state::update_deps(file, refer.id);
     }
-    Ok(())
+    Ok(res_opt)
 }

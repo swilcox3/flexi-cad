@@ -8,7 +8,7 @@ extern crate crossbeam_channel;
 extern crate data_model;
 #[cfg(test)] #[macro_use]
 extern crate query_interface;
-#[cfg(test)] #[macro_use]
+#[cfg(test)]
 extern crate serde_json;
 extern crate bincode;
 
