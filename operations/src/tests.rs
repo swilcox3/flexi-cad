@@ -14,6 +14,7 @@ pub struct TestObj {
     point: Point3f,
     point_2: Point3f,
     refer: Option<Reference>,
+    refer_2: Option<Reference>,
 }
 
 interfaces!(TestObj: Store, query_interface::ObjectClone, std::fmt::Debug, Data, UpdateFromRefs, HasRefs, Position, ReferTo);
@@ -26,6 +27,7 @@ impl TestObj {
             point: Point3f::new(0.0, 0.0, 0.0),
             point_2: Point3f::new(1.0, 0.0, 0.0),
             refer: None,
+            refer_2: None,
         }
     }
 }
@@ -63,17 +65,27 @@ impl HasRefs for TestObj {
         if let Some(refer) = &self.refer {
             deps.register_sub(&refer.id, self.id.clone());
         }
+        if let Some(refer_2) = &self.refer_2 {
+            deps.register_sub(&refer_2.id, self.id.clone());
+        }
     }
 
     fn clear_refs(&mut self) {
         self.refer = None;
+        self.refer_2 = None;
     }
 }
 
 impl ReferTo for TestObj {
     fn get_result(&self, which: &RefType) -> Option<RefResult> {
         match which {
-            RefType::Point{..} => Some(RefResult::Point{pt: self.point}),
+            RefType::Point{which_pt} => {
+                match which_pt {
+                    0 => Some(RefResult::Point{pt: self.point}),
+                    1 => Some(RefResult::Point{pt: self.point_2}),
+                    _ => None
+                }
+            }
             _ => None 
         }
     }
@@ -95,6 +107,7 @@ impl UpdateFromRefs for TestObj {
     fn get_refs(&self) -> Vec<Option<Reference>> {
         let mut results = Vec::new();
         results.push(self.refer.clone());
+        results.push(self.refer_2.clone());
         results
     }
 
@@ -115,7 +128,7 @@ impl UpdateFromRefs for TestObj {
                             self.point_2 = *pt;
                         }
                         if let RefType::Point{..} = other_ref.ref_type {
-                            self.refer = Some(other_ref);
+                            self.refer_2 = Some(other_ref);
                         }
                     }
                     _ => ()
@@ -131,10 +144,16 @@ impl UpdateFromRefs for TestObj {
                 self.point = *pt;
             }
         }
+        else {
+            self.refer = None;
+        }
         if let Some(refer) = results.get(1) {
             if let Some(RefResult::Point{pt}) = refer {
                 self.point_2 = *pt;
             }
+        }
+        else {
+            self.refer_2 = None;
         }
         self.update()
     }
@@ -143,7 +162,7 @@ impl UpdateFromRefs for TestObj {
 impl Position for TestObj {
     fn move_obj(&mut self, delta: &Vector3f) {
         self.point = self.point + delta;
-        self.point_2 = self.point + delta;
+        self.point_2 = self.point_2 + delta;
     }
 }
 

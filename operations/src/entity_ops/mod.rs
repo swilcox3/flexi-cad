@@ -102,20 +102,20 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>) -> Resu
     Ok(orig_to_copy)
 }
 
-pub fn snap_ref_to_result(file: PathBuf, event: UndoEventID, ref_owner: &RefID, refer: Reference, res: RefResult) -> Result<Option<RefResult>, DBError> {
+pub fn snap_ref_to_result(file: PathBuf, event: UndoEventID, own_ref: Reference, other_ref: Reference, guess: RefResult) -> Result<Option<RefResult>, DBError> {
     let mut which_opt = None;
     let mut res_opt = None;
-    app_state::get_obj(&file, &refer.id, |refer_obj| {
+    app_state::get_obj(&file, &other_ref.id, |refer_obj| {
         match refer_obj.query_ref::<ReferTo>() {
             Some(joinable) => {
-                let results = joinable.get_results_for_type(&refer.ref_type);
+                let results = joinable.get_results_for_type(&other_ref.ref_type);
                 let mut dist = std::f64::MAX;
                 let mut index = 0;
                 for ref_res in results {
                     match ref_res {
                         RefResult::Point{pt} => {
                             let refer_pt = pt;
-                            if let RefResult::Point{pt} = res {
+                            if let RefResult::Point{pt} = guess {
                                 let cur_dist = refer_pt.distance2(pt);
                                 if cur_dist < dist {
                                     res_opt = Some(ref_res);
@@ -134,17 +134,19 @@ pub fn snap_ref_to_result(file: PathBuf, event: UndoEventID, ref_owner: &RefID, 
         }
     })?;
     if let Some(which) = which_opt {
-        app_state::modify_obj(&file, &event, ref_owner, |owner| {
-            match owner.query_mut::<UpdateFromRefs>() {
-                Some(joinable) => {
-                    joinable.set_ref(&which, &res, Reference{id: refer.id, ref_type: which.clone()});
-                    Ok(())
+        if let Some(calc_res) = &res_opt {
+            app_state::modify_obj(&file, &event, &own_ref.id, |owner| {
+                match owner.query_mut::<UpdateFromRefs>() {
+                    Some(joinable) => {
+                        joinable.set_ref(&own_ref.ref_type, calc_res, Reference{id: other_ref.id, ref_type: which.clone()});
+                        Ok(())
+                    }
+                    None => Err(DBError::ObjLacksTrait)
                 }
-                None => Err(DBError::ObjLacksTrait)
-            }
-        })?;
-        app_state::add_dep(&file, &refer.id, refer.id.clone())?;
-        app_state::update_deps(file, refer.id);
+            })?;
+            app_state::add_dep(&file, &own_ref.id, other_ref.id.clone())?;
+            app_state::update_deps(file, own_ref.id);
+        }
     }
     Ok(res_opt)
 }

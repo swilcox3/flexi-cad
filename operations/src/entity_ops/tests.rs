@@ -67,15 +67,51 @@ fn test_snap_ref() {
         app_state::end_undo_event(&file, event).unwrap();
 
         let event = app_state::begin_undo_event(&file, String::from("snap objs")).unwrap();
-        let snapped = snap_ref_to_result(file.clone(), event.clone(), &id_2, 
+        let snapped = snap_ref_to_result(file.clone(), event.clone(), 
+            Reference{
+                id: id_2,
+                ref_type: RefType::Point{ which_pt: 0}
+            }, 
             Reference{ 
                 id: id_1, 
-                ref_type: RefType::Point{ which_pt: 0 }
+                ref_type: RefType::Point{ which_pt: 1 }
             },
             RefResult::Point{
-                pt: Point3f::new(0.0, 0.0, 0.0)
-            }).unwrap();
-        assert_eq!(snapped, Some(RefResult::Point{pt: Point3f::new(1.0, 2.0, 3.0)}));
+                pt: Point3f::new(2.0, 3.0, 3.0)
+            }
+        ).unwrap();
+        assert_eq!(snapped, Some(RefResult::Point{pt: Point3f::new(2.0, 2.0, 3.0)}));
+        let snapped_2 = snap_ref_to_result(file.clone(), event.clone(), 
+            Reference {
+                id: id_1,
+                ref_type: RefType::Point{which_pt: 1}
+            },
+            Reference{
+                id: id_2,
+                ref_type: RefType::Point{which_pt: 0}
+            },
+            RefResult::Point{
+                pt: Point3f::new(2.0, 3.0, 3.0)
+            }
+        ).unwrap();
+        assert_eq!(snapped_2, Some(RefResult::Point{pt: Point3f::new(2.0, 2.0, 3.0)}));
         empty_receiver(&rcv);
+        move_obj(file.clone(), event.clone(), id_1.clone(), Vector3f::new(0.0, 1.0, 0.0)).unwrap();
+        app_state::end_undo_event(&file, event).unwrap();
+        empty_receiver(&rcv);
+        app_state::get_obj(&file, &id_1, |first| {
+            let read = first.query_ref::<ReferTo>().unwrap();
+            let pts = read.get_results_for_type(&RefType::Point{which_pt: 0});
+            assert_eq!(pts[0], RefResult::Point{pt: Point3f::new(1.0, 3.0, 3.0)});
+            assert_eq!(pts[1], RefResult::Point{pt: Point3f::new(2.0, 3.0, 3.0)});
+            Ok(())
+        }).unwrap();
+        app_state::get_obj(&file, &id_2, |second| {
+            let read = second.query_ref::<ReferTo>().unwrap();
+            let pts = read.get_results_for_type(&RefType::Point{which_pt: 0});
+            assert_eq!(pts[0], RefResult::Point{pt: Point3f::new(2.0, 3.0, 3.0)});
+            assert_eq!(pts[1], RefResult::Point{pt: Point3f::new(1.0, 0.0, 0.0)});
+            Ok(())
+        }).unwrap();
     });
 }
