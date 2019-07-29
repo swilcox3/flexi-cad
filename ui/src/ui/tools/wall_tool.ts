@@ -1,28 +1,25 @@
 import * as ops from '../../operations/operations'
 import * as math from '../../utils/math'
+const kernel = require("../../../native/index.node")
 
 export class WallTool {
-    firstPt: math.Point3d
-    secondPt: math.Point3d
-    activeWidth: number
-    activeHeight: number
+    curTemp: any
+    width: number
+    height: number
     lastId: string
-    activeTempId: string
     undoEventId: string
 
     constructor(width = 1, height = 5)
     {
-        this.firstPt = null
-        this.secondPt = null
-        this.activeWidth = width 
-        this.activeHeight = height
+        this.curTemp = null;
+        this.width = width;
+        this.height = height;
         this.lastId = ''
-        this.activeTempId = ''
         this.undoEventId = ''
     }
 
     canJoinToWall(hovered: BABYLON.Mesh) {
-        return hovered && hovered.metadata.type == "Wall" && hovered.name != this.lastId && hovered.name != this.activeTempId;
+        return hovered && hovered.metadata.type == "Wall" && hovered.name != this.lastId && hovered.name != this.curTemp.get("id");
     }
 
     createWall(picked: BABYLON.Mesh)
@@ -30,39 +27,40 @@ export class WallTool {
         if(!this.undoEventId) {
             this.undoEventId = ops.beginUndoEvent("Create Wall")
         }
-        ops.createWall(this.undoEventId, this.firstPt, this.secondPt, this.activeWidth, this.activeHeight, this.activeTempId)
+        ops.createObj(this.undoEventId, this.curTemp)
         if(this.lastId) {
-            ops.joinAtPoint(this.undoEventId, this.lastId, this.activeTempId, this.firstPt)
+            ops.joinAtPoint(this.undoEventId, this.lastId, this.curTemp.get("id"), this.curTemp.get("first"))
         }
         if(this.canJoinToWall(picked)) {
-            ops.joinAtPoint(this.undoEventId, this.activeTempId, picked.name, this.secondPt);
+            ops.joinAtPoint(this.undoEventId, this.curTemp.get("id"), picked.name, this.curTemp.get("second"));
         }
     }
 
     onMouseDown(pt: math.Point3d, picked: BABYLON.Mesh)
     {
-        if(this.firstPt == null)
+        if(this.curTemp == null)
         {
-            this.firstPt = new math.Point3d(pt.x, pt.y, 0)
-            this.secondPt = new math.Point3d(pt.x + 1, pt.y + 1, 0)
-            this.activeTempId = ops.renderTempWall(this.firstPt, this.secondPt, this.activeWidth, this.activeHeight)
+            var first = new math.Point3d(pt.x, pt.y, 0)
+            var second = new math.Point3d(pt.x + 1, pt.y + 1, 0)
+            this.curTemp = new kernel.Wall(first, second, this.width, this.height);
+            ops.renderTempObject(this.curTemp)
         }
         else
         {
             this.createWall(picked);
-            this.lastId = this.activeTempId;
-            this.firstPt = new math.Point3d(pt.x, pt.y, 0)
-            this.secondPt = new math.Point3d(pt.x + .1, pt.y + .1, 0)
-            this.activeTempId = ops.renderTempWall(this.firstPt, this.secondPt, this.activeWidth, this.activeHeight)
+            this.lastId = this.curTemp.get("id");
+            var first = new math.Point3d(pt.x, pt.y, 0)
+            var second = new math.Point3d(pt.x + .1, pt.y + .1, 0)
+            this.curTemp = new kernel.Wall(first, second, this.width, this.height);
+            ops.renderTempObject(this.curTemp)
         }
     }
 
     onMouseMove(pt: math.Point3d, hovered: BABYLON.Mesh)
     {
-        if(this.firstPt != null)
+        if(this.curTemp != null)
         {
-            this.secondPt.x = pt.x
-            this.secondPt.y = pt.y
+            this.curTemp.set("second", new math.Point3d(pt.x, pt.y, 0));
             this.drawWall()
         }
         return this.canJoinToWall(hovered);
@@ -73,12 +71,14 @@ export class WallTool {
         if(this.undoEventId) {
             ops.cancelEvent(this.undoEventId)
         }
-        ops.deleteTempObject(this.activeTempId)
+        ops.deleteTempObject(this.curTemp.get("id"))
     }
 
     drawWall()
     {
-        ops.renderTempWall(this.firstPt, this.secondPt, this.activeWidth, this.activeHeight, this.activeTempId)
+        if(this.curTemp) {
+            ops.renderTempObject(this.curTemp)
+        }
     }
 
     finish(pt: math.Point3d, picked: BABYLON.Mesh)

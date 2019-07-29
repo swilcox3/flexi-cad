@@ -7,6 +7,13 @@ var renderers: Map<String, Renderer> = new Map()
 var filename: string
 var pendingCallbacks: Map<String, Array<(obj: BABYLON.Mesh) => void>> = new Map()
 
+interface DataObject {
+    get(prop: string): string,
+    set(prop: string, val: any): string,
+    getUpdateMsg(): any,
+    addObject(filename: string, event: string):undefined
+}
+
 function initRenderer(canvas: HTMLCanvasElement)
 {
     var renderer = new Renderer()
@@ -82,9 +89,9 @@ export function takeUndoSnapshot(event: string, id: string)
     kernel.take_undo_snapshot(filename, event, id)
 }
 
-export function renderTempWall(firstPt: math.Point3d, secondPt: math.Point3d, width: number, height: number, id?: string) 
+export function renderTempObject(obj: DataObject) 
 {
-    var msg = kernel.get_temp_wall(firstPt, secondPt, width, height, id)
+    var msg = obj.getUpdateMsg();
     if(msg.Mesh) {
         renderers.get(filename).renderMesh(msg.Mesh.data, msg.Mesh.data.id)
         return msg.Mesh.data.id
@@ -155,10 +162,10 @@ function waitForAllUpdates(ids: Array<string>)
     return Promise.all(promises)
 }
 
-export function createWall(event: string, firstPt: math.Point3d, secondPt: math.Point3d, width: number, height: number, id?: string)
+export function createObj(event: string, obj: DataObject)
 {
-    kernel.create_wall(firstPt, secondPt, width, height, filename, event, id)
-    return waitForUpdate(id)
+    obj.addObject(filename, event)
+    return waitForUpdate(obj.get("id"));
 }
 
 export function joinAtPoint(event: string, id_1: string, id_2: string, pt: math.Point3d) 

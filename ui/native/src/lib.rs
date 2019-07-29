@@ -17,6 +17,8 @@ use crossbeam_channel::Receiver;
 use ccl::dhashmap::DHashMap;
 use serde::{Serialize, Deserialize};
 
+pub mod wall;
+
 lazy_static!{
     static ref UPDATES: DHashMap<PathBuf, Receiver<UpdateMsg>> = DHashMap::default();
 }
@@ -150,52 +152,6 @@ fn take_undo_snapshot(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
-fn get_temp_wall(mut cx: FunctionContext) -> JsResult<JsValue> {
-    let arg_0 = cx.argument::<JsValue>(0)?;
-    let arg_1 = cx.argument::<JsValue>(1)?;
-    let point_1 = neon_serde::from_value(&mut cx, arg_0)?;
-    let point_2 = neon_serde::from_value(&mut cx, arg_1)?;
-    let width = cx.argument::<JsNumber>(2)?.value();
-    let height = cx.argument::<JsNumber>(3)?.value();
-    let id = match cx.argument_opt(4) {
-        Some(arg) => {
-            if arg.is_a::<JsUndefined>() {
-                RefID::new_v4()
-            }
-            else {
-                let id_str = arg.downcast::<JsString>().or_throw(&mut cx)?.value();
-                RefID::from_str(&id_str).unwrap()
-            }
-        }
-        None => RefID::new_v4()
-    };
-    let wall = data_model::Wall::new(id, point_1, point_2, width, height);
-    let data = wall.update().unwrap();
-    let val = neon_serde::to_value(&mut cx, &data)?;
-    Ok(val)
-}
-
-fn create_wall(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let arg_0 = cx.argument::<JsValue>(0)?;
-    let arg_1 = cx.argument::<JsValue>(1)?;
-    let point_1 = neon_serde::from_value(&mut cx, arg_0)?;
-    let point_2 = neon_serde::from_value(&mut cx, arg_1)?;
-    let width = cx.argument::<JsNumber>(2)?.value();
-    let height = cx.argument::<JsNumber>(3)?.value();
-    let path = cx.argument::<JsString>(4)?.value();
-    let event = cx.argument::<JsString>(5)?.value();
-    let id = match cx.argument_opt(6) {
-        Some(arg) => {
-            let id_str = arg.downcast::<JsString>().or_throw(&mut cx)?.value();
-            RefID::from_str(&id_str).unwrap()
-        }
-        None => RefID::new_v4()
-    };
-    let wall = data_model::Wall::new(id, point_1, point_2, width, height);
-    operations_kernel::add_obj(&PathBuf::from(path), &RefID::from_str(&event).unwrap(), Box::new(wall)).unwrap();
-    Ok(cx.undefined())
-}
-
 fn join_at_point(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
@@ -313,8 +269,6 @@ register_module!(mut cx, {
     cx.export_function("suspend_event", suspend_event)?;
     cx.export_function("resume_event", resume_event)?;
     cx.export_function("cancel_event", cancel_event)?;
-    cx.export_function("get_temp_wall", get_temp_wall)?;
-    cx.export_function("create_wall", create_wall)?;
     cx.export_function("join_at_point", join_at_point)?;
     cx.export_function("move_object", move_object)?;
     cx.export_function("move_objects", move_objects)?;
@@ -323,5 +277,6 @@ register_module!(mut cx, {
     cx.export_function("set_objects_datas", set_objects_datas)?;
     cx.export_function("copy_objects", copy_objects)?;
     cx.export_function("debug_state", debug_state)?;
+    cx.export_class::<wall::JsWall>("Wall")?;
     Ok(())
 });
