@@ -1,5 +1,6 @@
 import * as BABYLONGUI from "babylonjs-gui"
 import {WallTool} from './tools/wall_tool'
+import {DoorTool} from './tools/door_tool'
 import { openSync } from "fs";
 import * as ops from '../operations/operations'
 import { stringify } from "querystring";
@@ -42,6 +43,17 @@ export default class GUI
             mySingleton.setActiveTool(tool)
         });
         this.buttonPanel.addControl(button1);
+        var button2 = BABYLONGUI.Button.CreateSimpleButton("but2", "Door");
+        button2.width = 1.0;
+        button2.height = "40px";
+        button2.color = "white";
+        button2.cornerRadius = 20;
+        button2.background = "green";
+        button2.onPointerUpObservable.add(function () {
+            var tool = new DoorTool()
+            mySingleton.setActiveTool(tool)
+        });
+        this.buttonPanel.addControl(button2);
     }
 
     createPropPair(parent: BABYLONGUI.Grid, curRow: number, objIds:Array<string>, label:string, value:string) {

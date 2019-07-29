@@ -5,23 +5,33 @@ use cgmath::InnerSpace;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Door {
     id: RefID,
-    first_pt: Point3f,
-    second_pt: Point3f,
-    width: WorldCoord,
-    height: WorldCoord,
+    pub first_pt: Point3f,
+    pub second_pt: Point3f,
+    pub width: WorldCoord,
+    pub height: WorldCoord,
+    pub length: WorldCoord,
     line_ref: Option<Reference>
 }
 
 impl Door {
-    pub fn new(id: RefID, first_pt: Point3f, second_pt: Point3f, width: WorldCoord, height: WorldCoord) -> Door {
+    pub fn new(id: RefID, first_pt: Point3f, second_pt: Point3f, width: WorldCoord, height: WorldCoord, length: WorldCoord) -> Door {
         Door {
             id: id,
             first_pt: first_pt,
             second_pt: second_pt,
             width: width,
             height: height,
+            length: length,
             line_ref: None
         }
+    }
+
+    pub fn set_dir(&mut self, dir: &Vector3f) {
+        let dir = dir.normalize();
+        let offset = dir * self.length;
+        self.second_pt.x = offset.x;
+        self.second_pt.y = offset.y;
+        self.second_pt.z = offset.z;
     }
 }
 

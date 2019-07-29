@@ -17,7 +17,8 @@ use crossbeam_channel::Receiver;
 use ccl::dhashmap::DHashMap;
 use serde::{Serialize, Deserialize};
 
-pub mod wall;
+mod wall;
+mod door;
 
 lazy_static!{
     static ref UPDATES: DHashMap<PathBuf, Receiver<UpdateMsg>> = DHashMap::default();
@@ -278,5 +279,6 @@ register_module!(mut cx, {
     cx.export_function("copy_objects", copy_objects)?;
     cx.export_function("debug_state", debug_state)?;
     cx.export_class::<wall::JsWall>("Wall")?;
+    cx.export_class::<door::JsDoor>("Door")?;
     Ok(())
 });
