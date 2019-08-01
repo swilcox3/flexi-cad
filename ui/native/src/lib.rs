@@ -186,6 +186,14 @@ fn delete_object(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
+fn get_object_data(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let path = cx.argument::<JsString>(0)?.value();
+    let id = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
+    let prop_name = cx.argument::<JsString>(2)?.value();
+    let val = operations_kernel::get_obj_data(&PathBuf::from(path), &id, &prop_name).unwrap();
+    Ok(neon_serde::to_value(&mut cx, &val)?)
+}
+
 fn set_object_data(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
@@ -274,6 +282,7 @@ register_module!(mut cx, {
     cx.export_function("move_object", move_object)?;
     cx.export_function("move_objects", move_objects)?;
     cx.export_function("delete_object", delete_object)?;
+    cx.export_function("get_object_data", get_object_data)?;
     cx.export_function("set_object_data", set_object_data)?;
     cx.export_function("set_objects_datas", set_objects_datas)?;
     cx.export_function("copy_objects", copy_objects)?;

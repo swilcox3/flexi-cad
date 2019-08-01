@@ -43,6 +43,7 @@ pub enum UpdateMsg {
 pub trait Data : Object + Send + Sync {
     fn get_id(&self) -> &RefID;
     fn update(&self) -> Result<UpdateMsg, DBError>;
+    fn get_data(&self, prop_name: &String) -> Result<serde_json::Value, DBError>;
     fn set_data(&mut self, data: &serde_json::Value) -> Result<(), DBError>;
     //Only use this if you know exactly what you're doing.
     fn set_id(&mut self, id: RefID);

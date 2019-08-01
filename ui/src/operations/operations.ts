@@ -186,6 +186,11 @@ export function moveObjs(event: string, ids: Array<string>, delta: math.Point3d)
     return waitForAllUpdates(ids)
 }
 
+export async function getObjectData(id: string, prop_name: string)
+{
+    return await kernel.get_object_data(filename, id, prop_name)
+}
+
 export function setObjectData(event: string, id: string, data:any) 
 {
     kernel.set_object_data(filename, event, id, JSON.stringify(data))

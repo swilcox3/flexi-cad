@@ -47,12 +47,22 @@ impl Data for Wall {
             indices: Vec::with_capacity(36),
             metadata: Some(json!({
                 "type": "Wall",
-                "width": self.width,
-                "height": self.height,
+                "Width": self.width,
+                "Height": self.height,
             }))
         };
         primitives::rectangular_prism(&self.first_pt, &self.second_pt, self.width, self.height, &mut data);
         Ok(UpdateMsg::Mesh{data: data})
+    }
+
+    fn get_data(&self, prop_name: &String) -> Result<serde_json::Value, DBError> {
+        match prop_name.as_ref() {
+            "Width" => Ok(json!(self.width)),
+            "Height" => Ok(json!(self.height)),
+            "First" => serde_json::to_value(&self.first_pt).map_err(error_other),
+            "Second" => serde_json::to_value(&self.second_pt).map_err(error_other),
+            _ => Err(DBError::NotFound)
+        }
     }
 
     fn set_data(&mut self, data: &serde_json::Value) -> Result<(), DBError> {

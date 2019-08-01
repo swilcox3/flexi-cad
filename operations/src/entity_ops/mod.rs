@@ -34,6 +34,19 @@ pub fn move_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>, delta: 
     Ok(())
 }
 
+pub fn get_obj_data(file: &PathBuf, id: &RefID, prop_name: &String) -> Result<serde_json::Value, DBError> {
+    let mut val = None;
+    app_state::get_obj(file, id, |obj| {
+        let data = obj.get_data(prop_name)?;
+        val = Some(data);
+        Ok(())
+    })?;
+    match val {
+        Some(data) => Ok(data),
+        None => Err(DBError::NotFound)
+    }
+}
+
 pub fn set_obj_data(file: PathBuf, event: UndoEventID, id: RefID, data: serde_json::Value) -> Result<(), DBError> {
     app_state::modify_obj(&file, &event, &id, |obj| {
         obj.set_data(&data)

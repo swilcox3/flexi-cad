@@ -27,11 +27,11 @@ impl Door {
     }
 
     pub fn set_dir(&mut self, dir: &Vector3f) {
-        let dir = dir.normalize();
-        let offset = dir * self.length;
-        self.second_pt.x = offset.x;
-        self.second_pt.y = offset.y;
-        self.second_pt.z = offset.z;
+        let norm = dir.normalize();
+        let offset = norm * self.length;
+        self.second_pt.x = self.first_pt.x + offset.x;
+        self.second_pt.y = self.first_pt.y + offset.y;
+        self.second_pt.z = self.first_pt.z + offset.z;
     }
 }
 
@@ -54,13 +54,24 @@ impl Data for Door {
             indices: Vec::with_capacity(36),
             metadata: Some(json!({
                 "type": "Door",
-                "width": self.width,
-                "height": self.height,
-                "length": self.length
+                "Width": self.width,
+                "Height": self.height,
+                "Length": self.length
             }))
         };
         primitives::rectangular_prism(&self.first_pt, &self.second_pt, self.width, self.height, &mut data);
         Ok(UpdateMsg::Mesh{data: data})
+    }
+
+    fn get_data(&self, prop_name: &String) -> Result<serde_json::Value, DBError> {
+        match prop_name.as_ref() {
+            "Width" => Ok(json!(self.width)),
+            "Height" => Ok(json!(self.height)),
+            "Length" => Ok(json!(self.length)),
+            "First" => serde_json::to_value(&self.first_pt).map_err(error_other),
+            "Second" => serde_json::to_value(&self.second_pt).map_err(error_other),
+            _ => Err(DBError::NotFound)
+        }
     }
 
     fn set_data(&mut self, data: &serde_json::Value) -> Result<(), DBError> {
@@ -72,6 +83,10 @@ impl Data for Door {
         if let serde_json::Value::Number(num) = &data["Height"] {
             changed = true;
             self.height = num.as_f64().unwrap();
+        }
+        if let serde_json::Value::Number(num) = &data["Length"] {
+            changed = true;
+            self.length = num.as_f64().unwrap();
         }
         if changed {
             Ok(())

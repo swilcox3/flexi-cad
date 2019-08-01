@@ -9,7 +9,7 @@ export class DoorTool {
     length: number
     undoEventId: string
 
-    constructor(width = 1, height = 4, length = 6)
+    constructor(width = 1, height = 4, length = 3)
     {
         this.curTemp = null;
         this.width = width;
@@ -32,6 +32,13 @@ export class DoorTool {
 
     onMouseDown(pt: math.Point3d, picked: BABYLON.Mesh)
     {
+        this.createDoor(picked);
+        this.curTemp = null;
+    }
+
+    onMouseMove(pt: math.Point3d, hovered: BABYLON.Mesh)
+    {
+        const joinable = this.canJoinToWall(hovered);
         if(this.curTemp == null)
         {
             var first = new math.Point3d(pt.x, pt.y, 0)
@@ -41,19 +48,15 @@ export class DoorTool {
         }
         else
         {
-            this.createDoor(picked);
-            this.curTemp = null;
-        }
-    }
-
-    onMouseMove(pt: math.Point3d, hovered: BABYLON.Mesh)
-    {
-        const joinable = this.canJoinToWall(hovered);
-        if(this.curTemp != null)
-        {
             if(joinable) {
-
-
+                var first_promise = ops.getObjectData(hovered.name, "First");
+                var second_promise = ops.getObjectData(hovered.name, "Second");
+                Promise.all([first_promise, second_promise])
+                .then(([first, second]) => {
+                    var dir = new math.Point3d(second.x - first.x, second.y - first.y, 0);
+                    this.curTemp.set("first", new math.Point3d(pt.x, pt.y, 0));
+                    this.curTemp.set_dir(dir);
+                });
             }
             else {
                 this.curTemp.set("first", new math.Point3d(pt.x, pt.y, 0));
@@ -81,7 +84,9 @@ export class DoorTool {
 
     finish(pt: math.Point3d, picked: BABYLON.Mesh)
     {
-        this.createDoor(picked);
+        if(this.curTemp) {
+            this.createDoor(picked);
+        }
         if(this.undoEventId) {
             ops.endUndoEvent(this.undoEventId)
         }
