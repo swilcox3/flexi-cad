@@ -89,45 +89,34 @@ export default class GUI
         parent.addControl(edit, curRow, 1);
     }
 
-    createWallOverlay(walls: Set<BABYLON.Mesh>) {
-        var wallPanel = new BABYLONGUI.Grid();
-        wallPanel.width = 1;
-        wallPanel.height = "200px";
-        wallPanel.addColumnDefinition(.5);
-        wallPanel.addColumnDefinition(.5);
-        this.objOverlay.addControl(wallPanel);
+    populateObjectOverlay(objs: Set<BABYLON.Mesh>) {
+        var objPanel = new BABYLONGUI.Grid();
+        objPanel.width = 1;
+        objPanel.height = "200px";
+        objPanel.addColumnDefinition(.5);
+        objPanel.addColumnDefinition(.5);
+        this.objOverlay.addControl(objPanel);
         var curRow = 0;
         var ids: Array<string> = [];
-        var width:number = null;
-        var height:number = null;
-        walls.forEach((obj)=> {
+        var props: any = {};
+        objs.forEach((obj)=> {
             ids.push(obj.name)
-            if(width == null) {
-                width = obj.metadata.width;
-            }
-            else if (width != obj.metadata.width) {
-                width = undefined;
-            }
-            if(height == null) {
-                height = obj.metadata.height;
-            }
-            else if (height != obj.metadata.height) {
-                height = undefined;
+            for (var property in obj.metadata) {
+                if(obj.metadata.hasOwnProperty(property) && property !== "type") {
+                    if(props[property] === undefined) {
+                        props[property] = obj.metadata[property];
+                    }
+                    else if (props[property] !== null && props[property] !== obj.metadata[property]) {
+                        props[property] = null;
+                    }
+                }
             }
         });
-        var widthLabel = "";
-        var heightLabel = "";
-        if(width != null && width != undefined) {
-            widthLabel = width.toString();
+        for (const prop of Object.keys(props)) {
+            objPanel.addRowDefinition(40, true);
+            this.createPropPair(objPanel, curRow, ids, prop, props[prop].toString());
+            curRow = curRow + 1;
         }
-        if(height != null && width != undefined) {
-            heightLabel = height.toString();
-        }
-        wallPanel.addRowDefinition(40, true);
-        this.createPropPair(wallPanel, curRow, ids, "Width", widthLabel);
-        curRow = curRow + 1;
-        wallPanel.addRowDefinition(40, true);
-        this.createPropPair(wallPanel, curRow, ids, "Height", heightLabel);
     }
 
     setObjectOverlay(data: Set<BABYLON.Mesh>)
@@ -163,9 +152,7 @@ export default class GUI
         label.height = "40px"
         label.width = 1
         this.objOverlay.addControl(label);
-        if(type == "Wall" && allSame) {
-            this.createWallOverlay(data);
-        }
+        this.populateObjectOverlay(data);
     }
     
     clearObjectOverlay() 

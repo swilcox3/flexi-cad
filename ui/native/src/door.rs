@@ -155,6 +155,7 @@ declare_types! {
             {
                 let guard = cx.lock();
                 let wall = this.borrow(&guard).clone();
+                println!("made it");
                 operations_kernel::add_obj(&PathBuf::from(path), &RefID::from_str(&event).unwrap(), Box::new(wall)).unwrap();
             }
             Ok(cx.undefined().upcast())

@@ -56,6 +56,7 @@ impl Data for Door {
                 "type": "Door",
                 "width": self.width,
                 "height": self.height,
+                "length": self.length
             }))
         };
         primitives::rectangular_prism(&self.first_pt, &self.second_pt, self.width, self.height, &mut data);

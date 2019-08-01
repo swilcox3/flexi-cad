@@ -9,7 +9,7 @@ export class DoorTool {
     length: number
     undoEventId: string
 
-    constructor(width = 1, height = 4, length = 2)
+    constructor(width = 1, height = 4, length = 6)
     {
         this.curTemp = null;
         this.width = width;
@@ -35,9 +35,8 @@ export class DoorTool {
         if(this.curTemp == null)
         {
             var first = new math.Point3d(pt.x, pt.y, 0)
-            var second = new math.Point3d(pt.x + 1, pt.y + 1, 0)
+            var second = new math.Point3d(pt.x + this.length, pt.y, 0)
             this.curTemp = new kernel.Door(first, second, this.width, this.height, this.length);
-            this.curTemp.set_dir(new math.Point3d(1, 0, 0))
             ops.renderTempObject(this.curTemp)
         }
         else
@@ -49,14 +48,20 @@ export class DoorTool {
 
     onMouseMove(pt: math.Point3d, hovered: BABYLON.Mesh)
     {
+        const joinable = this.canJoinToWall(hovered);
         if(this.curTemp != null)
         {
-            var cur_first = this.curTemp.get("first");
-            var cur_dir = new math.Point3d(pt.x - cur_first.x, pt.y - cur_first.y, 0);
-            this.curTemp.set_dir(cur_dir)
-            this.drawWall()
+            if(joinable) {
+
+
+            }
+            else {
+                this.curTemp.set("first", new math.Point3d(pt.x, pt.y, 0));
+                this.curTemp.set("second", new math.Point3d(pt.x + this.length, pt.y, 0));
+            }
+            this.drawDoor()
         }
-        return this.canJoinToWall(hovered);
+        return joinable;
     }
 
     cancel()
@@ -67,7 +72,7 @@ export class DoorTool {
         ops.deleteTempObject(this.curTemp.get("id"))
     }
 
-    drawWall()
+    drawDoor()
     {
         if(this.curTemp) {
             ops.renderTempObject(this.curTemp)
