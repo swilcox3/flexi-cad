@@ -1,4 +1,5 @@
 use crate::*;
+use primitives::PrismOpening;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -9,7 +10,7 @@ pub struct Wall {
     pub height: WorldCoord,
     joined_first: Option<Reference>,
     joined_second: Option<Reference>,
-    openings: Vec<primitives::PrismOpening>,
+    openings: Vec<PrismOpening>,
     open_refs: Vec<Reference>,
     id: RefID
 }
@@ -25,6 +26,7 @@ impl Wall {
             height: height,
             joined_first: None,
             joined_second: None,
+            openings: Vec::new(),
             open_refs: Vec::new(),
             id: id
         }
@@ -52,7 +54,10 @@ impl Data for Wall {
                 "Height": self.height,
             }))
         };
-        primitives::rectangular_prism(&self.first_pt, &self.second_pt, self.width, self.height, &mut data);
+        let mut sorted = self.openings.clone();
+        sorted.sort_by(|first, second| first.interp.partial_cmp(&second.interp).unwrap());
+
+        primitives::prism_with_openings(&self.first_pt, &self.second_pt, self.width, self.height, sorted, &mut data);
         Ok(UpdateMsg::Mesh{data: data})
     }
 
@@ -185,6 +190,16 @@ impl UpdateFromRefs for Wall {
                         self.open_refs.push(other_ref);
                     }
                 }
+                if let RefResult::Opening{interp, height, length} = result {
+                    if let Some(open) = self.openings.get_mut(*which as usize) {
+                        open.interp = *interp;
+                        open.height = *height;
+                        open.length = *length;
+                    }
+                    else {
+                        self.openings.push(PrismOpening{interp: *interp, height: *height, length: *length});
+                    }
+                }
             }
             _ => ()
         }
@@ -208,10 +223,29 @@ impl UpdateFromRefs for Wall {
                 self.joined_second = None;
             }
         }
+        let mut to_remove = Vec::new();
         for i in 2..results.len() {
             if let Some(refer) = results.get(i) {
-                self.
+                if let Some(RefResult::Opening{interp, height, length}) = refer {
+                    match self.openings.get_mut(i - 2) {
+                        Some(open) => {
+                            open.interp = *interp;
+                            open.height = *height;
+                            open.length = *length;
+                        }
+                        None => {
+                            return Err(DBError::NotFound);
+                        }
+                    }
+                }
+                else {
+                    to_remove.push(i - 2 as usize);
+                }
             }
+        }
+        for index in to_remove.iter().rev() {
+            self.open_refs.remove(*index);
+            self.openings.remove(*index);
         }
         self.update()
     }

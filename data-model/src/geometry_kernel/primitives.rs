@@ -1,13 +1,14 @@
 use super::*;
 use cgmath::InnerSpace;
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd)]
 pub struct PrismOpening {
     pub interp: Interp,
     pub height: WorldCoord,
     pub length: WorldCoord
 }
 
-pub fn prism_and_next_opening(first_pt: &Point3f, second_pt: &Point3f, third_pt: &Point3f, offset: &Vector3f, vert_offset: &Vector3f, hole_offset: &Vector3f, index: u64, results: &mut MeshData) -> u64 {
+fn prism_and_next_opening(first_pt: &Point3f, second_pt: &Point3f, third_pt: &Point3f, offset: &Vector3f, vert_offset: &Vector3f, hole_offset: &Vector3f, index: u64, results: &mut MeshData) -> u64 {
     let zero = first_pt + offset;
     let first = first_pt - offset;
     let second = second_pt + offset;
@@ -160,7 +161,7 @@ mod tests {
         };
         prism_with_openings(&first, &second, width, height, holes, &mut results);
         for i in 0..results.positions.len() / 3 {
-            println!("{:?} => {:?}, {:?}, {:?}", i, results.positions[i * 3], results.positions[(i*3) + 1], results.positions[(i*3) + 2]);
+            println!("{:?}, {:?}, {:?}", results.positions[i * 3], results.positions[(i*3) + 1], results.positions[(i*3) + 2]);
         }
         for i in 0..results.indices.len() / 3 {
             println!("{:?}, {:?}, {:?}", results.indices[i * 3], results.indices[(i*3) + 1], results.indices[(i*3) + 2]);

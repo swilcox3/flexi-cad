@@ -46,6 +46,13 @@ impl Data for TestObj {
         Ok(UpdateMsg::Other{data: serde_json::to_value(&self).unwrap()})
     }
 
+    fn get_data(&self, prop_name: &String) -> Result<serde_json::Value, DBError> {
+        match prop_name.as_ref() {
+            "data" => Ok(json!(self.data)),
+            _ => Err(DBError::NotFound)
+        }
+    }
+
     fn set_data(&mut self, _data: &serde_json::Value) -> Result<(), DBError> {
         Ok(())
     }

@@ -137,6 +137,18 @@ pub fn snap_ref_to_result(file: PathBuf, event: UndoEventID, own_ref: Reference,
                                 }
                             }
                         }
+                        RefResult::Line{pt, dir} => {
+                            let refer_pt = pt;
+                            let refer_dir = dir;
+                            if let RefResult::Point{pt} = guess {
+                                let cur_dist = refer_pt.distance2(pt);
+                                if cur_dist < dist {
+                                    res_opt = Some(ref_res);
+                                    which_opt = Some(RefType::)Line
+                                }
+                            }
+
+                        }
                         _ => ()
                     }
                     index += 1;
