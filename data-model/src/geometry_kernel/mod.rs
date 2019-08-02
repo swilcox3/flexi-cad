@@ -38,15 +38,15 @@ pub struct Reference {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd)]
 pub enum RefType {
     Point{which_pt: u64},
-    Line{pts: (u64, u64)},
-    Rect{which: u64}
+    Line{interp: Interp, pts: (u64, u64)},
+    Opening{which: u64},
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum RefResult {
     Point{pt: Point3f},
-    Line{pts: (Point3f, Point3f)},
-    Rect{pts: Rect}
+    Line{pt: Point3f, dir: Vector3f},
+    Opening{interp: Interp, height: WorldCoord, length: WorldCoord}
 }
 
 //A value between 0 and 1
@@ -66,6 +66,10 @@ impl Interp {
         Interp {
             val: in_val,
         }
+    }
+
+    pub fn val(&self) -> f64 {
+        self.val
     }
 }
 

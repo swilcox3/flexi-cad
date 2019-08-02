@@ -159,8 +159,12 @@ mod tests {
             metadata: None
         };
         prism_with_openings(&first, &second, width, height, holes, &mut results);
-        println!("{:?}", results.positions);
-        println!("{:?}", results.indices);
+        for i in 0..results.positions.len() / 3 {
+            println!("{:?} => {:?}, {:?}, {:?}", i, results.positions[i * 3], results.positions[(i*3) + 1], results.positions[(i*3) + 2]);
+        }
+        for i in 0..results.indices.len() / 3 {
+            println!("{:?}, {:?}, {:?}", results.indices[i * 3], results.indices[(i*3) + 1], results.indices[(i*3) + 2]);
+        } 
     }
 
 

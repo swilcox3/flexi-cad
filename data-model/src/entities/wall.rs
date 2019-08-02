@@ -9,7 +9,8 @@ pub struct Wall {
     pub height: WorldCoord,
     joined_first: Option<Reference>,
     joined_second: Option<Reference>,
-    openings: Vec<Reference>,
+    openings: Vec<primitives::PrismOpening>,
+    open_refs: Vec<Reference>,
     id: RefID
 }
 
@@ -24,7 +25,7 @@ impl Wall {
             height: height,
             joined_first: None,
             joined_second: None,
-            openings: Vec::new(),
+            open_refs: Vec::new(),
             id: id
         }
     }
@@ -94,7 +95,7 @@ impl ReferTo for Wall {
                     _ => None 
                 }
             }
-            RefType::Line{pts} => {
+            RefType::Line{interp, pts} => {
                 let pt_1_opt = match pts.0 {
                     0 => Some(self.first_pt),
                     1 => Some(self.second_pt),
@@ -107,7 +108,9 @@ impl ReferTo for Wall {
                 };
                 if let Some(pt_1) = pt_1_opt {
                     if let Some(pt_2) = pt_2_opt {
-                        Some(RefResult::Line{pts: (pt_1, pt_2)})
+                        let dir = pt_2 - pt_1;
+                        let pt = pt_1 + dir * interp.val();
+                        Some(RefResult::Line{pt: pt, dir: dir})
                     }
                     else {
                         None
@@ -128,22 +131,10 @@ impl ReferTo for Wall {
                 results.push(RefResult::Point{pt: self.first_pt});
                 results.push(RefResult::Point{pt: self.second_pt});
             }
-            RefType::Line{pts} => {
-                let pt_1_opt = match pts.0 {
-                    0 => Some(self.first_pt),
-                    1 => Some(self.second_pt),
-                    _ => None
-                };
-                let pt_2_opt = match pts.1 {
-                    0 => Some(self.first_pt),
-                    1 => Some(self.second_pt),
-                    _ => None
-                };
-                if let Some(pt_1) = pt_1_opt {
-                    if let Some(pt_2) = pt_2_opt {
-                        results.push(RefResult::Line{pts: (pt_1, pt_2)});
-                    }
-                }
+            RefType::Line{interp, ..} => {
+                let dir = self.first_pt - self.second_pt;
+                let pt = self.first_pt + dir * interp.val();
+                results.push(RefResult::Line{pt: pt, dir: dir});
             }
             _ => ()
         }
@@ -156,6 +147,9 @@ impl UpdateFromRefs for Wall {
         let mut results = Vec::new(); 
         results.push(self.joined_first.clone());
         results.push(self.joined_second.clone());
+        for open in &self.open_refs {
+            results.push(Some(open.clone()));
+        }
         results
     }
 
@@ -182,6 +176,16 @@ impl UpdateFromRefs for Wall {
                     _ => ()
                 }
             }
+            RefType::Opening{which} => {
+                if let RefType::Opening{..} = other_ref.ref_type {
+                    if let Some(refer) = self.open_refs.get_mut(*which as usize) {
+                        *refer = other_ref;
+                    }
+                    else {
+                        self.open_refs.push(other_ref);
+                    }
+                }
+            }
             _ => ()
         }
     }
@@ -202,6 +206,11 @@ impl UpdateFromRefs for Wall {
             }
             else {
                 self.joined_second = None;
+            }
+        }
+        for i in 2..results.len() {
+            if let Some(refer) = results.get(i) {
+                self.
             }
         }
         self.update()

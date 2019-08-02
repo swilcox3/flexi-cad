@@ -107,27 +107,15 @@ impl ReferTo for Door {
                     _ => None 
                 }
             }
-            RefType::Line{pts} => {
-                let pt_1_opt = match pts.0 {
-                    0 => Some(self.first_pt),
-                    1 => Some(self.second_pt),
-                    _ => None
-                };
-                let pt_2_opt = match pts.1 {
-                    0 => Some(self.first_pt),
-                    1 => Some(self.second_pt),
-                    _ => None
-                };
-                if let Some(pt_1) = pt_1_opt {
-                    if let Some(pt_2) = pt_2_opt {
-                        Some(RefResult::Line{pts: (pt_1, pt_2)})
+            RefType::Opening{..} => {
+                match &self.line_ref {
+                    Some(line) => {
+                        match line.ref_type {
+                            RefType::Line{interp, ..} => Some(RefResult::Opening{interp: interp, height: self.height, length: self.length}),
+                            _ => None
+                        }
                     }
-                    else {
-                        None
-                    }
-                }
-                else {
-                    None
+                    None => None
                 }
             }
             _ => None
@@ -141,21 +129,15 @@ impl ReferTo for Door {
                 results.push(RefResult::Point{pt: self.first_pt});
                 results.push(RefResult::Point{pt: self.second_pt});
             }
-            RefType::Line{pts} => {
-                let pt_1_opt = match pts.0 {
-                    0 => Some(self.first_pt),
-                    1 => Some(self.second_pt),
-                    _ => None
-                };
-                let pt_2_opt = match pts.1 {
-                    0 => Some(self.first_pt),
-                    1 => Some(self.second_pt),
-                    _ => None
-                };
-                if let Some(pt_1) = pt_1_opt {
-                    if let Some(pt_2) = pt_2_opt {
-                        results.push(RefResult::Line{pts: (pt_1, pt_2)});
+            RefType::Opening{..} => {
+                match &self.line_ref {
+                    Some(line) => {
+                        match line.ref_type {
+                            RefType::Line{interp, ..} => results.push(RefResult::Opening{interp: interp, height: self.height, length: self.length}),
+                            _ => ()
+                        }
                     }
+                    None => ()
                 }
             }
             _ => ()
@@ -175,12 +157,9 @@ impl UpdateFromRefs for Door {
         match which_self {
             RefType::Line{..} => {
                 match result {
-                    RefResult::Line{pts} => {
-                        let other_dir = pts.1 - pts.0;
-                        let proj_1 = (self.first_pt - ORIGIN).project_on(other_dir);
-                        let proj_2 = (self.second_pt - ORIGIN).project_on(other_dir);
-                        self.first_pt = Point3f::new(proj_1.x, proj_1.y, proj_1.z);
-                        self.second_pt = Point3f::new(proj_2.x, proj_2.y, proj_2.z);
+                    RefResult::Line{pt, dir} => {
+                        self.first_pt = *pt;
+                        self.second_pt = pt + self.length * dir;
                         self.line_ref = Some(other_ref);
                     }
                     _ => ()
@@ -193,12 +172,9 @@ impl UpdateFromRefs for Door {
     fn update_from_refs(&mut self, results: &Vec<Option<RefResult>>) -> Result<UpdateMsg, DBError> {
         //std::thread::sleep(std::time::Duration::from_secs(1));
         if let Some(refer) = results.get(0) {
-            if let Some(RefResult::Line{pts}) = refer {
-                let other_dir = pts.1 - pts.0;
-                let proj_1 = (self.first_pt - ORIGIN).project_on(other_dir);
-                let proj_2 = (self.second_pt - ORIGIN).project_on(other_dir);
-                self.first_pt = Point3f::new(proj_1.x, proj_1.y, proj_1.z);
-                self.second_pt = Point3f::new(proj_2.x, proj_2.y, proj_2.z);
+            if let Some(RefResult::Line{pt, dir}) = refer {
+                self.first_pt = *pt;
+                self.second_pt = pt + self.length * dir;
             }
             else {
                 self.line_ref = None;
