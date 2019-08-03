@@ -14,14 +14,14 @@ pub struct Door {
 }
 
 impl Door {
-    pub fn new(id: RefID, first_pt: Point3f, second_pt: Point3f, width: WorldCoord, height: WorldCoord, length: WorldCoord) -> Door {
+    pub fn new(id: RefID, first_pt: Point3f, second_pt: Point3f, width: WorldCoord, height: WorldCoord) -> Door {
         Door {
             id: id,
             first_pt: first_pt,
             second_pt: second_pt,
             width: width,
             height: height,
-            length: length,
+            length: (second_pt - first_pt).magnitude(),
             line_ref: None
         }
     }
@@ -131,9 +131,11 @@ impl UpdateFromRefs for Door {
         match index {
             0 => {
                 if let RefResult::Line{pt_1, pt_2} = result {
-                    self.first_pt = *pt_1;
-                    self.second_pt = *pt_2;
-                    self.line_ref = Some(other_ref);
+                    if let RefType::Line{interp} = other_ref.ref_type {
+                        let dir = pt_2 - pt_1;
+                        self.first_pt = pt_1 + dir * interp.val();
+                        self.second_pt = self.first_pt + dir.normalize() * self.length;
+                    }
                 }
             }
             _ => ()
@@ -144,8 +146,14 @@ impl UpdateFromRefs for Door {
         //std::thread::sleep(std::time::Duration::from_secs(1));
         if let Some(refer) = results.get(0) {
             if let Some(RefResult::Line{pt_1, pt_2}) = refer {
-                self.first_pt = *pt_1;
-                self.second_pt = *pt_2;
+                if let Some(own_refer) = &self.line_ref {
+                    if let RefType::Line{interp} = own_refer.ref_type {
+                        println!("made it: {:?} => {:?}", pt_1, pt_2);
+                        let dir = pt_2 - pt_1;
+                        self.first_pt = EuclideanSpace::from_vec(dir * interp.val());
+                        self.second_pt = self.first_pt + dir.normalize() * self.length;
+                    }
+                }
             }
             else {
                 self.line_ref = None;

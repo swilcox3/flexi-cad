@@ -114,6 +114,7 @@ impl OperationManager {
                 match self.get_obj(&refer.id, |obj| {
                     match obj.query_ref::<ReferTo>() {
                         Some(update_from) => {
+                            println!("{:?}", refer);
                             result = update_from.get_result(refer.index);
                             Ok(())
                         }

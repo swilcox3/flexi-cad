@@ -21,8 +21,8 @@ fn test_dep_update() {
         let mut obj_2 = TestObj::new("other stuff");
         let id_1 = obj_1.get_id().clone();
         let id_2 = obj_2.get_id().clone();
-        let ref_1 = Reference{id: id_1.clone(), index: 0};
-        let ref_2 = Reference{id: id_2.clone(), index: 0};
+        let ref_1 = Reference{id: id_1.clone(), index: 0, ref_type: RefType::Point};
+        let ref_2 = Reference{id: id_2.clone(), index: 0, ref_type: RefType::Point};
         obj_1.set_ref(0, &RefResult::Point{pt: Point3f::new(0.0, 1.0, 2.0)}, ref_2);
         obj_2.set_ref(0, &RefResult::Point{pt: Point3f::new(2.0, 1.0, 0.0)}, ref_1);
         ops.add_object(&event, Box::new(obj_1)).unwrap();
@@ -60,8 +60,8 @@ fn test_dep_undo() {
         let mut obj_2 = TestObj::new("other stuff");
         let id_1 = obj_1.get_id().clone();
         let id_2 = obj_2.get_id().clone();
-        let ref_1 = Reference{id: id_1.clone(), index: 0};
-        let ref_2 = Reference{id: id_2.clone(), index: 0};
+        let ref_1 = Reference{id: id_1.clone(), index: 0, ref_type: RefType::Point};
+        let ref_2 = Reference{id: id_2.clone(), index: 0, ref_type: RefType::Point};
         obj_1.set_ref(0, &RefResult::Point{pt: Point3f::new(0.0, 1.0, 2.0)}, ref_2);
         obj_2.set_ref(0, &RefResult::Point{pt: Point3f::new(2.0, 1.0, 0.0)}, ref_1);
         ops.add_object(&event, Box::new(obj_1)).unwrap();
@@ -97,8 +97,8 @@ fn test_dep_redo() {
         let mut obj_2 = TestObj::new("other stuff");
         let id_1 = obj_1.get_id().clone();
         let id_2 = obj_2.get_id().clone();
-        let ref_1 = Reference{id: id_1.clone(), index: 0};
-        let ref_2 = Reference{id: id_2.clone(), index: 0};
+        let ref_1 = Reference{id: id_1.clone(), index: 0, ref_type: RefType::Point};
+        let ref_2 = Reference{id: id_2.clone(), index: 0, ref_type: RefType::Point};
         obj_1.set_ref(0, &RefResult::Point{pt: Point3f::new(0.0, 1.0, 2.0)}, ref_2);
         obj_2.set_ref(0, &RefResult::Point{pt: Point3f::new(2.0, 1.0, 0.0)}, ref_1);
         ops.add_object(&event, Box::new(obj_1)).unwrap();

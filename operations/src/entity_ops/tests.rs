@@ -25,7 +25,7 @@ fn test_copy_objs() {
         first.move_obj(&Vector3f::new(1.0, 2.0, 3.0));
         let mut second = Box::new(TestObj::new("second"));
         let id_2 = second.get_id().clone();
-        second.set_ref(0, &RefResult::Point{pt:Point3f::new(1.0, 2.0, 3.0)}, Reference{id: id_1.clone(), index: 0});
+        second.set_ref(0, &RefResult::Point{pt:Point3f::new(1.0, 2.0, 3.0)}, Reference{id: id_1.clone(), index: 0, ref_type: RefType::Point});
 
         let event = app_state::begin_undo_event(&file, String::from("add objs")).unwrap();
         app_state::add_obj(&file, &event, first).unwrap();
@@ -55,11 +55,10 @@ fn test_copy_objs() {
 #[test]
 fn test_snap_point_to_point() {
     test_setup("snap_point", |file, rcv| {
-        let mut first = Box::new(TestObj::new("first"));
-        let id_1 = first.get_id().clone();
-        first.move_obj(&Vector3f::new(1.0, 2.0, 3.0));
-        let second = Box::new(TestObj::new("second"));
-        let id_2 = second.get_id().clone();
+        let id_1 = RefID::new_v4();
+        let first = Box::new(Wall::new(id_1.clone(), Point3f::new(1.0, 2.0, 3.0), Point3f::new(2.0, 2.0, 3.0), 1.0, 1.0));
+        let id_2 = RefID::new_v4();
+        let second = Box::new(Wall::new(id_2.clone(), Point3f::new(0.0, 0.0, 0.0), Point3f::new(1.0, 0.0 ,0.0), 1.0, 1.0));
 
         let event = app_state::begin_undo_event(&file, String::from("add objs")).unwrap();
         app_state::add_obj(&file, &event, first).unwrap();
@@ -95,10 +94,10 @@ fn test_snap_point_to_point() {
 #[test]
 fn test_snap_point_to_line() {
     test_setup("snap_line", |file, rcv| {
-        let first = Box::new(TestObj::new("first"));
-        let id_1 = first.get_id().clone();
-        let second = Box::new(TestObj::new("second"));
-        let id_2 = second.get_id().clone();
+        let id_1 = RefID::new_v4();
+        let first = Box::new(Wall::new(id_1.clone(), Point3f::new(0.0, 0.0, 0.0), Point3f::new(1.0, 0.0, 0.0), 1.0, 1.0));
+        let id_2 = RefID::new_v4();
+        let second = Box::new(Door::new(id_2.clone(), Point3f::new(1.0, 2.0, 3.0), Point3f::new(1.0, 2.5, 3.0), 1.0, 1.0));
 
         let event = app_state::begin_undo_event(&file, String::from("add objs")).unwrap();
         app_state::add_obj(&file, &event, first).unwrap();
@@ -109,14 +108,24 @@ fn test_snap_point_to_line() {
         let snapped = snap_point_to_line(file.clone(), event.clone(), id_2, 0, &id_1, &Point3f::new(0.5, 1.0, 0.0)).unwrap();
         assert_eq!(snapped, Some(RefResult::Line{pt_1: Point3f::new(0.0, 0.0, 0.0), pt_2: Point3f::new(1.0, 0.0, 0.0)}));
         empty_receiver(&rcv);
+        app_state::end_undo_event(&file, event).unwrap();
+        empty_receiver(&rcv);
+        app_state::get_obj(&file, &id_2, |second| {
+            let read = second.query_ref::<ReferTo>().unwrap();
+            let pts = read.get_all_results();
+            assert_eq!(pts[0], RefResult::Point{pt: Point3f::new(0.5, 0.0, 0.0)});
+            assert_eq!(pts[1], RefResult::Point{pt: Point3f::new(1.0, 0.0, 0.0)});
+            Ok(())
+        }).unwrap();
+        let event = app_state::begin_undo_event(&file, String::from("move obj")).unwrap();
         move_obj(file.clone(), event.clone(), id_1.clone(), Vector3f::new(0.0, 1.0, 0.0)).unwrap();
         app_state::end_undo_event(&file, event).unwrap();
         empty_receiver(&rcv);
-        app_state::get_obj(&file, &id_2, |first| {
-            let read = first.query_ref::<ReferTo>().unwrap();
+        app_state::get_obj(&file, &id_2, |second| {
+            let read = second.query_ref::<ReferTo>().unwrap();
             let pts = read.get_all_results();
             assert_eq!(pts[0], RefResult::Point{pt: Point3f::new(0.5, 1.0, 0.0)});
-            assert_eq!(pts[1], RefResult::Point{pt: Point3f::new(1.0, 0.0, 0.0)});
+            assert_eq!(pts[1], RefResult::Point{pt: Point3f::new(1.0, 1.0, 0.0)});
             Ok(())
         }).unwrap();
     });

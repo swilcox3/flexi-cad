@@ -33,6 +33,14 @@ impl MeshData {
 pub struct Reference {
     pub id: RefID,
     pub index: ResIndex,
+    pub ref_type: RefType
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd)]
+pub enum RefType {
+    Point,
+    Line{interp: Interp},
+    Rect,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

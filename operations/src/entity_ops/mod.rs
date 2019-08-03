@@ -86,7 +86,8 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>) -> Resu
                                 if let Some(res) = has_ref_res.get_result(this_ref.index) {
                                     refs_to_set.push((res, Reference {
                                         id: *ref_copy_id,
-                                        index: this_ref.index
+                                        index: this_ref.index,
+                                        ref_type: this_ref.ref_type
                                     }));
                                 }
                             }
@@ -158,7 +159,7 @@ fn get_closest_point(file: &PathBuf, obj: &RefID, guess: &Point3f) -> Result<(Op
     Ok((which_opt, res_opt))
 }
 
-fn get_closest_line(file: &PathBuf, obj: &RefID, guess: &Point3f) -> Result<(Option<ResIndex>, Option<RefResult>), DBError> {
+fn get_closest_line(file: &PathBuf, obj: &RefID, guess: &Point3f) -> Result<(Option<Reference>, Option<RefResult>), DBError> {
     let mut which_opt = None;
     let mut res_opt = None;
     app_state::get_obj(file, obj, |refer_obj| {
@@ -170,11 +171,13 @@ fn get_closest_line(file: &PathBuf, obj: &RefID, guess: &Point3f) -> Result<(Opt
                 for ref_res in results {
                     if let RefResult::Line{pt_1, pt_2} = ref_res {
                         let dir = pt_2 - pt_1;
-                        let projected: Point3f = EuclideanSpace::from_vec(guess.to_vec().project_on(dir));
+                        let proj_vec = guess.to_vec().project_on(dir);
+                        let projected: Point3f = EuclideanSpace::from_vec(proj_vec);
                         let cur_dist = projected.distance2(*guess);
                         if cur_dist < dist {
+                            let interp = (proj_vec.magnitude2() / dir.magnitude2()).sqrt();
                             res_opt = Some(ref_res);
-                            which_opt = Some(index);
+                            which_opt = Some(Reference{id: *obj, index: index, ref_type: RefType::Line{interp: Interp::new(interp)}});
                             dist = cur_dist;
                         }
                     }
@@ -192,17 +195,17 @@ pub fn snap_point_to_point(file: PathBuf, event: UndoEventID, obj: RefID, index:
     let (which_opt, res_opt) = get_closest_point(&file, &other_obj, guess)?;
     if let Some(which) = which_opt {
         if let Some(calc_res) = &res_opt {
-            set_ref(file, event, obj, index, calc_res, Reference{id: *other_obj, index: which})?;
+            set_ref(file, event, obj, index, calc_res, Reference{id: *other_obj, index: which, ref_type: RefType::Point})?;
         }
     }
     Ok(res_opt)
 }
 
 pub fn snap_point_to_line(file: PathBuf, event: UndoEventID, obj: RefID, index: RefIndex, other_obj: &RefID, guess: &Point3f) -> Result<Option<RefResult>, DBError> {
-    let (which_opt, res_opt) = get_closest_line(&file, &other_obj, guess)?;
-    if let Some(which) = which_opt {
+    let (ref_opt, res_opt) = get_closest_line(&file, &other_obj, guess)?;
+    if let Some(refer) = ref_opt {
         if let Some(calc_res) = &res_opt {
-            set_ref(file, event, obj, index, calc_res, Reference{id: *other_obj, index: which})?;
+            set_ref(file, event, obj, index, calc_res, refer)?;
         }
     }
     Ok(res_opt)

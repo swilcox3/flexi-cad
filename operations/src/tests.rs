@@ -124,6 +124,7 @@ impl UpdateFromRefs for TestObj {
                 }
                 self.refer_2 = Some(other_ref);
             }
+
             _ => ()
         }
     }
