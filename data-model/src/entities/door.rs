@@ -98,50 +98,24 @@ impl Data for Door {
 }
 
 impl ReferTo for Door {
-    fn get_result(&self, which: &RefType) -> Option<RefResult> {
-        match which {
-            RefType::Point{which_pt} => {
-                match which_pt {
-                    0 => Some(RefResult::Point{pt: self.first_pt}),
-                    1 => Some(RefResult::Point{pt: self.second_pt}),
-                    _ => None 
-                }
+    fn get_result(&self, index: usize) -> Option<RefResult> {
+        match index {
+            0 => Some(RefResult::Point{pt: self.first_pt}),
+            1 => Some(RefResult::Point{pt: self.second_pt}),
+            2 => {
+                let third = Point3f::new(self.second_pt.x, self.second_pt.y, self.second_pt.z + self.height);
+                Some(RefResult::Rect{pt_1: self.first_pt, pt_2: self.second_pt, pt_3: third})
             }
-            RefType::Opening{..} => {
-                match &self.line_ref {
-                    Some(line) => {
-                        match line.ref_type {
-                            RefType::Line{interp, ..} => Some(RefResult::Opening{interp: interp, height: self.height, length: self.length}),
-                            _ => None
-                        }
-                    }
-                    None => None
-                }
-            }
-            _ => None
+            _ => None 
         }
     }
 
-    fn get_results_for_type(&self, which: &RefType) -> Vec<RefResult> {
+    fn get_all_results(&self) -> Vec<RefResult> {
         let mut results = Vec::new();
-        match which {
-            RefType::Point{..} => {
-                results.push(RefResult::Point{pt: self.first_pt});
-                results.push(RefResult::Point{pt: self.second_pt});
-            }
-            RefType::Opening{..} => {
-                match &self.line_ref {
-                    Some(line) => {
-                        match line.ref_type {
-                            RefType::Line{interp, ..} => results.push(RefResult::Opening{interp: interp, height: self.height, length: self.length}),
-                            _ => ()
-                        }
-                    }
-                    None => ()
-                }
-            }
-            _ => ()
-        }
+        results.push(RefResult::Point{pt: self.first_pt});
+        results.push(RefResult::Point{pt: self.second_pt});
+        let third = Point3f::new(self.second_pt.x, self.second_pt.y, self.second_pt.z + self.height);
+        results.push(RefResult::Rect{pt_1: self.first_pt, pt_2: self.second_pt, pt_3: third});
         results
     }
 }
@@ -153,16 +127,13 @@ impl UpdateFromRefs for Door {
         results
     }
 
-    fn set_ref(&mut self, which_self: &RefType, result: &RefResult, other_ref: Reference) {
-        match which_self {
-            RefType::Line{..} => {
-                match result {
-                    RefResult::Line{pt, dir} => {
-                        self.first_pt = *pt;
-                        self.second_pt = pt + self.length * dir;
-                        self.line_ref = Some(other_ref);
-                    }
-                    _ => ()
+    fn set_ref(&mut self, index: usize, result: &RefResult, other_ref: Reference) {
+        match index {
+            0 => {
+                if let RefResult::Line{pt_1, pt_2} = result {
+                    self.first_pt = *pt_1;
+                    self.second_pt = *pt_2;
+                    self.line_ref = Some(other_ref);
                 }
             }
             _ => ()
@@ -172,9 +143,9 @@ impl UpdateFromRefs for Door {
     fn update_from_refs(&mut self, results: &Vec<Option<RefResult>>) -> Result<UpdateMsg, DBError> {
         //std::thread::sleep(std::time::Duration::from_secs(1));
         if let Some(refer) = results.get(0) {
-            if let Some(RefResult::Line{pt, dir}) = refer {
-                self.first_pt = *pt;
-                self.second_pt = pt + self.length * dir;
+            if let Some(RefResult::Line{pt_1, pt_2}) = refer {
+                self.first_pt = *pt_1;
+                self.second_pt = *pt_2;
             }
             else {
                 self.line_ref = None;

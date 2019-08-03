@@ -84,28 +84,20 @@ impl HasRefs for TestObj {
 }
 
 impl ReferTo for TestObj {
-    fn get_result(&self, which: &RefType) -> Option<RefResult> {
-        match which {
-            RefType::Point{which_pt} => {
-                match which_pt {
-                    0 => Some(RefResult::Point{pt: self.point}),
-                    1 => Some(RefResult::Point{pt: self.point_2}),
-                    _ => None
-                }
-            }
-            _ => None 
+    fn get_result(&self, index: usize) -> Option<RefResult> {
+        match index {
+            0 => Some(RefResult::Point{pt: self.point}),
+            1 => Some(RefResult::Point{pt: self.point_2}),
+            2 => Some(RefResult::Line{pt_1: self.point, pt_2: self.point_2}),
+            _ => None
         }
     }
 
-    fn get_results_for_type(&self, which: &RefType) -> Vec<RefResult> {
+    fn get_all_results(&self) -> Vec<RefResult> {
         let mut results = Vec::new();
-        match which {
-            RefType::Point{..} => {
-                results.push(RefResult::Point{pt: self.point});
-                results.push(RefResult::Point{pt: self.point_2});
-            }
-            _ => ()
-        }
+        results.push(RefResult::Point{pt: self.point});
+        results.push(RefResult::Point{pt: self.point_2});
+        results.push(RefResult::Line{pt_1: self.point, pt_2: self.point_2});
         results
     }
 }
@@ -118,28 +110,19 @@ impl UpdateFromRefs for TestObj {
         results
     }
 
-    fn set_ref(&mut self, which_self: &RefType, result: &RefResult, other_ref: Reference) {
-        match which_self {
-            RefType::Point{which_pt} => {
-                match which_pt {
-                    0 => {
-                        if let RefResult::Point{pt} = result {
-                            self.point = *pt;
-                        }
-                        if let RefType::Point{..} = other_ref.ref_type {
-                            self.refer = Some(other_ref);
-                        }
-                    }
-                    1 => {
-                        if let RefResult::Point{pt} = result {
-                            self.point_2 = *pt;
-                        }
-                        if let RefType::Point{..} = other_ref.ref_type {
-                            self.refer_2 = Some(other_ref);
-                        }
-                    }
-                    _ => ()
+    fn set_ref(&mut self, index: usize, result: &RefResult, other_ref: Reference) {
+        match index {
+            0 => {
+                if let RefResult::Point{pt} = result {
+                    self.point = *pt;
                 }
+                self.refer = Some(other_ref);
+            }
+            1 => {
+                if let RefResult::Point{pt} = result {
+                    self.point_2 = *pt;
+                }
+                self.refer_2 = Some(other_ref);
             }
             _ => ()
         }

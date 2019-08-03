@@ -114,7 +114,7 @@ impl OperationManager {
                 match self.get_obj(&refer.id, |obj| {
                     match obj.query_ref::<ReferTo>() {
                         Some(update_from) => {
-                            result = update_from.get_result(&refer.ref_type);
+                            result = update_from.get_result(refer.index);
                             Ok(())
                         }
                         None => Err(DBError::ObjLacksTrait)

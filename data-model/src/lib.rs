@@ -14,6 +14,7 @@ use serde::{Serialize, Deserialize};
 pub use geometry_kernel::*;
 pub use entities::wall::Wall;
 pub use entities::door::Door;
+pub use cgmath::prelude::*;
 
 #[derive(Debug, PartialEq)]
 pub enum DBError
@@ -54,6 +55,8 @@ pub type DataObject = Box<dyn Data>;
 pub type RefID = Uuid;
 pub type UserID = Uuid;
 pub type UndoEventID = Uuid;
+pub type RefIndex = usize;
+pub type ResIndex = usize;
 
 pub trait DepStore {
     fn register_sub(&self, publisher: &RefID, sub: RefID);
@@ -67,13 +70,13 @@ pub trait HasRefs : Data {
 }
 
 pub trait ReferTo {
-    fn get_result(&self, which: &RefType) -> Option<RefResult>;
-    fn get_results_for_type(&self, which: &RefType) -> Vec<RefResult>;
+    fn get_result(&self, index: ResIndex) -> Option<RefResult>;
+    fn get_all_results(&self) -> Vec<RefResult>;
 }
 
 pub trait UpdateFromRefs {
     fn get_refs(&self) -> Vec<Option<Reference>>;
-    fn set_ref(&mut self, which_self: &RefType, result: &RefResult, other_ref: Reference);
+    fn set_ref(&mut self, index: RefIndex, result: &RefResult, other_ref: Reference);
     fn update_from_refs(&mut self, results: &Vec<Option<RefResult>>) -> Result<UpdateMsg, DBError>;
 }
 

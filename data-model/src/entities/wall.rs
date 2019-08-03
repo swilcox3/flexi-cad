@@ -91,58 +91,20 @@ impl Data for Wall {
 }
 
 impl ReferTo for Wall {
-    fn get_result(&self, which: &RefType) -> Option<RefResult> {
-        match which {
-            RefType::Point{which_pt} => {
-                match which_pt {
-                    0 => Some(RefResult::Point{pt: self.first_pt}),
-                    1 => Some(RefResult::Point{pt: self.second_pt}),
-                    _ => None 
-                }
-            }
-            RefType::Line{interp, pts} => {
-                let pt_1_opt = match pts.0 {
-                    0 => Some(self.first_pt),
-                    1 => Some(self.second_pt),
-                    _ => None
-                };
-                let pt_2_opt = match pts.1 {
-                    0 => Some(self.first_pt),
-                    1 => Some(self.second_pt),
-                    _ => None
-                };
-                if let Some(pt_1) = pt_1_opt {
-                    if let Some(pt_2) = pt_2_opt {
-                        let dir = pt_2 - pt_1;
-                        let pt = pt_1 + dir * interp.val();
-                        Some(RefResult::Line{pt: pt, dir: dir})
-                    }
-                    else {
-                        None
-                    }
-                }
-                else {
-                    None
-                }
-            }
-            _ => None
+    fn get_result(&self, index: usize) -> Option<RefResult> {
+        match index {
+            0 => Some(RefResult::Point{pt: self.first_pt}),
+            1 => Some(RefResult::Point{pt: self.second_pt}),
+            2 => Some(RefResult::Line{pt_1: self.first_pt, pt_2: self.second_pt}),
+            _ => None 
         }
     }
 
-    fn get_results_for_type(&self, which: &RefType) -> Vec<RefResult> {
+    fn get_all_results(&self) -> Vec<RefResult> {
         let mut results = Vec::new();
-        match which {
-            RefType::Point{..} => {
-                results.push(RefResult::Point{pt: self.first_pt});
-                results.push(RefResult::Point{pt: self.second_pt});
-            }
-            RefType::Line{interp, ..} => {
-                let dir = self.first_pt - self.second_pt;
-                let pt = self.first_pt + dir * interp.val();
-                results.push(RefResult::Line{pt: pt, dir: dir});
-            }
-            _ => ()
-        }
+        results.push(RefResult::Point{pt: self.first_pt});
+        results.push(RefResult::Point{pt: self.second_pt});
+        results.push(RefResult::Line{pt_1: self.first_pt, pt_2: self.second_pt});
         results
     }
 }
@@ -158,50 +120,42 @@ impl UpdateFromRefs for Wall {
         results
     }
 
-    fn set_ref(&mut self, which_self: &RefType, result: &RefResult, other_ref: Reference) {
-        match which_self {
-            RefType::Point{which_pt} => {
-                match which_pt {
-                    0 => {
-                        if let RefResult::Point{pt} = result {
-                            self.first_pt = *pt;
-                        }
-                        if let RefType::Point{..} = other_ref.ref_type {
-                            self.joined_first = Some(other_ref);
-                        }
-                    }
-                    1 => {
-                        if let RefResult::Point{pt} = result {
-                            self.second_pt = *pt;
-                        }
-                        if let RefType::Point{..} = other_ref.ref_type {
-                            self.joined_second = Some(other_ref);
-                        }
-                    }
-                    _ => ()
+    fn set_ref(&mut self, index: usize, result: &RefResult, other_ref: Reference) {
+        match index {
+            0 => {
+                if let RefResult::Point{pt} = result {
+                    self.first_pt = *pt;
                 }
+                self.joined_first = Some(other_ref);
             }
-            RefType::Opening{which} => {
-                if let RefType::Opening{..} = other_ref.ref_type {
-                    if let Some(refer) = self.open_refs.get_mut(*which as usize) {
+            1 => {
+                if let RefResult::Point{pt} = result {
+                    self.second_pt = *pt;
+                }
+                self.joined_second = Some(other_ref);
+            }
+            _ => {
+                if let RefResult::Rect{pt_1, pt_2, pt_3} = result {
+                    if let Some(refer) = self.open_refs.get_mut(index - 2) {
                         *refer = other_ref;
                     }
                     else {
                         self.open_refs.push(other_ref);
                     }
-                }
-                if let RefResult::Opening{interp, height, length} = result {
-                    if let Some(open) = self.openings.get_mut(*which as usize) {
-                        open.interp = *interp;
-                        open.height = *height;
-                        open.length = *length;
+                    let self_length = (self.second_pt - self.first_pt).magnitude();
+                    let length = (pt_1 - self.first_pt).magnitude();
+                    let interp = Interp::new(length / self_length);
+                    let height = pt_3.z - pt_2.z;
+                    if let Some(open) = self.openings.get_mut(index - 2) {
+                        open.interp = interp;
+                        open.height = height;
+                        open.length = length;
                     }
                     else {
-                        self.openings.push(PrismOpening{interp: *interp, height: *height, length: *length});
+                        self.openings.push(PrismOpening{interp: interp, height: height, length: length});
                     }
                 }
             }
-            _ => ()
         }
     }
 
@@ -226,16 +180,18 @@ impl UpdateFromRefs for Wall {
         let mut to_remove = Vec::new();
         for i in 2..results.len() {
             if let Some(refer) = results.get(i) {
-                if let Some(RefResult::Opening{interp, height, length}) = refer {
-                    match self.openings.get_mut(i - 2) {
-                        Some(open) => {
-                            open.interp = *interp;
-                            open.height = *height;
-                            open.length = *length;
-                        }
-                        None => {
-                            return Err(DBError::NotFound);
-                        }
+                if let Some(RefResult::Rect{pt_1, pt_2, pt_3}) = refer {
+                    let self_length = (self.second_pt - self.first_pt).magnitude();
+                    let length = (pt_1 - self.first_pt).magnitude();
+                    let interp = Interp::new(length / self_length);
+                    let height = pt_3.z - pt_2.z;
+                    if let Some(open) = self.openings.get_mut(i - 2) {
+                        open.interp = interp;
+                        open.height = height;
+                        open.length = length;
+                    }
+                    else {
+                        self.openings.push(PrismOpening{interp: interp, height: height, length: length});
                     }
                 }
                 else {

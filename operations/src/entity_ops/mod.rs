@@ -2,7 +2,7 @@
 mod tests;
 
 use crate::*;
-use data_model::cgmath::MetricSpace;
+use data_model::cgmath::prelude::*;
 
 pub fn move_obj(file: PathBuf, event: UndoEventID, id: RefID, delta: Vector3f) -> Result<(), DBError> {
     app_state::modify_obj(&file, &event, &id, |obj| {
@@ -83,10 +83,10 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>) -> Resu
                     if let Some(this_ref) = ref_opt {
                         if let Some(ref_copy_id) = orig_to_copy.get(&this_ref.id) {
                             if let Some(has_ref_res) = obj.query_ref::<ReferTo>() {
-                                if let Some(res) = has_ref_res.get_result(&this_ref.ref_type) {
+                                if let Some(res) = has_ref_res.get_result(this_ref.index) {
                                     refs_to_set.push((res, Reference {
                                         id: *ref_copy_id,
-                                        ref_type: this_ref.ref_type.clone()
+                                        index: this_ref.index
                                     }));
                                 }
                             }
@@ -102,7 +102,7 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>) -> Resu
                     if let Some(has_ref) = obj.query_mut::<UpdateFromRefs>() {
                         for (res, ref_to_set) in &refs_to_set {
                             app_state::add_dep(&file, &ref_to_set.id, copy_id.clone())?;
-                            has_ref.set_ref(&ref_to_set.ref_type, &res, ref_to_set.clone());
+                            has_ref.set_ref(ref_to_set.index, &res, ref_to_set.clone());
                         }
                     }
                     Ok(())
@@ -115,41 +115,38 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>) -> Resu
     Ok(orig_to_copy)
 }
 
-pub fn snap_ref_to_result(file: PathBuf, event: UndoEventID, own_ref: Reference, other_ref: Reference, guess: RefResult) -> Result<Option<RefResult>, DBError> {
+pub fn set_ref(file: PathBuf, event: UndoEventID, obj: RefID, index: RefIndex, result: &RefResult, other_ref: Reference) -> Result<(), DBError> {
+    app_state::modify_obj(&file, &event, &obj, |owner| {
+        match owner.query_mut::<UpdateFromRefs>() {
+            Some(joinable) => {
+                joinable.set_ref(index, result, other_ref.clone());
+                Ok(())
+            }
+            None => Err(DBError::ObjLacksTrait)
+        }
+    })?;
+    app_state::add_dep(&file, &obj, other_ref.id)?;
+    app_state::update_deps(file, obj);
+    Ok(())
+}
+
+fn get_closest_point(file: &PathBuf, obj: &RefID, guess: &Point3f) -> Result<(Option<ResIndex>, Option<RefResult>), DBError> {
     let mut which_opt = None;
     let mut res_opt = None;
-    app_state::get_obj(&file, &other_ref.id, |refer_obj| {
+    app_state::get_obj(file, obj, |refer_obj| {
         match refer_obj.query_ref::<ReferTo>() {
             Some(joinable) => {
-                let results = joinable.get_results_for_type(&other_ref.ref_type);
+                let results = joinable.get_all_results();
                 let mut dist = std::f64::MAX;
                 let mut index = 0;
                 for ref_res in results {
-                    match ref_res {
-                        RefResult::Point{pt} => {
-                            let refer_pt = pt;
-                            if let RefResult::Point{pt} = guess {
-                                let cur_dist = refer_pt.distance2(pt);
-                                if cur_dist < dist {
-                                    res_opt = Some(ref_res);
-                                    which_opt = Some(RefType::Point{which_pt: index});
-                                    dist = cur_dist;
-                                }
-                            }
+                    if let RefResult::Point{pt} = ref_res {
+                        let cur_dist = pt.distance2(*guess);
+                        if cur_dist < dist {
+                            res_opt = Some(ref_res);
+                            which_opt = Some(index);
+                            dist = cur_dist;
                         }
-                        RefResult::Line{pt, dir} => {
-                            let refer_pt = pt;
-                            let refer_dir = dir;
-                            if let RefResult::Point{pt} = guess {
-                                let cur_dist = refer_pt.distance2(pt);
-                                if cur_dist < dist {
-                                    res_opt = Some(ref_res);
-                                    which_opt = Some(RefType::)Line
-                                }
-                            }
-
-                        }
-                        _ => ()
                     }
                     index += 1;
                 }
@@ -158,19 +155,54 @@ pub fn snap_ref_to_result(file: PathBuf, event: UndoEventID, own_ref: Reference,
             None => Err(DBError::ObjLacksTrait)
         }
     })?;
+    Ok((which_opt, res_opt))
+}
+
+fn get_closest_line(file: &PathBuf, obj: &RefID, guess: &Point3f) -> Result<(Option<ResIndex>, Option<RefResult>), DBError> {
+    let mut which_opt = None;
+    let mut res_opt = None;
+    app_state::get_obj(file, obj, |refer_obj| {
+        match refer_obj.query_ref::<ReferTo>() {
+            Some(joinable) => {
+                let results = joinable.get_all_results();
+                let mut dist = std::f64::MAX;
+                let mut index = 0;
+                for ref_res in results {
+                    if let RefResult::Line{pt_1, pt_2} = ref_res {
+                        let dir = pt_2 - pt_1;
+                        let projected: Point3f = EuclideanSpace::from_vec(guess.to_vec().project_on(dir));
+                        let cur_dist = projected.distance2(*guess);
+                        if cur_dist < dist {
+                            res_opt = Some(ref_res);
+                            which_opt = Some(index);
+                            dist = cur_dist;
+                        }
+                    }
+                    index += 1;
+                }
+                Ok(())
+            }
+            None => Err(DBError::ObjLacksTrait)
+        }
+    })?;
+    Ok((which_opt, res_opt))
+}
+
+pub fn snap_point_to_point(file: PathBuf, event: UndoEventID, obj: RefID, index: RefIndex, other_obj: &RefID, guess: &Point3f) -> Result<Option<RefResult>, DBError> {
+    let (which_opt, res_opt) = get_closest_point(&file, &other_obj, guess)?;
     if let Some(which) = which_opt {
         if let Some(calc_res) = &res_opt {
-            app_state::modify_obj(&file, &event, &own_ref.id, |owner| {
-                match owner.query_mut::<UpdateFromRefs>() {
-                    Some(joinable) => {
-                        joinable.set_ref(&own_ref.ref_type, calc_res, Reference{id: other_ref.id, ref_type: which.clone()});
-                        Ok(())
-                    }
-                    None => Err(DBError::ObjLacksTrait)
-                }
-            })?;
-            app_state::add_dep(&file, &own_ref.id, other_ref.id.clone())?;
-            app_state::update_deps(file, own_ref.id);
+            set_ref(file, event, obj, index, calc_res, Reference{id: *other_obj, index: which})?;
+        }
+    }
+    Ok(res_opt)
+}
+
+pub fn snap_point_to_line(file: PathBuf, event: UndoEventID, obj: RefID, index: RefIndex, other_obj: &RefID, guess: &Point3f) -> Result<Option<RefResult>, DBError> {
+    let (which_opt, res_opt) = get_closest_line(&file, &other_obj, guess)?;
+    if let Some(which) = which_opt {
+        if let Some(calc_res) = &res_opt {
+            set_ref(file, event, obj, index, calc_res, Reference{id: *other_obj, index: which})?;
         }
     }
     Ok(res_opt)

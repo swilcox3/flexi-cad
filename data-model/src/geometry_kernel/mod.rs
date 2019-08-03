@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::RefID;
+use crate::{RefID, ResIndex};
 
 pub mod primitives;
 
@@ -32,21 +32,14 @@ impl MeshData {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd)]
 pub struct Reference {
     pub id: RefID,
-    pub ref_type: RefType
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd)]
-pub enum RefType {
-    Point{which_pt: u64},
-    Line{interp: Interp, pts: (u64, u64)},
-    Opening{which: u64},
+    pub index: ResIndex,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum RefResult {
     Point{pt: Point3f},
-    Line{pt: Point3f, dir: Vector3f},
-    Opening{interp: Interp, height: WorldCoord, length: WorldCoord}
+    Line{pt_1: Point3f, pt_2: Point3f},
+    Rect{pt_1: Point3f, pt_2: Point3f, pt_3: Point3f}
 }
 
 //A value between 0 and 1
