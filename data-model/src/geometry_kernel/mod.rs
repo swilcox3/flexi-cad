@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use crate::{RefID, ResIndex};
+use cgmath::prelude::*;
 
 pub mod primitives;
 
@@ -41,6 +42,41 @@ pub enum RefType {
     Point,
     Line{interp: Interp},
     Rect,
+    Any,
+}
+
+impl RefType {
+    pub fn type_equals(&self, other: &RefResult) -> bool {
+        match *self {
+            RefType::Point => {
+                if let RefResult::Point{..} = other {
+                    true
+                }
+                else {
+                    false
+                }
+            }
+            RefType::Line{..} => {
+                if let RefResult::Line{..} = other {
+                    true
+                }
+                else {
+                    false
+                }
+            }
+            RefType::Rect => {
+                if let RefResult::Rect{..} = other {
+                    true
+                }
+                else {
+                    false
+                }
+            }
+            RefType::Any => {
+                true
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -49,6 +85,23 @@ pub enum RefResult {
     Line{pt_1: Point3f, pt_2: Point3f},
     Rect{pt_1: Point3f, pt_2: Point3f, pt_3: Point3f}
 }
+
+impl RefResult {
+    pub fn distance2(&self, in_pt: &Point3f) -> (WorldCoord, RefType) {
+        match *self {
+            RefResult::Point{pt} => (pt.distance2(*in_pt), RefType::Point),
+            RefResult::Line{pt_1, pt_2} => {
+                let dir = pt_2 - pt_1;
+                let proj_vec = in_pt.to_vec().project_on(dir);
+                let projected: Point3f = EuclideanSpace::from_vec(proj_vec);
+                let interp = (proj_vec.magnitude2() / dir.magnitude2()).sqrt();
+                (projected.distance2(*in_pt), RefType::Line{interp: Interp::new(interp)})
+            }
+            RefResult::Rect{pt_1, ..} => (pt_1.distance2(*in_pt), RefType::Rect)
+        }
+    }
+}
+
 
 //A value between 0 and 1
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, PartialOrd)]

@@ -53,8 +53,8 @@ fn test_copy_objs() {
 }
 
 #[test]
-fn test_snap_point_to_point() {
-    test_setup("snap_point", |file, rcv| {
+fn test_join_walls() {
+    test_setup("join walls", |file, rcv| {
         let id_1 = RefID::new_v4();
         let first = Box::new(Wall::new(id_1.clone(), Point3f::new(1.0, 2.0, 3.0), Point3f::new(2.0, 2.0, 3.0), 1.0, 1.0));
         let id_2 = RefID::new_v4();
@@ -66,10 +66,7 @@ fn test_snap_point_to_point() {
         app_state::end_undo_event(&file, event).unwrap();
 
         let event = app_state::begin_undo_event(&file, String::from("snap objs")).unwrap();
-        let snapped = snap_point_to_point(file.clone(), event.clone(), id_2, 0, &id_1, &Point3f::new(2.0, 3.0, 3.0)).unwrap();
-        assert_eq!(snapped, Some(RefResult::Point{pt: Point3f::new(2.0, 2.0, 3.0)}));
-        let snapped_2 = snap_point_to_point(file.clone(), event.clone(), id_1, 1, &id_2, &Point3f::new(2.0, 3.0, 3.0)).unwrap();
-        assert_eq!(snapped_2, Some(RefResult::Point{pt: Point3f::new(2.0, 2.0, 3.0)}));
+        join_at(file.clone(), &event, id_1.clone(), id_2.clone(), &RefType::Point, &RefType::Point, &Point3f::new(2.0, 3.0, 3.0)).unwrap();
         empty_receiver(&rcv);
         move_obj(file.clone(), event.clone(), id_1.clone(), Vector3f::new(0.0, 1.0, 0.0)).unwrap();
         app_state::end_undo_event(&file, event).unwrap();
@@ -92,8 +89,8 @@ fn test_snap_point_to_point() {
 }
 
 #[test]
-fn test_snap_point_to_line() {
-    test_setup("snap_line", |file, rcv| {
+fn test_join_wall_and_door() {
+    test_setup("join wall and door", |file, rcv| {
         let id_1 = RefID::new_v4();
         let first = Box::new(Wall::new(id_1.clone(), Point3f::new(0.0, 0.0, 0.0), Point3f::new(1.0, 0.0, 0.0), 1.0, 1.0));
         let id_2 = RefID::new_v4();
@@ -105,10 +102,7 @@ fn test_snap_point_to_line() {
         app_state::end_undo_event(&file, event).unwrap();
 
         let event = app_state::begin_undo_event(&file, String::from("snap objs")).unwrap();
-        let snapped = snap_point_to_line(file.clone(), event.clone(), id_2, 0, &id_1, &Point3f::new(0.5, 1.0, 0.0)).unwrap();
-        assert_eq!(snapped, Some(RefResult::Line{pt_1: Point3f::new(0.0, 0.0, 0.0), pt_2: Point3f::new(1.0, 0.0, 0.0)}));
-        set_ref_at(file.clone(), event.clone(), id_1.clone(), 2, Reference{ id: id_2.clone(), index: 2, ref_type: RefType::Rect}).unwrap();
-
+        join_at(file.clone(), &event, id_1.clone(), id_2.clone(), &RefType::Line{interp: Interp::new(0.0)}, &RefType::Rect, &Point3f::new(0.5, 1.0, 0.0)).unwrap();
         app_state::end_undo_event(&file, event).unwrap();
         empty_receiver(&rcv);
         app_state::get_obj(&file, &id_2, |second| {

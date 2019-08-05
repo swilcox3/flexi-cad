@@ -148,6 +148,20 @@ pub fn delete_obj(file: &PathBuf, event: &UndoEventID, id: &RefID) -> Result<Dat
     }
 }
 
+pub fn set_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, index: RefIndex, result: &RefResult, refer: Reference) -> Result<(), DBError> {
+    let other_id = refer.id.clone();
+    modify_obj(&file, &event, &obj, |owner| {
+        match owner.query_mut::<UpdateFromRefs>() {
+            Some(joinable) => {
+                joinable.set_ref(index, result, refer.clone());
+                Ok(())
+            }
+            None => Err(DBError::ObjLacksTrait)
+        }
+    })?;
+    add_dep(&file, &obj, other_id)
+}
+
 pub fn update_deps(file: PathBuf, id: RefID) {
     Scheduler::spawn(move || {
         match APP_STATE.files.get(&file) {
