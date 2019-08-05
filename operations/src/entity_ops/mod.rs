@@ -116,7 +116,7 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>) -> Resu
     Ok(orig_to_copy)
 }
 
-pub fn set_ref(file: PathBuf, event: UndoEventID, obj: RefID, index: RefIndex, result: &RefResult, other_ref: Reference) -> Result<(), DBError> {
+pub fn set_ref_from_result(file: PathBuf, event: UndoEventID, obj: RefID, index: RefIndex, result: &RefResult, other_ref: Reference) -> Result<(), DBError> {
     app_state::modify_obj(&file, &event, &obj, |owner| {
         match owner.query_mut::<UpdateFromRefs>() {
             Some(joinable) => {
@@ -129,6 +129,25 @@ pub fn set_ref(file: PathBuf, event: UndoEventID, obj: RefID, index: RefIndex, r
     app_state::add_dep(&file, &obj, other_ref.id)?;
     app_state::update_deps(file, obj);
     Ok(())
+}
+
+pub fn set_ref_at(file: PathBuf, event: UndoEventID, obj: RefID, index: RefIndex, other_ref: Reference) -> Result<(), DBError> {
+    let mut res_opt = None;
+    app_state::get_obj(&file, &other_ref.id, |source| {
+        match source.query_ref::<ReferTo>() {
+            Some(joinable) => {
+                res_opt = joinable.get_result(other_ref.index);
+                Ok(())
+            }
+            None => Err(DBError::ObjLacksTrait)
+        }
+    })?;
+    if let Some(result) = res_opt {
+        set_ref_from_result(file, event, obj, index, &result, other_ref)
+    }
+    else {
+        Ok(())
+    }
 }
 
 fn get_closest_point(file: &PathBuf, obj: &RefID, guess: &Point3f) -> Result<(Option<ResIndex>, Option<RefResult>), DBError> {
@@ -195,7 +214,7 @@ pub fn snap_point_to_point(file: PathBuf, event: UndoEventID, obj: RefID, index:
     let (which_opt, res_opt) = get_closest_point(&file, &other_obj, guess)?;
     if let Some(which) = which_opt {
         if let Some(calc_res) = &res_opt {
-            set_ref(file, event, obj, index, calc_res, Reference{id: *other_obj, index: which, ref_type: RefType::Point})?;
+            set_ref_from_result(file, event, obj, index, calc_res, Reference{id: *other_obj, index: which, ref_type: RefType::Point})?;
         }
     }
     Ok(res_opt)
@@ -205,7 +224,7 @@ pub fn snap_point_to_line(file: PathBuf, event: UndoEventID, obj: RefID, index: 
     let (ref_opt, res_opt) = get_closest_line(&file, &other_obj, guess)?;
     if let Some(refer) = ref_opt {
         if let Some(calc_res) = &res_opt {
-            set_ref(file, event, obj, index, calc_res, refer)?;
+            set_ref_from_result(file, event, obj, index, calc_res, refer)?;
         }
     }
     Ok(res_opt)

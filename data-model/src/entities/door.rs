@@ -135,6 +135,7 @@ impl UpdateFromRefs for Door {
                         let dir = pt_2 - pt_1;
                         self.first_pt = pt_1 + dir * interp.val();
                         self.second_pt = self.first_pt + dir.normalize() * self.length;
+                        self.line_ref = Some(other_ref);
                     }
                 }
             }
@@ -148,9 +149,8 @@ impl UpdateFromRefs for Door {
             if let Some(RefResult::Line{pt_1, pt_2}) = refer {
                 if let Some(own_refer) = &self.line_ref {
                     if let RefType::Line{interp} = own_refer.ref_type {
-                        println!("made it: {:?} => {:?}", pt_1, pt_2);
                         let dir = pt_2 - pt_1;
-                        self.first_pt = EuclideanSpace::from_vec(dir * interp.val());
+                        self.first_pt = pt_1 + dir * interp.val();
                         self.second_pt = self.first_pt + dir.normalize() * self.length;
                     }
                 }

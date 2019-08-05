@@ -107,7 +107,8 @@ fn test_snap_point_to_line() {
         let event = app_state::begin_undo_event(&file, String::from("snap objs")).unwrap();
         let snapped = snap_point_to_line(file.clone(), event.clone(), id_2, 0, &id_1, &Point3f::new(0.5, 1.0, 0.0)).unwrap();
         assert_eq!(snapped, Some(RefResult::Line{pt_1: Point3f::new(0.0, 0.0, 0.0), pt_2: Point3f::new(1.0, 0.0, 0.0)}));
-        empty_receiver(&rcv);
+        set_ref_at(file.clone(), event.clone(), id_1.clone(), 2, Reference{ id: id_2.clone(), index: 2, ref_type: RefType::Rect}).unwrap();
+
         app_state::end_undo_event(&file, event).unwrap();
         empty_receiver(&rcv);
         app_state::get_obj(&file, &id_2, |second| {
