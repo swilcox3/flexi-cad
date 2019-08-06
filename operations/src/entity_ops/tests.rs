@@ -66,24 +66,22 @@ fn test_join_walls() {
         app_state::end_undo_event(&file, event).unwrap();
 
         let event = app_state::begin_undo_event(&file, String::from("snap objs")).unwrap();
-        join_at(file.clone(), &event, id_1.clone(), id_2.clone(), &RefType::Point, &RefType::Point, &Point3f::new(2.0, 3.0, 3.0)).unwrap();
+        join_at(file.clone(), &event, id_1.clone(), id_2.clone(), &RefType::Point, &RefType::Point, &Point3f::new(2.0, 4.0, 3.0)).unwrap();
         empty_receiver(&rcv);
         move_obj(file.clone(), event.clone(), id_1.clone(), Vector3f::new(0.0, 1.0, 0.0)).unwrap();
         app_state::end_undo_event(&file, event).unwrap();
         empty_receiver(&rcv);
         app_state::get_obj(&file, &id_1, |first| {
-            println!("{:?}", first);
             let read = first.query_ref::<ReferTo>().unwrap();
             let pts = read.get_all_results();
             assert_eq!(pts[0], RefResult::Point{pt: Point3f::new(1.0, 3.0, 3.0)});
-            assert_eq!(pts[1], RefResult::Point{pt: Point3f::new(2.0, 4.0, 4.0)});
+            assert_eq!(pts[1], RefResult::Point{pt: Point3f::new(2.0, 3.0, 3.0)});
             Ok(())
         }).unwrap();
         app_state::get_obj(&file, &id_2, |second| {
-            println!("{:?}", second);
             let read = second.query_ref::<ReferTo>().unwrap();
             let pts = read.get_all_results();
-            assert_eq!(pts[0], RefResult::Point{pt: Point3f::new(2.0, 4.0, 4.0)});
+            assert_eq!(pts[0], RefResult::Point{pt: Point3f::new(2.0, 3.0, 3.0)});
             assert_eq!(pts[1], RefResult::Point{pt: Point3f::new(4.0, 5.0, 6.0)});
             Ok(())
         }).unwrap();

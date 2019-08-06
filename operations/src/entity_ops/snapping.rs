@@ -30,7 +30,6 @@ fn get_closest_result(file: &PathBuf, obj: &RefID, only_match: &RefType, guess: 
 
 pub fn snap_to(file: PathBuf, event: &UndoEventID, obj: RefID, index: RefIndex, other_obj: &RefID, only_match: &RefType, guess: &Point3f) -> Result<Option<RefResult>, DBError> {
     let (which_opt, res_opt) = get_closest_result(&file, &other_obj, only_match, guess)?;
-    println!("{:?} => {:?}", which_opt, res_opt);
     if let Some(which) = which_opt {
         if let Some(calc_res) = &res_opt {
             app_state::set_ref(&file, event, &obj, index, calc_res, which)?;
@@ -47,10 +46,17 @@ pub fn join_at(file: PathBuf, event: &UndoEventID, first: RefID, second: RefID, 
     if let Some(which_1) = which_opt_1 {
         if let Some(res_1) = res_opt_1 {
             if let Some(which_2) = which_opt_2 {
-                if let Some(res_2) = res_opt_2 {
-                    let other_index = which_2.index;
-                    app_state::set_ref(&file, event, &first, which_1.index, &res_2, which_2)?;
-                    app_state::set_ref(&file, event, &second, other_index, &res_1, which_1)?;
+                if let Some(_) = res_opt_2 {
+                    let other_index = which_1.index;
+                    app_state::set_ref(&file, event, &second, which_2.index, &res_1, which_1)?;
+                    //This is weird, but we need the index to set above, but we want to only move the second object passed in,
+                    //updating it to the position of the first one.
+                    let (which_opt_2, res_opt_2) = get_closest_result(&file, &second, second_type, guess)?;
+                    if let Some(which_2) = which_opt_2 {
+                        if let Some(res_2) = res_opt_2 {
+                            app_state::set_ref(&file, event, &first, other_index, &res_2, which_2)?;
+                        }
+                    }
                     app_state::update_all_deps(file, vec![first, second]);
                     return Ok(());
                 }
