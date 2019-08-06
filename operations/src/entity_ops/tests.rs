@@ -58,7 +58,7 @@ fn test_join_walls() {
         let id_1 = RefID::new_v4();
         let first = Box::new(Wall::new(id_1.clone(), Point3f::new(1.0, 2.0, 3.0), Point3f::new(2.0, 2.0, 3.0), 1.0, 1.0));
         let id_2 = RefID::new_v4();
-        let second = Box::new(Wall::new(id_2.clone(), Point3f::new(0.0, 0.0, 0.0), Point3f::new(1.0, 0.0 ,0.0), 1.0, 1.0));
+        let second = Box::new(Wall::new(id_2.clone(), Point3f::new(2.0, 3.0, 4.0,), Point3f::new(4.0, 5.0, 6.0), 1.0, 1.0));
 
         let event = app_state::begin_undo_event(&file, String::from("add objs")).unwrap();
         app_state::add_obj(&file, &event, first).unwrap();
@@ -72,25 +72,27 @@ fn test_join_walls() {
         app_state::end_undo_event(&file, event).unwrap();
         empty_receiver(&rcv);
         app_state::get_obj(&file, &id_1, |first| {
+            println!("{:?}", first);
             let read = first.query_ref::<ReferTo>().unwrap();
             let pts = read.get_all_results();
             assert_eq!(pts[0], RefResult::Point{pt: Point3f::new(1.0, 3.0, 3.0)});
-            assert_eq!(pts[1], RefResult::Point{pt: Point3f::new(2.0, 3.0, 3.0)});
+            assert_eq!(pts[1], RefResult::Point{pt: Point3f::new(2.0, 4.0, 4.0)});
             Ok(())
         }).unwrap();
         app_state::get_obj(&file, &id_2, |second| {
+            println!("{:?}", second);
             let read = second.query_ref::<ReferTo>().unwrap();
             let pts = read.get_all_results();
-            assert_eq!(pts[0], RefResult::Point{pt: Point3f::new(2.0, 3.0, 3.0)});
-            assert_eq!(pts[1], RefResult::Point{pt: Point3f::new(1.0, 0.0, 0.0)});
+            assert_eq!(pts[0], RefResult::Point{pt: Point3f::new(2.0, 4.0, 4.0)});
+            assert_eq!(pts[1], RefResult::Point{pt: Point3f::new(4.0, 5.0, 6.0)});
             Ok(())
         }).unwrap();
     });
 }
 
 #[test]
-fn test_join_wall_and_door() {
-    test_setup("join wall and door", |file, rcv| {
+fn test_snap_door_to_wall() {
+    test_setup("snap door to wall", |file, rcv| {
         let id_1 = RefID::new_v4();
         let first = Box::new(Wall::new(id_1.clone(), Point3f::new(0.0, 0.0, 0.0), Point3f::new(1.0, 0.0, 0.0), 1.0, 1.0));
         let id_2 = RefID::new_v4();
@@ -102,7 +104,8 @@ fn test_join_wall_and_door() {
         app_state::end_undo_event(&file, event).unwrap();
 
         let event = app_state::begin_undo_event(&file, String::from("snap objs")).unwrap();
-        join_at(file.clone(), &event, id_1.clone(), id_2.clone(), &RefType::Line{interp: Interp::new(0.0)}, &RefType::Rect, &Point3f::new(0.5, 1.0, 0.0)).unwrap();
+        let snapped = snap_to(file.clone(), &event, id_2.clone(), 0, &id_1, &RefType::Line{interp: Interp::new(0.0)}, &Point3f::new(0.5, 1.0, 0.0)).unwrap();
+        assert_eq!(snapped, Some(RefResult::Line{ pt_1: Point3f::new(0.0, 0.0, 0.0), pt_2: Point3f::new(1.0, 0.0, 0.0)}));
         app_state::end_undo_event(&file, event).unwrap();
         empty_receiver(&rcv);
         app_state::get_obj(&file, &id_2, |second| {

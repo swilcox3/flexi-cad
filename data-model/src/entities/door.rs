@@ -145,10 +145,12 @@ impl UpdateFromRefs for Door {
 
     fn update_from_refs(&mut self, results: &Vec<Option<RefResult>>) -> Result<UpdateMsg, DBError> {
         //std::thread::sleep(std::time::Duration::from_secs(1));
+                        println!("made it out");
         if let Some(refer) = results.get(0) {
             if let Some(RefResult::Line{pt_1, pt_2}) = refer {
                 if let Some(own_refer) = &self.line_ref {
                     if let RefType::Line{interp} = own_refer.ref_type {
+                        println!("made it in");
                         let dir = pt_2 - pt_1;
                         self.first_pt = pt_1 + dir * interp.val();
                         self.second_pt = self.first_pt + dir.normalize() * self.length;
