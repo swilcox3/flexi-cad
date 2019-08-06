@@ -22,17 +22,20 @@ export class DoorTool {
         return hovered && hovered.metadata.type == "Wall";
     }
 
-    createDoor(picked: BABYLON.Mesh)
+    createDoor(pt: math.Point3d, picked: BABYLON.Mesh)
     {
         if(!this.undoEventId) {
             this.undoEventId = ops.beginUndoEvent("Create Door")
         }
         ops.createObj(this.undoEventId, this.curTemp)
+        if(this.canJoinToWall(picked)) {
+            ops.snapToLine(this.undoEventId, this.curTemp.get("id"), picked.name, pt)
+        }
     }
 
     onMouseDown(pt: math.Point3d, picked: BABYLON.Mesh)
     {
-        this.createDoor(picked);
+        this.createDoor(new math.Point3d(pt.x, pt.y, 0), picked);
         this.curTemp = null;
     }
 
@@ -43,7 +46,7 @@ export class DoorTool {
         {
             var first = new math.Point3d(pt.x, pt.y, 0)
             var second = new math.Point3d(pt.x + this.length, pt.y, 0)
-            this.curTemp = new kernel.Door(first, second, this.width, this.height, this.length);
+            this.curTemp = new kernel.Door(first, second, this.width, this.height);
             ops.renderTempObject(this.curTemp)
         }
         else
@@ -85,7 +88,7 @@ export class DoorTool {
     finish(pt: math.Point3d, picked: BABYLON.Mesh)
     {
         if(this.curTemp) {
-            this.createDoor(picked);
+            this.createDoor(new math.Point3d(pt.x, pt.y, 0), picked);
         }
         if(this.undoEventId) {
             ops.endUndoEvent(this.undoEventId)

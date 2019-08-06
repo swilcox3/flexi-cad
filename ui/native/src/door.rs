@@ -13,7 +13,6 @@ declare_types! {
             let point_2 = neon_serde::from_value(&mut cx, arg_1)?;
             let width = cx.argument::<JsNumber>(2)?.value();
             let height = cx.argument::<JsNumber>(3)?.value();
-            let length = cx.argument::<JsNumber>(4)?.value();
             let id = match cx.argument_opt(5) {
                 Some(arg) => {
                     let id_str = arg.downcast::<JsString>().or_throw(&mut cx)?.value();
@@ -21,7 +20,7 @@ declare_types! {
                 }
                 None => RefID::new_v4()
             };
-            Ok(Door::new(id, point_1, point_2, width, height, length))
+            Ok(Door::new(id, point_1, point_2, width, height))
         }
 
         method set_dir(mut cx) {

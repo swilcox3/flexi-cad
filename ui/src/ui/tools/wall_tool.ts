@@ -29,10 +29,10 @@ export class WallTool {
         }
         ops.createObj(this.undoEventId, this.curTemp)
         if(this.lastId) {
-            ops.joinAtPoint(this.undoEventId, this.lastId, this.curTemp.get("id"), this.curTemp.get("first"))
+            ops.joinAtPoints(this.undoEventId, this.lastId, this.curTemp.get("id"), this.curTemp.get("first"))
         }
         if(this.canJoinToWall(picked)) {
-            ops.joinAtPoint(this.undoEventId, this.curTemp.get("id"), picked.name, this.curTemp.get("second"));
+            ops.joinAtPoints(this.undoEventId, picked.name, this.curTemp.get("id"), this.curTemp.get("second"));
         }
     }
 

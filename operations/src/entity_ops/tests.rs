@@ -102,7 +102,7 @@ fn test_snap_door_to_wall() {
         app_state::end_undo_event(&file, event).unwrap();
 
         let event = app_state::begin_undo_event(&file, String::from("snap objs")).unwrap();
-        let snapped = snap_to(file.clone(), &event, id_2.clone(), 0, &id_1, &RefType::Line{interp: Interp::new(0.0)}, &Point3f::new(0.5, 1.0, 0.0)).unwrap();
+        let snapped = snap_to(file.clone(), &event, id_2.clone(), &RefType::, &id_1, &RefType::Line{interp: Interp::new(0.0)}, &Point3f::new(0.5, 1.0, 0.0)).unwrap();
         assert_eq!(snapped, Some(RefResult::Line{ pt_1: Point3f::new(0.0, 0.0, 0.0), pt_2: Point3f::new(1.0, 0.0, 0.0)}));
         app_state::end_undo_event(&file, event).unwrap();
         empty_receiver(&rcv);

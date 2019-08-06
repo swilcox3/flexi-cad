@@ -168,10 +168,16 @@ export function createObj(event: string, obj: DataObject)
     return waitForUpdate(obj.get("id"));
 }
 
-export function joinAtPoint(event: string, id_1: string, id_2: string, pt: math.Point3d) 
+export function joinAtPoints(event: string, id_1: string, id_2: string, pt: math.Point3d) 
 {
-    kernel.join_at_point(filename, event, id_1, id_2, pt)
+    kernel.join_at_points(filename, event, id_1, id_2, pt)
     return waitForAllUpdates([id_1, id_2])
+}
+
+export function snapToLine(event: string, id: string, snap_to_id: string, pt: math.Point3d) 
+{
+    kernel.snap_to_line(filename, event, id, snap_to_id, pt)
+    return waitForUpdate(id)
 }
 
 export function moveObj(event: string, id: string, delta: math.Point3d)
