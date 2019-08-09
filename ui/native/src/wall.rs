@@ -109,7 +109,7 @@ declare_types! {
                     {
                         let guard = cx.lock();
                         this.borrow_mut(&guard).width = width;
-                    };
+                    }
                     Ok(cx.undefined().upcast())
                 }
                 "height" => {
@@ -117,13 +117,12 @@ declare_types! {
                     {
                         let guard = cx.lock();
                         this.borrow_mut(&guard).height = height; 
-                    };
+                    }
                     Ok(cx.undefined().upcast())
                 }
                 _ => cx.throw_type_error("property does not exist")
             }
         }
-
 
         method getUpdateMsg(mut cx) {
             let this = cx.this();

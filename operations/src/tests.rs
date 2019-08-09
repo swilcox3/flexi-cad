@@ -84,20 +84,20 @@ impl HasRefs for TestObj {
 }
 
 impl ReferTo for TestObj {
-    fn get_result(&self, index: usize) -> Option<RefResult> {
+    fn get_result(&self, index: usize) -> Option<RefGeometry> {
         match index {
-            0 => Some(RefResult::Point{pt: self.point}),
-            1 => Some(RefResult::Point{pt: self.point_2}),
-            2 => Some(RefResult::Line{pt_1: self.point, pt_2: self.point_2}),
+            0 => Some(RefGeometry::Point{pt: self.point}),
+            1 => Some(RefGeometry::Point{pt: self.point_2}),
+            2 => Some(RefGeometry::Line{pt_1: self.point, pt_2: self.point_2}),
             _ => None
         }
     }
 
-    fn get_all_results(&self) -> Vec<RefResult> {
+    fn get_all_results(&self) -> Vec<RefGeometry> {
         let mut results = Vec::new();
-        results.push(RefResult::Point{pt: self.point});
-        results.push(RefResult::Point{pt: self.point_2});
-        results.push(RefResult::Line{pt_1: self.point, pt_2: self.point_2});
+        results.push(RefGeometry::Point{pt: self.point});
+        results.push(RefGeometry::Point{pt: self.point_2});
+        results.push(RefGeometry::Line{pt_1: self.point, pt_2: self.point_2});
         results
     }
 }
@@ -110,16 +110,16 @@ impl UpdateFromRefs for TestObj {
         results
     }
 
-    fn set_ref(&mut self, index: usize, result: &RefResult, other_ref: Reference) {
+    fn set_ref(&mut self, index: usize, result: &RefGeometry, other_ref: Reference) {
         match index {
             0 => {
-                if let RefResult::Point{pt} = result {
+                if let RefGeometry::Point{pt} = result {
                     self.point = *pt;
                 }
                 self.refer = Some(other_ref);
             }
             1 => {
-                if let RefResult::Point{pt} = result {
+                if let RefGeometry::Point{pt} = result {
                     self.point_2 = *pt;
                 }
                 self.refer_2 = Some(other_ref);
@@ -129,9 +129,9 @@ impl UpdateFromRefs for TestObj {
         }
     }
 
-    fn update_from_refs(&mut self, results: &Vec<Option<RefResult>>) -> Result<UpdateMsg, DBError> {
+    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>) -> Result<UpdateMsg, DBError> {
         if let Some(refer) = results.get(0) {
-            if let Some(RefResult::Point{pt}) = refer {
+            if let Some(RefGeometry::Point{pt}) = refer {
                 self.point = *pt;
             }
         }
@@ -139,7 +139,7 @@ impl UpdateFromRefs for TestObj {
             self.refer = None;
         }
         if let Some(refer) = results.get(1) {
-            if let Some(RefResult::Point{pt}) = refer {
+            if let Some(RefGeometry::Point{pt}) = refer {
                 self.point_2 = *pt;
             }
         }

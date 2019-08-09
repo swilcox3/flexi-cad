@@ -56,9 +56,9 @@ export class DoorTool {
                 var second_promise = ops.getObjectData(hovered.name, "Second");
                 Promise.all([first_promise, second_promise])
                 .then(([first, second]) => {
-                    var dir = new math.Point3d(second.x - first.x, second.y - first.y, 0);
-                    this.curTemp.set("first", new math.Point3d(pt.x, pt.y, 0));
-                    this.curTemp.set_dir(dir);
+                    var project = math.projectOnLine(first, second, new math.Point3d(pt.x, pt.y, 0));
+                    this.curTemp.set("first", project);
+                    this.curTemp.set_dir(new math.Point3d(second.x - first.x, second.y - first.y, 0));
                 });
             }
             else {

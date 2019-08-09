@@ -55,8 +55,6 @@ pub type DataObject = Box<dyn Data>;
 pub type RefID = Uuid;
 pub type UserID = Uuid;
 pub type UndoEventID = Uuid;
-pub type RefIndex = usize;
-pub type ResIndex = usize;
 
 pub trait DepStore {
     fn register_sub(&self, publisher: &RefID, sub: RefID);
@@ -70,14 +68,15 @@ pub trait HasRefs : Data {
 }
 
 pub trait ReferTo {
-    fn get_result(&self, index: ResIndex) -> Option<RefResult>;
-    fn get_all_results(&self) -> Vec<RefResult>;
+    fn get_result(&self, index: ResultInd) -> Option<RefGeometry>;
+    fn get_all_results(&self) -> Vec<RefGeometry>;
 }
 
 pub trait UpdateFromRefs {
     fn get_refs(&self) -> Vec<Option<Reference>>;
-    fn set_ref(&mut self, index: RefIndex, result: &RefResult, other_ref: Reference);
-    fn update_from_refs(&mut self, results: &Vec<Option<RefResult>>) -> Result<UpdateMsg, DBError>;
+    fn set_ref(&mut self, index: ReferInd, result: &RefGeometry, other_ref: Reference);
+    fn get_associated_geom(&self, index: ReferInd) -> RefGeometry;
+    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>) -> Result<UpdateMsg, DBError>;
 }
 
 #[cfg(test)]

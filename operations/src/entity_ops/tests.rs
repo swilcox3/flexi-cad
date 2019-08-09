@@ -25,7 +25,7 @@ fn test_copy_objs() {
         first.move_obj(&Vector3f::new(1.0, 2.0, 3.0));
         let mut second = Box::new(TestObj::new("second"));
         let id_2 = second.get_id().clone();
-        second.set_ref(0, &RefResult::Point{pt:Point3f::new(1.0, 2.0, 3.0)}, Reference{id: id_1.clone(), index: 0, ref_type: RefType::Point});
+        second.set_ref(0, &RefGeometry::Point{pt:Point3f::new(1.0, 2.0, 3.0)}, Reference{id: id_1.clone(), index: 0, ref_type: RefType::Point});
 
         let event = app_state::begin_undo_event(&file, String::from("add objs")).unwrap();
         app_state::add_obj(&file, &event, first).unwrap();
@@ -41,12 +41,12 @@ fn test_copy_objs() {
         empty_receiver(&rcv);
         app_state::get_obj(&file, orig_to_dups.get(&id_1).unwrap(), |obj| {
             let point_ref = obj.query_ref::<ReferTo>().unwrap();
-            assert_eq!(point_ref.get_result(0), Some(RefResult::Point{pt: Point3f::new(1.0, 2.0, 4.0)}));
+            assert_eq!(point_ref.get_result(0), Some(RefGeometry::Point{pt: Point3f::new(1.0, 2.0, 4.0)}));
             Ok(())
         }).unwrap();
         app_state::get_obj(&file, orig_to_dups.get(&id_2).unwrap(), |obj| {
             let point_ref = obj.query_ref::<ReferTo>().unwrap();
-            assert_eq!(point_ref.get_result(0), Some(RefResult::Point{pt: Point3f::new(1.0, 2.0, 4.0)}));
+            assert_eq!(point_ref.get_result(0), Some(RefGeometry::Point{pt: Point3f::new(1.0, 2.0, 4.0)}));
             Ok(())
         }).unwrap();
     });
@@ -74,22 +74,22 @@ fn test_join_walls() {
         app_state::get_obj(&file, &id_1, |first| {
             let read = first.query_ref::<ReferTo>().unwrap();
             let pts = read.get_all_results();
-            assert_eq!(pts[0], RefResult::Point{pt: Point3f::new(1.0, 3.0, 3.0)});
-            assert_eq!(pts[1], RefResult::Point{pt: Point3f::new(2.0, 3.0, 3.0)});
+            assert_eq!(pts[0], RefGeometry::Point{pt: Point3f::new(1.0, 3.0, 3.0)});
+            assert_eq!(pts[1], RefGeometry::Point{pt: Point3f::new(2.0, 3.0, 3.0)});
             Ok(())
         }).unwrap();
         app_state::get_obj(&file, &id_2, |second| {
             let read = second.query_ref::<ReferTo>().unwrap();
             let pts = read.get_all_results();
-            assert_eq!(pts[0], RefResult::Point{pt: Point3f::new(2.0, 3.0, 3.0)});
-            assert_eq!(pts[1], RefResult::Point{pt: Point3f::new(4.0, 5.0, 6.0)});
+            assert_eq!(pts[0], RefGeometry::Point{pt: Point3f::new(2.0, 3.0, 3.0)});
+            assert_eq!(pts[1], RefGeometry::Point{pt: Point3f::new(4.0, 5.0, 6.0)});
             Ok(())
         }).unwrap();
     });
 }
 
 #[test]
-fn test_snap_door_to_wall() {
+fn test_join_door_and_wall() {
     test_setup("snap door to wall", |file, rcv| {
         let id_1 = RefID::new_v4();
         let first = Box::new(Wall::new(id_1.clone(), Point3f::new(0.0, 0.0, 0.0), Point3f::new(1.0, 0.0, 0.0), 1.0, 1.0));
@@ -102,15 +102,14 @@ fn test_snap_door_to_wall() {
         app_state::end_undo_event(&file, event).unwrap();
 
         let event = app_state::begin_undo_event(&file, String::from("snap objs")).unwrap();
-        let snapped = snap_to(file.clone(), &event, id_2.clone(), &RefType::, &id_1, &RefType::Line{interp: Interp::new(0.0)}, &Point3f::new(0.5, 1.0, 0.0)).unwrap();
-        assert_eq!(snapped, Some(RefResult::Line{ pt_1: Point3f::new(0.0, 0.0, 0.0), pt_2: Point3f::new(1.0, 0.0, 0.0)}));
+        join_at(file.clone(), &event, id_1.clone(), id_2.clone(), &RefType::Rect, &RefType::Line{interp: Interp::new(0.0)}, &Point3f::new(0.25, 1.0, 0.0)).unwrap();
         app_state::end_undo_event(&file, event).unwrap();
         empty_receiver(&rcv);
         app_state::get_obj(&file, &id_2, |second| {
             let read = second.query_ref::<ReferTo>().unwrap();
             let pts = read.get_all_results();
-            assert_eq!(pts[0], RefResult::Point{pt: Point3f::new(0.5, 0.0, 0.0)});
-            assert_eq!(pts[1], RefResult::Point{pt: Point3f::new(1.0, 0.0, 0.0)});
+            assert_eq!(pts[0], RefGeometry::Point{pt: Point3f::new(0.25, 0.0, 0.0)});
+            assert_eq!(pts[1], RefGeometry::Point{pt: Point3f::new(0.75, 0.0, 0.0)});
             Ok(())
         }).unwrap();
         let event = app_state::begin_undo_event(&file, String::from("move obj")).unwrap();
@@ -120,8 +119,8 @@ fn test_snap_door_to_wall() {
         app_state::get_obj(&file, &id_2, |second| {
             let read = second.query_ref::<ReferTo>().unwrap();
             let pts = read.get_all_results();
-            assert_eq!(pts[0], RefResult::Point{pt: Point3f::new(0.5, 1.0, 0.0)});
-            assert_eq!(pts[1], RefResult::Point{pt: Point3f::new(1.0, 1.0, 0.0)});
+            assert_eq!(pts[0], RefGeometry::Point{pt: Point3f::new(0.25, 1.0, 0.0)});
+            assert_eq!(pts[1], RefGeometry::Point{pt: Point3f::new(0.75, 1.0, 0.0)});
             Ok(())
         }).unwrap();
     });

@@ -19,6 +19,7 @@ use serde::{Serialize, Deserialize};
 
 mod wall;
 mod door;
+mod math;
 
 lazy_static!{
     static ref UPDATES: DHashMap<PathBuf, Receiver<UpdateMsg>> = DHashMap::default();
@@ -297,5 +298,6 @@ register_module!(mut cx, {
     cx.export_function("debug_state", debug_state)?;
     cx.export_class::<wall::JsWall>("Wall")?;
     cx.export_class::<door::JsDoor>("Door")?;
+    cx.export_function("project_on_line", math::project_on_line)?;
     Ok(())
 });

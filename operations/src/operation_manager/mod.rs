@@ -107,7 +107,7 @@ impl OperationManager {
         Ok(())
     }
 
-    fn get_ref_result(&self, refer_opt: &Option<Reference>) -> Option<RefResult> {
+    fn get_ref_result(&self, refer_opt: &Option<Reference>) -> Option<RefGeometry> {
         match refer_opt {
             Some(refer) => {
                 let mut result = None;
@@ -138,7 +138,7 @@ impl OperationManager {
         })?;
         let mut results = Vec::new();
         for refer in refs {
-            results.push(self.get_ref_result(&refer));
+            results.push(self.get_ref_result(refer.get_reference()));
         }
         let mut msg = UpdateMsg::Empty;
         self.data.get_mut_obj_no_undo(obj_id, |obj| {

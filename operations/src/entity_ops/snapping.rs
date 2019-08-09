@@ -1,6 +1,20 @@
 use crate::*;
 
-fn get_closest_result(file: &PathBuf, obj: &RefID, only_match: &RefType, guess: &Point3f) -> Result<(Option<Reference>, Option<RefResult>), DBError> {
+fn get_result(file: &PathBuf, obj: &RefID, index: ResultInd) -> Result<Option<RefGeometry>, DBError> {
+    let mut res_opt = None;
+    app_state::get_obj(file, obj, |read| {
+        match read.query_ref::<ReferTo>() {
+            Some(refer) => {
+                res_opt = refer.get_result(index);
+                Ok(())
+            }
+            None => Err(DBError::ObjLacksTrait)
+        }
+    })?;
+    Ok(res_opt)
+}
+
+fn get_closest_result(file: &PathBuf, obj: &RefID, only_match: &RefType, guess: &Point3f) -> Result<(Option<Reference>, Option<RefGeometry>), DBError> {
     let mut which_opt = None;
     let mut res_opt = None;
     app_state::get_obj(file, obj, |refer_obj| {
@@ -14,7 +28,7 @@ fn get_closest_result(file: &PathBuf, obj: &RefID, only_match: &RefType, guess: 
                         let (cur_dist, ref_type) = ref_res.distance2(&guess);
                         if cur_dist < dist {
                             res_opt = Some(ref_res);
-                            which_opt = Some(Reference{id: *obj, index: index, ref_type: ref_type});
+                            which_opt = Some(Reference{id: *obj, index: ResultInd{index: index}, ref_type: ref_type});
                             dist = cur_dist;
                         }
                     }
@@ -28,7 +42,7 @@ fn get_closest_result(file: &PathBuf, obj: &RefID, only_match: &RefType, guess: 
     Ok((which_opt, res_opt))
 }
 
-pub fn snap_to(file: PathBuf, event: &UndoEventID, obj: RefID, index: RefIndex, other_obj: &RefID, only_match: &RefType, guess: &Point3f) -> Result<Option<RefResult>, DBError> {
+pub fn snap_to(file: PathBuf, event: &UndoEventID, obj: RefID, index: ReferInd, other_obj: &RefID, only_match: &RefType, guess: &Point3f) -> Result<Option<RefGeometry>, DBError> {
     let (which_opt, res_opt) = get_closest_result(&file, &other_obj, only_match, guess)?;
     if let Some(which) = which_opt {
         if let Some(calc_res) = &res_opt {
@@ -43,19 +57,17 @@ pub fn snap_to(file: PathBuf, event: &UndoEventID, obj: RefID, index: RefIndex, 
 pub fn join_at(file: PathBuf, event: &UndoEventID, first: RefID, second: RefID, first_type: &RefType, second_type: &RefType, guess: &Point3f) -> Result<(), DBError> {
     let (which_opt_1, res_opt_1) = get_closest_result(&file, &first, first_type, guess)?;
     let (which_opt_2, res_opt_2) = get_closest_result(&file, &second, second_type, guess)?;
-    if let Some(which_1) = which_opt_1 {
-        if let Some(res_1) = res_opt_1 {
-            if let Some(which_2) = which_opt_2 {
+    if let Some(ref_to_set_on_2) = which_opt_1 {
+        if let Some(res_from_1) = res_opt_1 {
+            if let Some(ref_to_set_on_1) = which_opt_2 {
                 if let Some(_) = res_opt_2 {
-                    let other_index = which_1.index;
-                    app_state::set_ref(&file, event, &second, which_2.index, &res_1, which_1)?;
+                    let other_index = ref_to_set_on_2.index;
+                    app_state::set_ref(&file, event, &second, ref_to_set_on_1.index, &res_from_1, ref_to_set_on_2)?;
                     //This is weird, but we need the index to set above, but we want to only move the second object passed in,
                     //updating it to the position of the first one.
-                    let (which_opt_2, res_opt_2) = get_closest_result(&file, &second, second_type, guess)?;
-                    if let Some(which_2) = which_opt_2 {
-                        if let Some(res_2) = res_opt_2 {
-                            app_state::set_ref(&file, event, &first, other_index, &res_2, which_2)?;
-                        }
+                    let res_opt_2 = get_result(&file, &second, other_index)?;
+                    if let Some(res_2) = res_opt_2 {
+                        app_state::set_ref(&file, event, &first, other_index, &res_2, which_2)?;
                     }
                     app_state::update_all_deps(file, vec![first, second]);
                     return Ok(());

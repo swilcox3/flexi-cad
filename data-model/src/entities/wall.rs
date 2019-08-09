@@ -4,14 +4,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Wall {
-    pub first_pt: Point3f,
-    pub second_pt: Point3f,
+    pub first_pt: UpdatablePoint,
+    pub second_pt: UpdatablePoint,
     pub width: WorldCoord,
     pub height: WorldCoord,
-    joined_first: Option<Reference>,
-    joined_second: Option<Reference>,
-    openings: Vec<PrismOpening>,
-    open_refs: Vec<Reference>,
+    openings: Vec<UpdatableRect>,
     id: RefID
 }
 
@@ -20,14 +17,11 @@ interfaces!(Wall: query_interface::ObjectClone, std::fmt::Debug, Data, ReferTo, 
 impl Wall {
     pub fn new(id: RefID, first: Point3f, second: Point3f, width: WorldCoord, height: WorldCoord) -> Wall {
         Wall {
-            first_pt: first,
-            second_pt: second,
+            first_pt: UpdatablePoint::new(first),
+            second_pt: UpdatablePoint::new(second),
             width: width,
             height: height,
-            joined_first: None,
-            joined_second: None,
             openings: Vec::new(),
-            open_refs: Vec::new(),
             id: id
         }
     }
@@ -54,10 +48,16 @@ impl Data for Wall {
                 "Height": self.height,
             }))
         };
-        let mut sorted = self.openings.clone();
+        let self_length = (self.second_pt.pt - self.first_pt.pt).magnitude();
+        let mut sorted: Vec<PrismOpening> = self.openings.iter().map(|val| {
+            let length = (val.pt_1 - self.first_pt.pt).magnitude();
+            let interp = Interp::new(length / self_length);
+            let height = val.pt_3.z - val.pt_2.z;
+            PrismOpening{interp: interp, height: height, length: length}
+        }).collect();
         sorted.sort_by(|first, second| first.interp.partial_cmp(&second.interp).unwrap());
 
-        primitives::prism_with_openings(&self.first_pt, &self.second_pt, self.width, self.height, sorted, &mut data);
+        primitives::prism_with_openings(&self.first_pt.pt, &self.second_pt.pt, self.width, self.height, sorted, &mut data);
         Ok(UpdateMsg::Mesh{data: data})
     }
 
@@ -91,116 +91,87 @@ impl Data for Wall {
 }
 
 impl ReferTo for Wall {
-    fn get_result(&self, index: usize) -> Option<RefResult> {
-        match index {
-            0 => Some(RefResult::Point{pt: self.first_pt}),
-            1 => Some(RefResult::Point{pt: self.second_pt}),
-            2 => Some(RefResult::Line{pt_1: self.first_pt, pt_2: self.second_pt}),
+    fn get_result(&self, result: ResultInd) -> Option<RefGeometry> {
+        match result.index {
+            0 => Some(RefGeometry::Point{pt: self.first_pt.pt}),
+            1 => Some(RefGeometry::Point{pt: self.second_pt.pt}),
+            2 => Some(RefGeometry::Line{pt_1: self.first_pt.pt, pt_2: self.second_pt.pt}),
             _ => None 
         }
     }
 
-    fn get_all_results(&self) -> Vec<RefResult> {
+    fn get_all_results(&self) -> Vec<RefGeometry> {
         let mut results = Vec::new();
-        results.push(RefResult::Point{pt: self.first_pt});
-        results.push(RefResult::Point{pt: self.second_pt});
-        results.push(RefResult::Line{pt_1: self.first_pt, pt_2: self.second_pt});
+        results.push(RefGeometry::Point{pt: self.first_pt.pt});
+        results.push(RefGeometry::Point{pt: self.second_pt.pt});
+        results.push(RefGeometry::Line{pt_1: self.first_pt.pt, pt_2: self.second_pt.pt});
         results
     }
 }
 
 impl UpdateFromRefs for Wall {
-    fn get_refs(&self) -> Vec<Option<Reference>> {
-        let mut results = Vec::new(); 
-        results.push(self.joined_first.clone());
-        results.push(self.joined_second.clone());
-        for open in &self.open_refs {
-            results.push(Some(open.clone()));
+    fn get_refs(&self) -> Vec<&UpdatableGeometry> {
+        let mut results: Vec<&UpdatableGeometry> = Vec::new(); 
+        results.push(&self.first_pt);
+        results.push(&self.second_pt);
+        for open in &self.openings {
+            results.push(open);
         }
         results
     }
 
-    fn set_ref(&mut self, index: usize, result: &RefResult, other_ref: Reference) {
-        match index {
+    fn set_ref(&mut self, refer: ReferInd, result: &RefGeometry, other_ref: Reference) {
+        match refer.index {
             0 => {
-                if let RefResult::Point{pt} = result {
-                    self.first_pt = *pt;
+                if let RefGeometry::Point{pt} = result {
+                    self.first_pt.pt = *pt;
                 }
-                self.joined_first = Some(other_ref);
+                self.first_pt.refer = Some(other_ref);
             }
             1 => {
-                if let RefResult::Point{pt} = result {
-                    self.second_pt = *pt;
+                if let RefGeometry::Point{pt} = result {
+                    self.second_pt.pt = *pt;
                 }
-                self.joined_second = Some(other_ref);
+                self.second_pt.refer = Some(other_ref);
             }
             _ => {
-                if let RefResult::Rect{pt_1, pt_2, pt_3} = result {
-                    if let Some(refer) = self.open_refs.get_mut(index - 2) {
-                        *refer = other_ref;
+                if let RefGeometry::Rect{pt_1, pt_2, pt_3} = result {
+                    if let Some(open) = self.openings.get_mut(refer.index - 2) {
+                        open.refer = Some(other_ref);
                     }
                     else {
-                        self.open_refs.push(other_ref);
-                    }
-                    let self_length = (self.second_pt - self.first_pt).magnitude();
-                    let length = (pt_1 - self.first_pt).magnitude();
-                    let interp = Interp::new(length / self_length);
-                    let height = pt_3.z - pt_2.z;
-                    if let Some(open) = self.openings.get_mut(index - 2) {
-                        open.interp = interp;
-                        open.height = height;
-                        open.length = length;
-                    }
-                    else {
-                        self.openings.push(PrismOpening{interp: interp, height: height, length: length});
+                        let mut new_open = UpdatableRect::new(*pt_1, *pt_2, *pt_3);
+                        new_open.refer = Some(other_ref);
+                        self.openings.push(new_open);
                     }
                 }
             }
         }
     }
 
-    fn update_from_refs(&mut self, results: &Vec<Option<RefResult>>) -> Result<UpdateMsg, DBError> {
+    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>) -> Result<UpdateMsg, DBError> {
         //std::thread::sleep(std::time::Duration::from_secs(1));
         if let Some(refer) = results.get(0) {
-            if let Some(RefResult::Point{pt}) = refer {
-                self.first_pt = *pt;
-            }
-            else {
-                self.joined_first = None;
-            }
+            self.first_pt.update(refer);
         }
         if let Some(refer) = results.get(1) {
-            if let Some(RefResult::Point{pt}) = refer {
-                self.second_pt = *pt;
-            }
-            else {
-                self.joined_second = None;
-            }
+            self.second_pt.update(refer);
         }
         let mut to_remove = Vec::new();
         for i in 2..results.len() {
             if let Some(refer) = results.get(i) {
-                if let Some(RefResult::Rect{pt_1, pt_2, pt_3}) = refer {
-                    let self_length = (self.second_pt - self.first_pt).magnitude();
-                    let length = (pt_1 - self.first_pt).magnitude();
-                    let interp = Interp::new(length / self_length);
-                    let height = pt_3.z - pt_2.z;
-                    if let Some(open) = self.openings.get_mut(i - 2) {
-                        open.interp = interp;
-                        open.height = height;
-                        open.length = length;
-                    }
-                    else {
-                        self.openings.push(PrismOpening{interp: interp, height: height, length: length});
+                if let Some(open) = self.openings.get_mut(i - 2) {
+                    open.update(refer);
+                    if let None = open.refer {
+                        to_remove.push(i);
                     }
                 }
                 else {
-                    to_remove.push(i - 2 as usize);
+                    return Err(DBError::NotFound);
                 }
             }
         }
         for index in to_remove.iter().rev() {
-            self.open_refs.remove(*index);
             self.openings.remove(*index);
         }
         self.update()
@@ -209,24 +180,25 @@ impl UpdateFromRefs for Wall {
 
 impl HasRefs for Wall {
     fn init(&self, deps: &DepStore) {
-        if let Some(refer) = &self.joined_first {
+        if let Some(refer) = &self.first_pt.refer {
             deps.register_sub(&refer.id, self.id.clone());
         }
-        if let Some(refer) = &self.joined_second {
+        if let Some(refer) = &self.second_pt.refer {
             deps.register_sub(&refer.id, self.id.clone());
         }
     }
 
     fn clear_refs(&mut self) {
-        self.joined_first = None;
-        self.joined_second = None;
+        self.first_pt.refer = None;
+        self.second_pt.refer = None;
+        self.openings.clear();
     }
 }
 
 impl Position for Wall {
     fn move_obj(&mut self, delta: &Vector3f) {
-        self.first_pt += *delta;
-        self.second_pt += *delta;
+        self.first_pt.pt += *delta;
+        self.second_pt.pt += *delta;
     }
 }
 

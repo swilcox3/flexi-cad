@@ -1,3 +1,5 @@
+var kernel = require('../../native/index.node')
+
 export class Point2d
 {
     x: number
@@ -17,6 +19,10 @@ export class Point3d
         this.x = inX
         this.y = inY
         this.z = inZ
+    }
+
+    subtract(pt: Point3d) {
+        return new Point3d(this.x - pt.x, this.y - pt.y, this.z - pt.z);
     }
 }
 
@@ -55,50 +61,6 @@ export function cross2d(point0: Vec2d, point1: Vec2d)
     return point0.x*point1.y - point0.y*point1.y
 }
 
-export function getJoinPtIndex(points: Array<Point2d>, joinPt: Point2d)
-{
-    var results = {
-        success:false,
-        pointIndex:0
-    }
-    for(var i = 0; i < points.length - 1; i++)
-    {
-        var current = points[i]
-        var next = points[i + 1]
-        var vecAB = vector2d(current, next)
-        var vecAC = vector2d(current, joinPt)
-        var cross = cross2d(vecAB, vecAC)
-        if(doubleEquals(cross, 0))
-        {
-             var dot1 = dot2d(vecAB, vecAC)
-             var dot2 = dot2d(vecAB, vecAB)
-             if(doubleEquals(dot1, 0))
-             {
-                 results.pointIndex = i
-                 results.success = true
-                 break
-             }
-             if(doubleEquals(dot1, dot2))
-             {
-                 results.pointIndex = i + 1
-                 results.success = true
-                 break
-             }
-             if(dot2 > dot1 && dot1 > 0)
-             {
-                 results.pointIndex = i + 1
-                 points.splice(i, 0, joinPt)
-                 results.success = true
-                 break
-             }
-
-
-        }
-
-    }
-    return results
-}
-
 export function transformModelToGraphicCoords(point: Point3d)
 {
     return new Point3d(point.x, point.z, -point.y)
@@ -107,4 +69,9 @@ export function transformModelToGraphicCoords(point: Point3d)
 export function transformGraphicToModelCoords(point: Point3d)
 {
     return new Point3d(point.x, -point.z, point.y)
+}
+
+export function projectOnLine(first: Point3d, second: Point3d, project: Point3d)
+{
+    return kernel.project_on_line(first, second, project)
 }

@@ -3,35 +3,41 @@ use serde::{Serialize, Deserialize};
 use cgmath::InnerSpace;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RefLineSeg {
+    pt_1: Point3f,
+    pt_2: Point3f,
+    length: WorldCoord,
+    interp: Interp
+}
+
+impl RefLineSeg {
+    fn new(pt_1: Point3f, pt_2: Point3f) -> RefLineSeg {
+        let length = (pt_2 - pt_1).magnitude();
+        RefLineSeg {
+            pt_1: pt_1, 
+            pt_2: pt_2,
+            length: length,
+            interp: Interp::new(0.0)
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Door {
     id: RefID,
-    pub first_pt: Point3f,
-    pub second_pt: Point3f,
+    pub dir: UpdatableGeometry<RefLineSeg>,
     pub width: WorldCoord,
     pub height: WorldCoord,
-    pub length: WorldCoord,
-    line_ref: Option<Reference>
 }
 
 impl Door {
-    pub fn new(id: RefID, first_pt: Point3f, second_pt: Point3f, width: WorldCoord, height: WorldCoord) -> Door {
+    pub fn new(id: RefID, first: Point3f, second: Point3f, width: WorldCoord, height: WorldCoord) -> Door {
         Door {
             id: id,
-            first_pt: first_pt,
-            second_pt: second_pt,
+            dir: UpdatableGeometry::new(RefLineSeg::new(first, second)),
             width: width,
             height: height,
-            length: (second_pt - first_pt).magnitude(),
-            line_ref: None
         }
-    }
-
-    pub fn set_dir(&mut self, dir: &Vector3f) {
-        let norm = dir.normalize();
-        let offset = norm * self.length;
-        self.second_pt.x = self.first_pt.x + offset.x;
-        self.second_pt.y = self.first_pt.y + offset.y;
-        self.second_pt.z = self.first_pt.z + offset.z;
     }
 }
 
@@ -56,10 +62,10 @@ impl Data for Door {
                 "type": "Door",
                 "Width": self.width,
                 "Height": self.height,
-                "Length": self.length
+                "Length": self.dir.geom.length
             }))
         };
-        primitives::rectangular_prism(&self.first_pt, &self.second_pt, self.width, self.height, &mut data);
+        primitives::rectangular_prism(&self.dir.geom.pt_1, &self.dir.geom.pt_2, self.width, self.height, &mut data);
         Ok(UpdateMsg::Mesh{data: data})
     }
 
@@ -67,9 +73,9 @@ impl Data for Door {
         match prop_name.as_ref() {
             "Width" => Ok(json!(self.width)),
             "Height" => Ok(json!(self.height)),
-            "Length" => Ok(json!(self.length)),
-            "First" => serde_json::to_value(&self.first_pt).map_err(error_other),
-            "Second" => serde_json::to_value(&self.second_pt).map_err(error_other),
+            "Length" => Ok(json!(self.dir.geom.length)),
+            "First" => serde_json::to_value(&self.dir.geom.pt_1).map_err(error_other),
+            "Second" => serde_json::to_value(&self.dir.geom.pt_2).map_err(error_other),
             _ => Err(DBError::NotFound)
         }
     }
@@ -86,7 +92,7 @@ impl Data for Door {
         }
         if let serde_json::Value::Number(num) = &data["Length"] {
             changed = true;
-            self.length = num.as_f64().unwrap();
+            self.dir.geom.length = num.as_f64().unwrap();
         }
         if changed {
             Ok(())
@@ -98,44 +104,44 @@ impl Data for Door {
 }
 
 impl ReferTo for Door {
-    fn get_result(&self, index: usize) -> Option<RefResult> {
-        match index {
-            0 => Some(RefResult::Point{pt: self.first_pt}),
-            1 => Some(RefResult::Point{pt: self.second_pt}),
+    fn get_result(&self, res: ResultInd) -> Option<RefGeometry> {
+        match res.index {
+            0 => Some(RefGeometry::Point{pt: self.dir.geom.pt_1}),
+            1 => Some(RefGeometry::Point{pt: self.dir.geom.pt_2}),
             2 => {
-                let third = Point3f::new(self.second_pt.x, self.second_pt.y, self.second_pt.z + self.height);
-                Some(RefResult::Rect{pt_1: self.first_pt, pt_2: self.second_pt, pt_3: third})
+                let third = Point3f::new(self.dir.geom.pt_2.x, self.dir.geom.pt_2.y, self.dir.geom.pt_2.z + self.height);
+                Some(RefGeometry::Rect{pt_1: self.dir.geom.pt_1, pt_2: self.dir.geom.pt_2, pt_3: third})
             }
             _ => None 
         }
     }
 
-    fn get_all_results(&self) -> Vec<RefResult> {
+    fn get_all_results(&self) -> Vec<RefGeometry> {
         let mut results = Vec::new();
-        results.push(RefResult::Point{pt: self.first_pt});
-        results.push(RefResult::Point{pt: self.second_pt});
-        let third = Point3f::new(self.second_pt.x, self.second_pt.y, self.second_pt.z + self.height);
-        results.push(RefResult::Rect{pt_1: self.first_pt, pt_2: self.second_pt, pt_3: third});
+        results.push(RefGeometry::Point{pt: self.dir.geom.pt_1});
+        results.push(RefGeometry::Point{pt: self.dir.geom.pt_2});
+        let third = Point3f::new(self.dir.geom.pt_2.x, self.dir.geom.pt_2.y, self.dir.geom.pt_2.z + self.height);
+        results.push(RefGeometry::Rect{pt_1: self.dir.geom.pt_1, pt_2: self.dir.geom.pt_2, pt_3: third});
         results
     }
 }
 
 impl UpdateFromRefs for Door {
-    fn get_refs(&self) -> Vec<Option<Reference>> {
+    fn get_refs(&self) -> Vec<UpdatableGeometry<RefLineSeg>> {
         let mut results = Vec::new(); 
-        results.push(self.line_ref.clone());
+        results.push(self.dir.clone());
         results
     }
 
-    fn set_ref(&mut self, index: usize, result: &RefResult, other_ref: Reference) {
-        match index {
+    fn set_ref(&mut self, refer: ReferInd, result: &RefGeometry, other_ref: Reference) {
+        match refer.index {
             0 => {
-                if let RefResult::Line{pt_1, pt_2} = result {
+                if let RefGeometry::Line{pt_1, pt_2} = result {
                     if let RefType::Line{interp} = other_ref.ref_type {
                         let dir = pt_2 - pt_1;
-                        self.first_pt = pt_1 + dir * interp.val();
-                        self.second_pt = self.first_pt + dir.normalize() * self.length;
-                        self.line_ref = Some(other_ref);
+                        self.dir.geom.pt_1 = pt_1 + dir * interp.val();
+                        self.dir.geom.pt_2 = self.dir.geom.pt_1 + dir.normalize() * self.dir.geom.length;
+                        self.dir.refer = Some(other_ref);
                     }
                 }
             }
@@ -143,20 +149,20 @@ impl UpdateFromRefs for Door {
         }
     }
 
-    fn update_from_refs(&mut self, results: &Vec<Option<RefResult>>) -> Result<UpdateMsg, DBError> {
+    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>) -> Result<UpdateMsg, DBError> {
         //std::thread::sleep(std::time::Duration::from_secs(1));
         if let Some(refer) = results.get(0) {
-            if let Some(RefResult::Line{pt_1, pt_2}) = refer {
-                if let Some(own_refer) = &self.line_ref {
+            if let Some(RefGeometry::Line{pt_1, pt_2}) = refer {
+                if let Some(own_refer) = &self.dir.refer {
                     if let RefType::Line{interp} = own_refer.ref_type {
                         let dir = pt_2 - pt_1;
-                        self.first_pt = pt_1 + dir * interp.val();
-                        self.second_pt = self.first_pt + dir.normalize() * self.length;
+                        self.dir.geom.pt_1 = pt_1 + dir * interp.val();
+                        self.dir.geom.pt_2 = self.dir.geom.pt_1 + dir.normalize() * self.dir.geom.length;
                     }
                 }
             }
             else {
-                self.line_ref = None;
+                self.dir.refer = None;
             }
         }
         self.update()
@@ -165,20 +171,20 @@ impl UpdateFromRefs for Door {
 
 impl HasRefs for Door {
     fn init(&self, deps: &DepStore) {
-        if let Some(refer) = &self.line_ref {
+        if let Some(refer) = &self.dir.refer {
             deps.register_sub(&refer.id, self.id.clone());
         }
     }
 
     fn clear_refs(&mut self) {
-        self.line_ref = None;
+        self.dir.refer = None;
     }
 }
 
 impl Position for Door {
     fn move_obj(&mut self, delta: &Vector3f) {
-        self.first_pt += *delta;
-        self.second_pt += *delta;
+        self.dir.geom.pt_1 += *delta;
+        self.dir.geom.pt_2 += *delta;
     }
 }
 
