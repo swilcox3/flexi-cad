@@ -3,26 +3,6 @@ use serde::{Serialize, Deserialize};
 use cgmath::InnerSpace;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RefLineSeg {
-    pt_1: Point3f,
-    pt_2: Point3f,
-    length: WorldCoord,
-    interp: Interp
-}
-
-impl RefLineSeg {
-    fn new(pt_1: Point3f, pt_2: Point3f) -> RefLineSeg {
-        let length = (pt_2 - pt_1).magnitude();
-        RefLineSeg {
-            pt_1: pt_1, 
-            pt_2: pt_2,
-            length: length,
-            interp: Interp::new(0.0)
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Door {
     id: RefID,
     pub dir: UpdatableGeometry<RefLineSeg>,
@@ -136,36 +116,11 @@ impl UpdateFromRefs for Door {
     fn set_ref(&mut self, refer: ReferInd, result: &RefGeometry, other_ref: Reference) {
         match refer.index {
             0 => {
-                if let RefGeometry::Line{pt_1, pt_2} = result {
-                    if let RefType::Line{interp} = other_ref.ref_type {
-                        let dir = pt_2 - pt_1;
-                        self.dir.geom.pt_1 = pt_1 + dir * interp.val();
-                        self.dir.geom.pt_2 = self.dir.geom.pt_1 + dir.normalize() * self.dir.geom.length;
-                        self.dir.refer = Some(other_ref);
-                    }
-                }
+                self.dir.set_reference(Some(other_ref));
+                self.dir.update(&Some(*result));
             }
             _ => ()
         }
-    }
-
-    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>) -> Result<UpdateMsg, DBError> {
-        //std::thread::sleep(std::time::Duration::from_secs(1));
-        if let Some(refer) = results.get(0) {
-            if let Some(RefGeometry::Line{pt_1, pt_2}) = refer {
-                if let Some(own_refer) = &self.dir.refer {
-                    if let RefType::Line{interp} = own_refer.ref_type {
-                        let dir = pt_2 - pt_1;
-                        self.dir.geom.pt_1 = pt_1 + dir * interp.val();
-                        self.dir.geom.pt_2 = self.dir.geom.pt_1 + dir.normalize() * self.dir.geom.length;
-                    }
-                }
-            }
-            else {
-                self.dir.refer = None;
-            }
-        }
-        self.update()
     }
 }
 

@@ -24,6 +24,42 @@ pub struct Rect {
     pub pt_3: Point3f,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RefLineSeg {
+    pub pt_1: Point3f,
+    pub pt_2: Point3f,
+    pub length: WorldCoord,
+    pub interp: Interp
+}
+
+impl RefLineSeg {
+    pub fn new(pt_1: Point3f, pt_2: Point3f) -> RefLineSeg {
+        let length = (pt_2 - pt_1).magnitude();
+        RefLineSeg {
+            pt_1: pt_1, 
+            pt_2: pt_2,
+            length: length,
+            interp: Interp::new(0.0)
+        }
+    }
+}
+
+impl Updatable for RefLineSeg {
+    fn get_geom(&self) -> RefGeometry {
+        RefGeometry::Line{pt_1: self.pt_1, pt_2: self.pt_2}
+    }
+    
+    fn update_geom(&mut self, geom: &RefGeometry) {
+        if let RefGeometry::Line{pt_1, pt_2} = geom {
+            let dir = pt_2 - pt_1;
+            let norm = dir.normalize();
+            self.pt_1 = pt_1 + dir * self.interp.val;
+            self.pt_2 = self.pt_1 + norm * self.length;
+        }
+    }
+}
+
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MeshData {
     pub id: RefID,
@@ -124,13 +160,18 @@ impl RefGeometry {
     }
 }
 
+pub trait Updatable {
+    fn get_geom(&self) -> RefGeometry;
+    fn update_geom(&mut self, geom: &RefGeometry);
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct UpdatableGeometry<T: Clone> {
+pub struct UpdatableGeometry<T: Updatable> {
     pub refer: Option<Reference>,
     pub geom: T
 }
 
-impl<T: Clone> UpdatableGeometry<T> {
+impl<T: Updatable> UpdatableGeometry<T> {
     pub fn new(geom: T) -> UpdatableGeometry<T> {
         UpdatableGeometry {
             refer: None,
@@ -138,21 +179,25 @@ impl<T: Clone> UpdatableGeometry<T> {
         }
     }
 
-    pub fn update(&mut self, ref_geom: &Option<T>) {
+    pub fn update(&mut self, ref_geom: &Option<RefGeometry>) {
         if let Some(geom) = ref_geom {
-            self.geom = *geom;
+            self.geom.update_geom(&geom);
         }
         else {
             self.refer = None;
         }
     }
 
+    pub fn set_reference(&self, refer: Option<Reference>) {
+        self.refer = refer;
+    }
+
     pub fn get_reference(&self) -> &Option<Reference> {
         &self.refer
     }
 
-    pub fn get_geometry(&self) -> T {
-        self.geom.clone()
+    pub fn get_geometry(&self) -> RefGeometry {
+        self.geom.get_geom()
     }
 }
 
