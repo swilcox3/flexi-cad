@@ -4,21 +4,21 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Wall {
-    pub first_pt: UpdatablePoint,
-    pub second_pt: UpdatablePoint,
+    pub first_pt: UpdatableGeometry<RefPoint>,
+    pub second_pt: UpdatableGeometry<RefPoint>,
     pub width: WorldCoord,
     pub height: WorldCoord,
-    openings: Vec<UpdatableRect>,
+    openings: Vec<UpdatableGeometry<RefRect>>,
     id: RefID
 }
 
-interfaces!(Wall: query_interface::ObjectClone, std::fmt::Debug, Data, ReferTo, HasRefs, Position, UpdateFromRefs);
+interfaces!(Wall: query_interface::ObjectClone, std::fmt::Debug, Data, ReferTo, Position, UpdateFromRefs);
 
 impl Wall {
     pub fn new(id: RefID, first: Point3f, second: Point3f, width: WorldCoord, height: WorldCoord) -> Wall {
         Wall {
-            first_pt: UpdatablePoint::new(first),
-            second_pt: UpdatablePoint::new(second),
+            first_pt: UpdatableGeometry::new(RefPoint{pt: first}),
+            second_pt: UpdatableGeometry::new(RefPoint{pt: second}),
             width: width,
             height: height,
             openings: Vec::new(),
@@ -48,16 +48,16 @@ impl Data for Wall {
                 "Height": self.height,
             }))
         };
-        let self_length = (self.second_pt.pt - self.first_pt.pt).magnitude();
+        let self_length = (self.second_pt.geom.pt - self.first_pt.geom.pt).magnitude();
         let mut sorted: Vec<PrismOpening> = self.openings.iter().map(|val| {
-            let length = (val.pt_1 - self.first_pt.pt).magnitude();
+            let length = (val.geom.pt_1 - self.first_pt.geom.pt).magnitude();
             let interp = Interp::new(length / self_length);
-            let height = val.pt_3.z - val.pt_2.z;
+            let height = val.geom.pt_3.z - val.geom.pt_2.z;
             PrismOpening{interp: interp, height: height, length: length}
         }).collect();
         sorted.sort_by(|first, second| first.interp.partial_cmp(&second.interp).unwrap());
 
-        primitives::prism_with_openings(&self.first_pt.pt, &self.second_pt.pt, self.width, self.height, sorted, &mut data);
+        primitives::prism_with_openings(&self.first_pt.geom.pt, &self.second_pt.geom.pt, self.width, self.height, sorted, &mut data);
         Ok(UpdateMsg::Mesh{data: data})
     }
 
@@ -93,112 +93,81 @@ impl Data for Wall {
 impl ReferTo for Wall {
     fn get_result(&self, result: ResultInd) -> Option<RefGeometry> {
         match result.index {
-            0 => Some(RefGeometry::Point{pt: self.first_pt.pt}),
-            1 => Some(RefGeometry::Point{pt: self.second_pt.pt}),
-            2 => Some(RefGeometry::Line{pt_1: self.first_pt.pt, pt_2: self.second_pt.pt}),
+            0 => Some(RefGeometry::Point{pt: self.first_pt.geom.pt}),
+            1 => Some(RefGeometry::Point{pt: self.second_pt.geom.pt}),
+            2 => Some(RefGeometry::Line{pt_1: self.first_pt.geom.pt, pt_2: self.second_pt.geom.pt}),
             _ => None 
         }
     }
 
     fn get_all_results(&self) -> Vec<RefGeometry> {
         let mut results = Vec::new();
-        results.push(RefGeometry::Point{pt: self.first_pt.pt});
-        results.push(RefGeometry::Point{pt: self.second_pt.pt});
-        results.push(RefGeometry::Line{pt_1: self.first_pt.pt, pt_2: self.second_pt.pt});
+        results.push(RefGeometry::Point{pt: self.first_pt.geom.pt});
+        results.push(RefGeometry::Point{pt: self.second_pt.geom.pt});
+        results.push(RefGeometry::Line{pt_1: self.first_pt.geom.pt, pt_2: self.second_pt.geom.pt});
         results
     }
 }
 
 impl UpdateFromRefs for Wall {
-    fn get_refs(&self) -> Vec<&UpdatableGeometry> {
-        let mut results: Vec<&UpdatableGeometry> = Vec::new(); 
-        results.push(&self.first_pt);
-        results.push(&self.second_pt);
+    fn clear_refs(&mut self) {
+        self.first_pt.refer = None;
+        self.second_pt.refer = None;
+        for open in &mut self.openings {
+            open.refer = None;
+        }
+    }
+
+    fn get_refs(&self) -> Vec<Option<Reference>> {
+        let mut results = Vec::new();
+        results.push(self.first_pt.refer.clone());
+        results.push(self.second_pt.refer.clone());
         for open in &self.openings {
-            results.push(open);
+            results.push(open.refer.clone());
         }
         results
     }
 
-    fn set_ref(&mut self, refer: ReferInd, result: &RefGeometry, other_ref: Reference) {
-        match refer.index {
-            0 => {
-                if let RefGeometry::Point{pt} = result {
-                    self.first_pt.pt = *pt;
-                }
-                self.first_pt.refer = Some(other_ref);
-            }
-            1 => {
-                if let RefGeometry::Point{pt} = result {
-                    self.second_pt.pt = *pt;
-                }
-                self.second_pt.refer = Some(other_ref);
-            }
+    fn set_ref(&mut self, index: ReferInd, result: RefGeometry, other_ref: Reference) {
+        match index.index {
+            0 => self.first_pt.set_reference(result, other_ref),
+            1 => self.second_pt.set_reference(result, other_ref),
             _ => {
-                if let RefGeometry::Rect{pt_1, pt_2, pt_3} = result {
-                    if let Some(open) = self.openings.get_mut(refer.index - 2) {
-                        open.refer = Some(other_ref);
-                    }
-                    else {
-                        let mut new_open = UpdatableRect::new(*pt_1, *pt_2, *pt_3);
-                        new_open.refer = Some(other_ref);
-                        self.openings.push(new_open);
-                    }
+                if let Some(open) = self.openings.get_mut(index.index - 2) {
+                    open.set_reference(result, other_ref);
                 }
             }
         }
     }
 
-    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>) -> Result<UpdateMsg, DBError> {
-        //std::thread::sleep(std::time::Duration::from_secs(1));
-        if let Some(refer) = results.get(0) {
-            self.first_pt.update(refer);
+    fn update_from_refs(&mut self, results: Vec<Option<RefGeometry>>) {
+        if let Some(geom) = results.get(0) {
+            self.first_pt.update(geom);
         }
-        if let Some(refer) = results.get(1) {
-            self.second_pt.update(refer);
+        if let Some(geom) = results.get(1) {
+            self.second_pt.update(geom);
         }
         let mut to_remove = Vec::new();
         for i in 2..results.len() {
-            if let Some(refer) = results.get(i) {
+            if let Some(geom) = results.get(i) {
                 if let Some(open) = self.openings.get_mut(i - 2) {
-                    open.update(refer);
-                    if let None = open.refer {
-                        to_remove.push(i);
+                    open.update(geom);
+                    if open.refer == None {
+                        to_remove.push(i - 2);
                     }
-                }
-                else {
-                    return Err(DBError::NotFound);
                 }
             }
         }
         for index in to_remove.iter().rev() {
             self.openings.remove(*index);
         }
-        self.update()
-    }
-}
-
-impl HasRefs for Wall {
-    fn init(&self, deps: &DepStore) {
-        if let Some(refer) = &self.first_pt.refer {
-            deps.register_sub(&refer.id, self.id.clone());
-        }
-        if let Some(refer) = &self.second_pt.refer {
-            deps.register_sub(&refer.id, self.id.clone());
-        }
-    }
-
-    fn clear_refs(&mut self) {
-        self.first_pt.refer = None;
-        self.second_pt.refer = None;
-        self.openings.clear();
     }
 }
 
 impl Position for Wall {
     fn move_obj(&mut self, delta: &Vector3f) {
-        self.first_pt.pt += *delta;
-        self.second_pt.pt += *delta;
+        self.first_pt.geom.pt += *delta;
+        self.second_pt.geom.pt += *delta;
     }
 }
 

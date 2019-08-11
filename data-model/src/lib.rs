@@ -56,25 +56,16 @@ pub type RefID = Uuid;
 pub type UserID = Uuid;
 pub type UndoEventID = Uuid;
 
-pub trait DepStore {
-    fn register_sub(&self, publisher: &RefID, sub: RefID);
-    fn delete_sub(&self, publisher: &RefID, sub: &RefID);
-    fn delete_obj(&self, publisher: &RefID);
-}
-
-pub trait HasRefs : Data {
-    fn init(&self, deps: &DepStore);
-    fn clear_refs(&mut self);
-}
-
 pub trait ReferTo {
     fn get_result(&self, index: ResultInd) -> Option<RefGeometry>;
     fn get_all_results(&self) -> Vec<RefGeometry>;
 }
 
 pub trait UpdateFromRefs {
+    fn clear_refs(&mut self);
     fn get_refs(&self) -> Vec<Option<Reference>>;
-    fn set_ref(&mut self, index: ReferInd, result: &RefGeometry, other_ref: Reference);
+    fn set_ref(&mut self, index: ReferInd, result: RefGeometry, other_ref: Reference);
+    fn update_from_refs(&mut self, results: Vec<Option<RefGeometry>>); 
 }
 
 #[cfg(test)]

@@ -1,6 +1,5 @@
 use crate::*;
 use serde::{Serialize, Deserialize};
-use cgmath::InnerSpace;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Door {
@@ -21,7 +20,7 @@ impl Door {
     }
 }
 
-interfaces!(Door: query_interface::ObjectClone, std::fmt::Debug, Data, ReferTo, HasRefs, Position, UpdateFromRefs);
+interfaces!(Door: query_interface::ObjectClone, std::fmt::Debug, Data, ReferTo, Position, UpdateFromRefs);
 
 #[typetag::serde]
 impl Data for Door {
@@ -107,32 +106,25 @@ impl ReferTo for Door {
 }
 
 impl UpdateFromRefs for Door {
-    fn get_refs(&self) -> Vec<UpdatableGeometry<RefLineSeg>> {
-        let mut results = Vec::new(); 
-        results.push(self.dir.clone());
-        results
+    fn clear_refs(&mut self) {
+        self.dir.refer = None;
     }
 
-    fn set_ref(&mut self, refer: ReferInd, result: &RefGeometry, other_ref: Reference) {
-        match refer.index {
-            0 => {
-                self.dir.set_reference(Some(other_ref));
-                self.dir.update(&Some(*result));
-            }
+    fn get_refs(&self) -> Vec<Option<Reference>> {
+        vec![self.dir.refer.clone()]
+    }
+
+    fn set_ref(&mut self, index: ReferInd, result: RefGeometry, other_ref: Reference) {
+        match index.index {
+            0 => self.dir.set_reference(result, other_ref),
             _ => ()
         }
     }
-}
 
-impl HasRefs for Door {
-    fn init(&self, deps: &DepStore) {
-        if let Some(refer) = &self.dir.refer {
-            deps.register_sub(&refer.id, self.id.clone());
+    fn update_from_refs(&mut self, results: Vec<Option<RefGeometry>>) {
+        if let Some(geom) = results.get(0) {
+            self.dir.update(geom);
         }
-    }
-
-    fn clear_refs(&mut self) {
-        self.dir.refer = None;
     }
 }
 

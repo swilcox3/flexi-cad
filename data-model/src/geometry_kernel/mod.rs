@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::fmt::Debug;
 use crate::RefID;
 use cgmath::prelude::*;
 
@@ -22,6 +21,23 @@ pub struct Rect {
     pub pt_1: Point3f,
     pub pt_2: Point3f,
     pub pt_3: Point3f,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RefPoint {
+    pub pt: Point3f
+}
+
+impl Updatable for RefPoint {
+    fn get_geom(&self) -> RefGeometry {
+        RefGeometry::Point{pt: self.pt}
+    }
+    
+    fn update_geom(&mut self, geom: &RefGeometry) {
+        if let RefGeometry::Point{pt} = geom {
+            self.pt = *pt;
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -59,6 +75,36 @@ impl Updatable for RefLineSeg {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RefRect {
+    pub pt_1: Point3f,
+    pub pt_2: Point3f,
+    pub pt_3: Point3f,
+}
+
+impl RefRect {
+    pub fn new(pt_1: Point3f, pt_2: Point3f, pt_3: Point3f) -> RefRect {
+        RefRect {
+            pt_1: pt_1, 
+            pt_2: pt_2,
+            pt_3: pt_3
+        }
+    }
+}
+
+impl Updatable for RefRect {
+    fn get_geom(&self) -> RefGeometry {
+        RefGeometry::Rect{pt_1: self.pt_1, pt_2: self.pt_2, pt_3: self.pt_3}
+    }
+    
+    fn update_geom(&mut self, geom: &RefGeometry) {
+        if let RefGeometry::Rect{pt_1, pt_2, pt_3} = geom {
+            self.pt_1 = *pt_1;
+            self.pt_2 = *pt_2;
+            self.pt_3 = *pt_3;
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MeshData {
@@ -188,16 +234,9 @@ impl<T: Updatable> UpdatableGeometry<T> {
         }
     }
 
-    pub fn set_reference(&self, refer: Option<Reference>) {
-        self.refer = refer;
-    }
-
-    pub fn get_reference(&self) -> &Option<Reference> {
-        &self.refer
-    }
-
-    pub fn get_geometry(&self) -> RefGeometry {
-        self.geom.get_geom()
+    pub fn set_reference(&mut self, result: RefGeometry, refer: Reference) {
+        self.refer = Some(refer);
+        self.update(&Some(result));
     }
 }
 

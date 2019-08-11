@@ -31,8 +31,13 @@ impl OperationManager {
             updates: sender,
         };
         ops.data.iterate_all(&mut |obj: &DataObject| {
-            if let Some(dep_obj) = obj.query_ref::<HasRefs>() {
-                dep_obj.init(&ops.deps);
+            if let Some(dep_obj) = obj.query_ref::<UpdateFromRefs>() {
+                let refs = dep_obj.get_refs();
+                for ref_opt in refs {
+                    if let Some(refer) = ref_opt {
+                        ops.deps.register_sub(&refer.id, dep_obj.get_id().clone());
+                    }
+                }
             }
             let msg = obj.update()?;
             ops.updates.send(msg).unwrap();
@@ -193,7 +198,7 @@ impl OperationManager {
 
     pub fn copy_obj(&self, event: &UndoEventID, id: &RefID) -> Result<RefID, DBError> {
         let mut copy = self.data.duplicate_obj(id)?;
-        if let Some(updatable) = copy.query_mut::<HasRefs>() {
+        if let Some(updatable) = copy.query_mut::<UpdateFromRefs>() {
             updatable.clear_refs();
         }
         let copy_id = copy.get_id().clone();
@@ -209,8 +214,13 @@ impl OperationManager {
     }
 
     pub fn add_object(&self, event: &UndoEventID, obj: DataObject) -> Result<(), DBError> {
-        if let Some(dep_obj) = obj.query_ref::<HasRefs>() {
-            dep_obj.init(&self.deps);
+        if let Some(dep_obj) = obj.query_ref::<UpdateFromRefs>() {
+            let refs = dep_obj.get_refs();
+            for ref_opt in refs {
+                if let Some(refer) = ref_opt {
+                    self.deps.register_sub(&refer.id, dep_obj.get_id().clone());
+                }
+            }
         }
         let msg = obj.update()?;
         self.data.add_obj(event, obj)?;
