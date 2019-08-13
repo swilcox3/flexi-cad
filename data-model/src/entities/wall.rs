@@ -140,6 +140,21 @@ impl UpdateFromRefs for Wall {
         }
     }
 
+    fn get_associated_geom(&self, index: ReferInd) -> Option<RefGeometry> {
+        match index.index {
+            0 => Some(self.first_pt.geom.get_geom()),
+            1 => Some(self.second_pt.geom.get_geom()),
+            _ => {
+                if let Some(open) = self.openings.get(index.index - 2) {
+                    Some(open.geom.get_geom())
+                }
+                else {
+                    None
+                }
+            }
+        }
+    }
+
     fn update_from_refs(&mut self, results: Vec<Option<RefGeometry>>) {
         if let Some(geom) = results.get(0) {
             self.first_pt.update(geom);
