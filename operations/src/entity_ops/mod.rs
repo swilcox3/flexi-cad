@@ -104,7 +104,7 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>) -> Resu
                     if let Some(has_ref) = obj.query_mut::<UpdateFromRefs>() {
                         for (res, ref_to_set) in &refs_to_set {
                             app_state::add_dep(&file, &ref_to_set.id, copy_id.clone())?;
-                            has_ref.set_ref(ref_to_set.index, &res, ref_to_set.clone());
+                            has_ref.set_ref(ref_to_set.index, res, ref_to_set.clone());
                         }
                     }
                     Ok(())

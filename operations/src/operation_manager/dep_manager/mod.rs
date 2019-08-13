@@ -39,10 +39,8 @@ impl DependencyManager {
             }
         }
     }
-}
 
-impl DepStore for DependencyManager {
-    fn register_sub(&self, publisher: &RefID, sub: RefID) {
+    pub fn register_sub(&self, publisher: &RefID, sub: RefID) {
         if sub != RefID::nil() {
             match self.pub_subs.get_mut(publisher) {
                 Some(mut set) => {
@@ -57,17 +55,17 @@ impl DepStore for DependencyManager {
         }
     }
 
-    fn delete_sub(&self, publisher: &RefID, sub: &RefID) {
+    pub fn delete_sub(&self, publisher: &RefID, sub: &RefID) {
         if let Some(mut set) = self.pub_subs.get_mut(publisher) {
             set.remove(sub);
         }
     }
 
-    fn delete_obj(&self, publisher: &RefID) {
+    pub fn delete_obj(&self, publisher: &RefID) {
         self.pub_subs.remove(publisher);
         self.pub_subs.alter(|(_, set)| {
             set.remove(publisher);
         });
     }
-
 }
+

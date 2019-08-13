@@ -148,7 +148,7 @@ pub fn delete_obj(file: &PathBuf, event: &UndoEventID, id: &RefID) -> Result<Dat
     }
 }
 
-pub fn set_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, index: ReferInd, result: &RefGeometry, refer: Reference) -> Result<(), DBError> {
+pub fn set_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, index: ReferInd, result: RefGeometry, refer: Reference) -> Result<(), DBError> {
     modify_obj(&file, &event, &obj, |owner| {
         match owner.query_mut::<UpdateFromRefs>() {
             Some(joinable) => {

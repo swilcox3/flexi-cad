@@ -35,7 +35,7 @@ impl OperationManager {
                 let refs = dep_obj.get_refs();
                 for ref_opt in refs {
                     if let Some(refer) = ref_opt {
-                        ops.deps.register_sub(&refer.id, dep_obj.get_id().clone());
+                        ops.deps.register_sub(&refer.id, obj.get_id().clone());
                     }
                 }
             }
@@ -143,13 +143,14 @@ impl OperationManager {
         })?;
         let mut results = Vec::new();
         for refer in refs {
-            results.push(self.get_ref_result(refer.get_reference()));
+            results.push(self.get_ref_result(&refer));
         }
         let mut msg = UpdateMsg::Empty;
         self.data.get_mut_obj_no_undo(obj_id, |obj| {
             match obj.query_mut::<UpdateFromRefs>() {
                 Some(updatable) => {
-                    msg = updatable.update_from_refs(&results)?;
+                    updatable.update_from_refs(results);
+                    msg = obj.update()?;
                     Ok(())
                 }
                 None => Err(DBError::ObjLacksTrait)
@@ -218,7 +219,7 @@ impl OperationManager {
             let refs = dep_obj.get_refs();
             for ref_opt in refs {
                 if let Some(refer) = ref_opt {
-                    self.deps.register_sub(&refer.id, dep_obj.get_id().clone());
+                    self.deps.register_sub(&refer.id, obj.get_id().clone());
                 }
             }
         }
