@@ -161,7 +161,7 @@ fn join_at_points(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let id_2 = RefID::from_str(&cx.argument::<JsString>(3)?.value()).unwrap();
     let arg_4 = cx.argument::<JsValue>(4)?;
     let point = neon_serde::from_value(&mut cx, arg_4)?;
-    operations_kernel::join_at(PathBuf::from(&path), &event, id_1, id_2, &RefType::Point, &RefType::Point, &point).unwrap();
+    operations_kernel::join_objs(PathBuf::from(&path), &event, id_1, id_2, &RefType::Point, &RefType::Point, &point).unwrap();
     Ok(cx.undefined())
 }
 
@@ -172,7 +172,7 @@ fn snap_to_line(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let id_2 = RefID::from_str(&cx.argument::<JsString>(3)?.value()).unwrap();
     let arg_4 = cx.argument::<JsValue>(4)?;
     let point = neon_serde::from_value(&mut cx, arg_4)?;
-    operations_kernel::snap_to(PathBuf::from(&path), &event, id_1, 0, &id_2, &RefType::Line{interp: Interp::new(0.0)}, &point).unwrap();
+    operations_kernel::join_objs(PathBuf::from(&path), &event, id_1, id_2, &RefType::Rect, &RefType::Line, &point).unwrap();
     Ok(cx.undefined())
 }
 

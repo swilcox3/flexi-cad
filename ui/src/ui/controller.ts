@@ -125,13 +125,15 @@ class UIController
     private activeTool: Tool
     private selection: SelectionController
     private moveObjs: MoveObjectsController
-    private ctrlPressed: boolean;
+    private shiftPt: math.Point3d;
+    private shiftPressed: boolean;
     private clipboard: Array<string>;
     constructor() {
         this.activeTool = null;
         this.selection = new SelectionController();
         this.moveObjs = new MoveObjectsController();
-        this.ctrlPressed = false;
+        this.shiftPt = null;
+        this.shiftPressed = false;
         this.clipboard = new Array<string>();
     }
 
@@ -178,6 +180,22 @@ class UIController
     {
         if(this.activeTool != null)
         {
+            if(this.shiftPressed) {
+                if(this.shiftPt) {
+                    if(Math.abs(pt.x - this.shiftPt.x) > Math.abs(pt.y - this.shiftPt.y)) {
+                        pt = new math.Point3d(pt.x, this.shiftPt.y, this.shiftPt.z);
+                    }
+                    else {
+                        pt = new math.Point3d(this.shiftPt.x, pt.y, this.shiftPt.z);
+                    }
+                }
+                else {
+                    this.shiftPt = pt;
+                }
+            }
+            else {
+                this.shiftPt = null;
+            }
             return this.activeTool.onMouseMove(pt, hovered)
         }
         return true;
@@ -208,6 +226,16 @@ class UIController
     ctrlUp()
     {
         this.selection.ctrlPressed = false;
+    }
+
+    shiftDown()
+    {
+        this.shiftPressed = true;
+    }
+
+    shiftUp()
+    {
+        this.shiftPressed = false;
     }
 
     onDeleteKey()

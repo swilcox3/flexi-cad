@@ -93,6 +93,10 @@ impl RefLineSeg {
             interp: Interp::new(0.0)
         }
     }
+
+    pub fn set_dir(&mut self, dir: &Vector3f) {
+        self.pt_2 = self.pt_1 + dir.normalize()*self.length;
+    }
 }
 
 impl Updatable for RefLineSeg {

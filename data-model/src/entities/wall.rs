@@ -65,8 +65,8 @@ impl Data for Wall {
         match prop_name.as_ref() {
             "Width" => Ok(json!(self.width)),
             "Height" => Ok(json!(self.height)),
-            "First" => serde_json::to_value(&self.first_pt).map_err(error_other),
-            "Second" => serde_json::to_value(&self.second_pt).map_err(error_other),
+            "First" => serde_json::to_value(&self.first_pt.geom.pt).map_err(error_other),
+            "Second" => serde_json::to_value(&self.second_pt.geom.pt).map_err(error_other),
             _ => Err(DBError::NotFound)
         }
     }

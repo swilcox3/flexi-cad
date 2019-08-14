@@ -29,7 +29,7 @@ declare_types! {
             let dir = neon_serde::from_value(&mut cx, arg)?;
             {
                 let guard = cx.lock();
-                this.borrow_mut(&guard).set_dir(&dir);
+                this.borrow_mut(&guard).dir.geom.set_dir(&dir);
             }
             Ok(cx.undefined().upcast())
         }
@@ -50,7 +50,7 @@ declare_types! {
                 "first" => {
                     let first = {
                         let guard = cx.lock();
-                        let this_pt = this.borrow(&guard).first_pt;
+                        let this_pt = this.borrow(&guard).dir.geom.pt_1;
                         this_pt.clone()
                     };
                     let first_obj = neon_serde::to_value(&mut cx, &first)?;
@@ -59,7 +59,7 @@ declare_types! {
                 "second" => {
                     let second = {
                         let guard = cx.lock();
-                        let this_pt = this.borrow(&guard).second_pt;
+                        let this_pt = this.borrow(&guard).dir.geom.pt_2;
                         this_pt.clone()
                     };
                     let second_obj = neon_serde::to_value(&mut cx, &second)?;
@@ -103,7 +103,7 @@ declare_types! {
                     let pt = neon_serde::from_value(&mut cx, arg)?;
                     {
                         let guard = cx.lock();
-                        this.borrow_mut(&guard).first_pt = pt;
+                        this.borrow_mut(&guard).dir.geom.pt_1 = pt;
                     }
                     Ok(cx.undefined().upcast())
                 }
@@ -111,7 +111,7 @@ declare_types! {
                     let pt = neon_serde::from_value(&mut cx, arg)?;
                     {
                         let guard = cx.lock();
-                        this.borrow_mut(&guard).second_pt = pt;
+                        this.borrow_mut(&guard).dir.geom.pt_2 = pt;
                     }
                     Ok(cx.undefined().upcast())
                 }

@@ -29,7 +29,7 @@ export class DoorTool {
         }
         ops.createObj(this.undoEventId, this.curTemp)
         if(this.canJoinToWall(picked)) {
-            ops.snapToLine(this.undoEventId, this.curTemp.get("id"), picked.name, pt)
+            ops.snapToLine(this.undoEventId, picked.name, this.curTemp.get("id"), pt)
         }
     }
 
