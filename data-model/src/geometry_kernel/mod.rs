@@ -255,21 +255,27 @@ impl MeshData {
     }
 }
 
-
 pub trait Position {
     fn move_obj(&mut self, delta: &Vector3f);
 }
 
 pub fn project_on_line(first: &Point3f, second: &Point3f, project: &Point3f) -> Point3f {
     let dir = second - first;
-    let proj_vec = project.to_vec().project_on(dir);
-    EuclideanSpace::from_vec(proj_vec)
+    let proj_vec = (project - first).project_on(dir);
+    first + proj_vec
 }
 
 pub fn get_interp_along_line(first: &Point3f, second: &Point3f, project: &Point3f) -> Interp {
     let dir = second - first;
-    let proj_vec = project.to_vec().project_on(dir);
+    let proj_vec = (project - first).project_on(dir);
     Interp::new((proj_vec.magnitude2() / dir.magnitude2()).sqrt())
+}
+
+pub fn rotate_point_through_angle_2d(origin: &Point3f, point: &Point3f, angle: cgmath::Rad<f64>) -> Point3f {
+    let dir = point - origin;
+    let rot = cgmath::Matrix3::from_angle_z(angle);
+    let rotated = rot * dir;
+    origin + rotated
 }
 
 ///A value between 0 and 1
@@ -293,5 +299,33 @@ impl Interp {
 
     pub fn val(&self) -> f64 {
         self.val
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_project_on_line() {
+        let first = Point3f::new(0.0, 0.0, 0.0);
+        let second = Point3f::new(1.0, 0.0, 0.0);
+        let project = Point3f::new(0.5, 1.0, 0.0);
+        assert_eq!(project_on_line(&first, &second, &project), Point3f::new(0.5, 0.0, 0.0));
+
+        let first = Point3f::new(0.0, 0.0, 0.0);
+        let second = Point3f::new(1.0, 0.0, 0.0);
+        let project = Point3f::new(0.5, -1.0, 0.0);
+        assert_eq!(project_on_line(&first, &second, &project), Point3f::new(0.5, 0.0, 0.0));
+
+        let first = Point3f::new(0.0, 0.0, 0.0);
+        let second = Point3f::new(1.0, 0.0, 0.0);
+        let project = Point3f::new(-1.0, -1.0, 1.0);
+        assert_eq!(project_on_line(&first, &second, &project), Point3f::new(-1.0, 0.0, 0.0));
+
+        let first = Point3f::new(-50.0, 20.0, 0.0);
+        let second = Point3f::new(-40.0, 20.0, 0.0);
+        let project = Point3f::new(-45.0, 19.0, 0.0);
+        assert_eq!(project_on_line(&first, &second, &project), Point3f::new(-45.0, 20.0, 0.0));
     }
 }

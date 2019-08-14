@@ -50,11 +50,13 @@ impl Data for Wall {
         };
         let self_length = (self.second_pt.geom.pt - self.first_pt.geom.pt).magnitude();
         let mut sorted: Vec<PrismOpening> = self.openings.iter().map(|val| {
-            let length = (val.geom.pt_1 - self.first_pt.geom.pt).magnitude();
-            let interp = Interp::new(length / self_length);
+            let position = (val.geom.pt_1 - self.first_pt.geom.pt).magnitude();
+            let interp = Interp::new(position / self_length);
+            let length = (val.geom.pt_2 - val.geom.pt_1).magnitude();
             let height = val.geom.pt_3.z - val.geom.pt_2.z;
             PrismOpening{interp: interp, height: height, length: length}
         }).collect();
+        println!("{:?}", sorted);
         sorted.sort_by(|first, second| first.interp.partial_cmp(&second.interp).unwrap());
 
         primitives::prism_with_openings(&self.first_pt.geom.pt, &self.second_pt.geom.pt, self.width, self.height, sorted, &mut data);

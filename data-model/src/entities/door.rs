@@ -44,7 +44,8 @@ impl Data for Door {
                 "Length": self.dir.geom.length
             }))
         };
-        primitives::rectangular_prism(&self.dir.geom.pt_1, &self.dir.geom.pt_2, self.width, self.height, &mut data);
+        let rotated = rotate_point_through_angle_2d(&self.dir.geom.pt_1, &self.dir.geom.pt_2, cgmath::Rad(std::f64::consts::FRAC_PI_4));
+        primitives::rectangular_prism(&self.dir.geom.pt_1, &rotated, self.width, self.height, &mut data);
         Ok(UpdateMsg::Mesh{data: data})
     }
 
