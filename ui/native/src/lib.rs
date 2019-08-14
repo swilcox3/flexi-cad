@@ -298,6 +298,7 @@ register_module!(mut cx, {
     cx.export_function("debug_state", debug_state)?;
     cx.export_class::<wall::JsWall>("Wall")?;
     cx.export_class::<door::JsDoor>("Door")?;
+    cx.export_class::<door::JsDimension>("Dimension")?;
     cx.export_function("project_on_line", math::project_on_line)?;
     Ok(())
 });

@@ -56,7 +56,6 @@ impl Data for Wall {
             let height = val.geom.pt_3.z - val.geom.pt_2.z;
             PrismOpening{interp: interp, height: height, length: length}
         }).collect();
-        println!("{:?}", sorted);
         sorted.sort_by(|first, second| first.interp.partial_cmp(&second.interp).unwrap());
 
         primitives::prism_with_openings(&self.first_pt.geom.pt, &self.second_pt.geom.pt, self.width, self.height, sorted, &mut data);

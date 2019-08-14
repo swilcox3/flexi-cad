@@ -1,0 +1,132 @@
+use crate::*;
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Dimension {
+    id: RefID,
+    pub first: UpdatableGeometry<RefPoint>,
+    pub second: UpdatableGeometry<RefPoint>,
+    pub offset: WorldCoord,
+}
+
+impl Dimension {
+    pub fn new(id: RefID, first: Point3f, second: Point3f, offset: WorldCoord) -> Dimension {
+        Dimension {
+            id: id,
+            first: UpdatableGeometry::new(RefPoint{pt: first}),
+            second: UpdatableGeometry::new(RefPoint{pt: second}),
+            offset: offset,
+        }
+    }
+}
+
+interfaces!(Dimension: query_interface::ObjectClone, std::fmt::Debug, Data, Position, UpdateFromRefs);
+
+#[typetag::serde]
+impl Data for Dimension{
+    fn get_id(&self) -> &RefID {
+        &self.id
+    }
+
+    fn set_id(&mut self, id: RefID) {
+        self.id = id;
+    }
+
+    fn update(&self) -> Result<UpdateMsg, DBError> {
+        let data = json!({
+            "id": self.get_id().clone(),
+            "first": serde_json::to_string(&self.first).map_err(error_other)?,
+            "second": serde_json::to_string(&self.second).map_err(error_other)?,
+            "offset": self.offset,
+            "metadata": {
+                "type": "Dimension",
+                "Offset": self.offset
+            }
+        });
+        Ok(UpdateMsg::Other{data: data})
+    }
+
+    fn get_data(&self, prop_name: &String) -> Result<serde_json::Value, DBError> {
+        match prop_name.as_ref() {
+            "Offset" => Ok(json!(self.offset)),
+            "First" => serde_json::to_value(&self.first.geom.pt).map_err(error_other),
+            "Second" => serde_json::to_value(&self.second.geom.pt).map_err(error_other),
+            _ => Err(DBError::NotFound)
+        }
+    }
+
+    fn set_data(&mut self, data: &serde_json::Value) -> Result<(), DBError> {
+        let mut changed = false;
+        if let serde_json::Value::Number(num) = &data["Offset"] {
+            changed = true;
+            self.offset = num.as_f64().unwrap();
+        }
+        if changed {
+            Ok(())
+        }
+        else {
+            Err(DBError::NotFound)
+        }
+    }
+}
+
+impl UpdateFromRefs for Dimension {
+    fn clear_refs(&mut self) {
+        self.first.refer = None;
+        self.second.refer = None;
+    }
+
+    fn get_refs(&self) -> Vec<Option<Reference>> {
+        vec![self.first.refer.clone(), self.second.refer.clone()]
+    }
+
+    fn set_ref(&mut self, index: ReferInd, result: &RefGeometry, other_ref: Reference, snap_pt: &Option<Point3f>) {
+        match index.index {
+            0 => self.first.set_reference(result, other_ref, snap_pt),
+            1 => self.second.set_reference(result, other_ref, snap_pt),
+            _ => ()
+        }
+    }
+
+    fn add_ref(&mut self, _: &RefGeometry, _: Reference, _: &Option<Point3f>) -> bool {
+        return false;
+    }
+
+    fn delete_ref(&mut self, index: ReferInd) {
+        match index.index {
+            0 => self.first.refer = None,
+            1 => self.second.refer = None,
+            _ => ()
+        }
+    }
+
+    fn get_associated_geom(&self, index: ReferInd) -> Option<RefGeometry> {
+        match index.index {
+            0 => Some(self.first.geom.get_geom()),
+            1 => Some(self.second.geom.get_geom()),
+            _ => {
+                None
+            }
+        }
+    }
+
+    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>) {
+        if let Some(geom) = results.get(0) {
+            self.first.update(geom);
+        }
+        if let Some(geom) = results.get(1) {
+            self.second.update(geom);
+        }
+    }
+}
+
+impl Position for Dimension {
+    fn move_obj(&mut self, delta: &Vector3f) {
+        let perp = get_perp_2d(&self.first.geom.pt, &self.second.geom.pt);
+        let projected = delta.project_on(perp);
+        self.offset = projected.magnitude();
+    }
+}
+
+
+

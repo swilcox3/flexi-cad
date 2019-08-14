@@ -14,6 +14,7 @@ use serde::{Serialize, Deserialize};
 pub use geometry_kernel::*;
 pub use entities::wall::Wall;
 pub use entities::door::Door;
+pub use entities::dimension::Dimension;
 pub use cgmath::prelude::*;
 
 #[derive(Debug, PartialEq)]

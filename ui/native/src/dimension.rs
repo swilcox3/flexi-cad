@@ -1,18 +1,17 @@
-use data_model::Door;
+use data_model::Dimension;
 use neon::prelude::*;
 use operations_kernel::*;
 use std::path::PathBuf;
 use std::str::FromStr;
 
 declare_types! {
-    pub class JsDoor for Door {
+    pub class JsDimension for Dimension {
         init(mut cx) {
             let arg_0 = cx.argument::<JsValue>(0)?;
             let arg_1 = cx.argument::<JsValue>(1)?;
             let point_1 = neon_serde::from_value(&mut cx, arg_0)?;
             let point_2 = neon_serde::from_value(&mut cx, arg_1)?;
-            let width = cx.argument::<JsNumber>(2)?.value();
-            let height = cx.argument::<JsNumber>(3)?.value();
+            let offset = cx.argument::<JsNumber>(2)?.value();
             let id = match cx.argument_opt(5) {
                 Some(arg) => {
                     let id_str = arg.downcast::<JsString>().or_throw(&mut cx)?.value();
@@ -20,18 +19,7 @@ declare_types! {
                 }
                 None => RefID::new_v4()
             };
-            Ok(Door::new(id, point_1, point_2, width, height))
-        }
-
-        method set_dir(mut cx) {
-            let mut this = cx.this();
-            let arg = cx.argument::<JsValue>(0)?;
-            let dir = neon_serde::from_value(&mut cx, arg)?;
-            {
-                let guard = cx.lock();
-                this.borrow_mut(&guard).dir.geom.set_dir(&dir);
-            }
-            Ok(cx.undefined().upcast())
+            Ok(Dimension::new(id, point_1, point_2, offset))
         }
 
         method get(mut cx) {
@@ -50,7 +38,7 @@ declare_types! {
                 "first" => {
                     let first = {
                         let guard = cx.lock();
-                        let this_pt = this.borrow(&guard).dir.geom.pt_1;
+                        let this_pt = this.borrow(&guard).first.geom.pt;
                         this_pt.clone()
                     };
                     let first_obj = neon_serde::to_value(&mut cx, &first)?;
@@ -59,27 +47,19 @@ declare_types! {
                 "second" => {
                     let second = {
                         let guard = cx.lock();
-                        let this_pt = this.borrow(&guard).dir.geom.pt_2;
+                        let this_pt = this.borrow(&guard).second.geom.pt;
                         this_pt.clone()
                     };
                     let second_obj = neon_serde::to_value(&mut cx, &second)?;
                     Ok(second_obj.upcast())
                 }
-                "width" => {
-                    let width = {
+                "offset" => {
+                    let offset = {
                         let guard = cx.lock();
-                        let this_width = this.borrow(&guard).width;
-                        this_width
+                        let this_offset = this.borrow(&guard).offset;
+                        this_offset
                     };
-                    Ok(cx.number(width).upcast())
-                }
-                "height" => {
-                    let height = {
-                        let guard = cx.lock();
-                        let this_height = this.borrow(&guard).height;
-                        this_height
-                    };
-                    Ok(cx.number(height).upcast())
+                    Ok(cx.number(offset).upcast())
                 }
                 _ => cx.throw_type_error("property does not exist")
             }
@@ -103,7 +83,7 @@ declare_types! {
                     let pt = neon_serde::from_value(&mut cx, arg)?;
                     {
                         let guard = cx.lock();
-                        this.borrow_mut(&guard).dir.geom.pt_1 = pt;
+                        this.borrow_mut(&guard).first.geom.pt = pt;
                     }
                     Ok(cx.undefined().upcast())
                 }
@@ -111,30 +91,21 @@ declare_types! {
                     let pt = neon_serde::from_value(&mut cx, arg)?;
                     {
                         let guard = cx.lock();
-                        this.borrow_mut(&guard).dir.geom.pt_2 = pt;
+                        this.borrow_mut(&guard).second.geom.pt = pt;
                     }
                     Ok(cx.undefined().upcast())
                 }
-                "width" => {
-                    let width = arg.downcast::<JsNumber>().or_throw(&mut cx)?.value();
+                "offset" => {
+                    let offset = arg.downcast::<JsNumber>().or_throw(&mut cx)?.value();
                     {
                         let guard = cx.lock();
-                        this.borrow_mut(&guard).width = width;
-                    };
-                    Ok(cx.undefined().upcast())
-                }
-                "height" => {
-                    let height = arg.downcast::<JsNumber>().or_throw(&mut cx)?.value();
-                    {
-                        let guard = cx.lock();
-                        this.borrow_mut(&guard).height = height; 
+                        this.borrow_mut(&guard).offset = offset;
                     };
                     Ok(cx.undefined().upcast())
                 }
                 _ => cx.throw_type_error("property does not exist")
             }
         }
-
 
         method getUpdateMsg(mut cx) {
             let this = cx.this();
@@ -153,8 +124,8 @@ declare_types! {
             let event = cx.argument::<JsString>(1)?.value();
             {
                 let guard = cx.lock();
-                let door = this.borrow(&guard).clone();
-                operations_kernel::add_obj(&PathBuf::from(path), &RefID::from_str(&event).unwrap(), Box::new(door)).unwrap();
+                let dim = this.borrow(&guard).clone();
+                operations_kernel::add_obj(&PathBuf::from(path), &RefID::from_str(&event).unwrap(), Box::new(dim)).unwrap();
             }
             Ok(cx.undefined().upcast())
         }

@@ -278,6 +278,10 @@ pub fn rotate_point_through_angle_2d(origin: &Point3f, point: &Point3f, angle: c
     origin + rotated
 }
 
+pub fn get_perp_2d(first: &Point3f, second: &Point3f) -> Vector3f {
+    (second - first).cross(Vector3f::unit_z()).normalize()
+}
+
 ///A value between 0 and 1
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, PartialOrd)]
 pub struct Interp {
