@@ -7,27 +7,23 @@ pub trait Store: Send + Sync {
     fn get_store_data(&self) -> String;
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TestObj {
     id: RefID,
     data: String,
-    point: Point3f,
-    point_2: Point3f,
-    refer: Option<Reference>,
-    refer_2: Option<Reference>,
+    point: UpdatableGeometry<RefPoint>,
+    point_2: UpdatableGeometry<RefPoint>,
 }
 
-interfaces!(TestObj: Store, query_interface::ObjectClone, std::fmt::Debug, Data, UpdateFromRefs, HasRefs, Position, ReferTo);
+interfaces!(TestObj: Store, query_interface::ObjectClone, std::fmt::Debug, Data, UpdateFromRefs, Position, ReferTo);
 
 impl TestObj {
     pub fn new(dat: &str) -> TestObj {
         TestObj { 
             id: RefID::new_v4(), 
             data: String::from(dat), 
-            point: Point3f::new(0.0, 0.0, 0.0),
-            point_2: Point3f::new(1.0, 0.0, 0.0),
-            refer: None,
-            refer_2: None,
+            point: UpdatableGeometry::new(RefPoint{pt: Point3f::new(0.0, 0.0, 0.0)}),
+            point_2: UpdatableGeometry::new(RefPoint{pt: Point3f::new(1.0, 0.0, 0.0)}),
         }
     }
 }
@@ -67,37 +63,21 @@ impl Store for TestObj {
     }
 }
 
-impl HasRefs for TestObj {
-    fn init(&self, deps: &DepStore) {
-        if let Some(refer) = &self.refer {
-            deps.register_sub(&refer.id, self.id.clone());
-        }
-        if let Some(refer_2) = &self.refer_2 {
-            deps.register_sub(&refer_2.id, self.id.clone());
-        }
-    }
-
-    fn clear_refs(&mut self) {
-        self.refer = None;
-        self.refer_2 = None;
-    }
-}
-
 impl ReferTo for TestObj {
-    fn get_result(&self, index: usize) -> Option<RefGeometry> {
-        match index {
-            0 => Some(RefGeometry::Point{pt: self.point}),
-            1 => Some(RefGeometry::Point{pt: self.point_2}),
-            2 => Some(RefGeometry::Line{pt_1: self.point, pt_2: self.point_2}),
+    fn get_result(&self, index: ResultInd) -> Option<RefGeometry> {
+        match index.index {
+            0 => Some(self.point.geom.get_geom()),
+            1 => Some(self.point_2.geom.get_geom()),
+            2 => Some(RefGeometry::Line{pt_1: self.point.geom.pt, pt_2: self.point_2.geom.pt}),
             _ => None
         }
     }
 
     fn get_all_results(&self) -> Vec<RefGeometry> {
         let mut results = Vec::new();
-        results.push(RefGeometry::Point{pt: self.point});
-        results.push(RefGeometry::Point{pt: self.point_2});
-        results.push(RefGeometry::Line{pt_1: self.point, pt_2: self.point_2});
+        results.push(RefGeometry::Point{pt: self.point.geom.pt});
+        results.push(RefGeometry::Point{pt: self.point_2.geom.pt});
+        results.push(RefGeometry::Line{pt_1: self.point.geom.pt, pt_2: self.point_2.geom.pt});
         results
     }
 }
@@ -105,55 +85,50 @@ impl ReferTo for TestObj {
 impl UpdateFromRefs for TestObj {
     fn get_refs(&self) -> Vec<Option<Reference>> {
         let mut results = Vec::new();
-        results.push(self.refer.clone());
-        results.push(self.refer_2.clone());
+        results.push(self.point.refer.clone());
+        results.push(self.point_2.refer.clone());
         results
     }
 
-    fn set_ref(&mut self, index: usize, result: &RefGeometry, other_ref: Reference) {
-        match index {
-            0 => {
-                if let RefGeometry::Point{pt} = result {
-                    self.point = *pt;
-                }
-                self.refer = Some(other_ref);
-            }
-            1 => {
-                if let RefGeometry::Point{pt} = result {
-                    self.point_2 = *pt;
-                }
-                self.refer_2 = Some(other_ref);
-            }
+    fn get_num_refs(&self) -> usize {
+        2
+    }
 
+    fn clear_refs(&mut self) {
+        self.point.refer = None;
+        self.point_2.refer = None;
+    }
+
+    fn set_ref(&mut self, index: ReferInd, result: RefGeometry, other_ref: Reference) {
+        match index.index {
+            0 => self.point.set_reference(result, other_ref),
+            1 => self.point_2.set_reference(result, other_ref),
             _ => ()
         }
     }
 
-    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>) -> Result<UpdateMsg, DBError> {
-        if let Some(refer) = results.get(0) {
-            if let Some(RefGeometry::Point{pt}) = refer {
-                self.point = *pt;
-            }
+    fn get_associated_geom(&self, index: ReferInd) -> Option<RefGeometry> {
+        match index.index {
+            0 => Some(self.point.geom.get_geom()),
+            1 => Some(self.point_2.geom.get_geom()),
+            _ => None
         }
-        else {
-            self.refer = None;
+    }
+
+    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>) {
+        if let Some(geom) = results.get(0) {
+            self.point.update(geom);
         }
-        if let Some(refer) = results.get(1) {
-            if let Some(RefGeometry::Point{pt}) = refer {
-                self.point_2 = *pt;
-            }
+        if let Some(geom) = results.get(1) {
+            self.point_2.update(geom);
         }
-        else {
-            self.refer_2 = None;
-        }
-        self.update()
     }
 }
 
 impl Position for TestObj {
     fn move_obj(&mut self, delta: &Vector3f) {
-        self.point = self.point + delta;
-        self.point_2 = self.point_2 + delta;
+        self.point = self.point.geom.pt + delta;
+        self.point_2 = self.point_2.geom.pt + delta;
     }
 }
 

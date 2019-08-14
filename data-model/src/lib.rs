@@ -67,7 +67,7 @@ pub trait UpdateFromRefs {
     fn get_num_refs(&self) -> usize;
     fn set_ref(&mut self, index: ReferInd, result: RefGeometry, other_ref: Reference);
     fn get_associated_geom(&self, index: ReferInd) -> Option<RefGeometry>;
-    fn update_from_refs(&mut self, results: Vec<Option<RefGeometry>>); 
+    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>); 
 }
 
 #[cfg(test)]

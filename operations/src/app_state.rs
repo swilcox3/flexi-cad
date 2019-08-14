@@ -152,7 +152,7 @@ pub fn set_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, index: ReferInd
     modify_obj(&file, &event, &obj, |owner| {
         match owner.query_mut::<UpdateFromRefs>() {
             Some(joinable) => {
-                joinable.set_ref(index, result, refer.clone());
+                joinable.set_ref(index, result.clone(), refer.clone());
                 Ok(())
             }
             None => Err(DBError::ObjLacksTrait)

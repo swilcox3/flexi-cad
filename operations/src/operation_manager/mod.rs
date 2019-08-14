@@ -149,7 +149,7 @@ impl OperationManager {
         self.data.get_mut_obj_no_undo(obj_id, |obj| {
             match obj.query_mut::<UpdateFromRefs>() {
                 Some(updatable) => {
-                    updatable.update_from_refs(results);
+                    updatable.update_from_refs(&results);
                     msg = obj.update()?;
                     Ok(())
                 }

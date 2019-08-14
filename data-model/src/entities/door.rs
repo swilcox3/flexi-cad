@@ -135,7 +135,7 @@ impl UpdateFromRefs for Door {
     }
 
 
-    fn update_from_refs(&mut self, results: Vec<Option<RefGeometry>>) {
+    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>) {
         if let Some(geom) = results.get(0) {
             self.dir.update(geom);
         }
