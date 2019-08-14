@@ -64,6 +64,7 @@ pub trait ReferTo {
 pub trait UpdateFromRefs {
     fn clear_refs(&mut self);
     fn get_refs(&self) -> Vec<Option<Reference>>;
+    fn get_num_refs(&self) -> usize;
     fn set_ref(&mut self, index: ReferInd, result: RefGeometry, other_ref: Reference);
     fn get_associated_geom(&self, index: ReferInd) -> Option<RefGeometry>;
     fn update_from_refs(&mut self, results: Vec<Option<RefGeometry>>); 

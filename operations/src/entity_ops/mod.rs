@@ -80,20 +80,24 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>) -> Resu
         let mut refs_to_set = Vec::new();
         app_state::get_obj(&file, &id, |obj| {
             if let Some(has_ref) = obj.query_ref::<UpdateFromRefs>() {
+                let mut index = 0;
                 for ref_opt in has_ref.get_refs() {
                     if let Some(this_ref) = ref_opt {
                         if let Some(ref_copy_id) = orig_to_copy.get(&this_ref.id) {
                             if let Some(has_ref_res) = obj.query_ref::<ReferTo>() {
                                 if let Some(res) = has_ref_res.get_result(this_ref.index) {
-                                    refs_to_set.push((res, Reference {
+                                    let ref_index = ReferInd{index: index};
+                                    let copy_ref = Reference {
                                         id: *ref_copy_id,
                                         index: this_ref.index,
                                         ref_type: this_ref.ref_type
-                                    }));
+                                    };
+                                    refs_to_set.push((ref_index, res, copy_ref));
                                 }
                             }
                         }
                     }
+                    index += 1;
                 }
             }
             Ok(())
@@ -102,9 +106,9 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>) -> Resu
             if let Some(copy_id) = orig_to_copy.get(&id) {
                 app_state::modify_obj(&file, &event, copy_id, |obj| {
                     if let Some(has_ref) = obj.query_mut::<UpdateFromRefs>() {
-                        for (res, ref_to_set) in &refs_to_set {
+                        for (index, res, ref_to_set) in &refs_to_set {
                             app_state::add_dep(&file, &ref_to_set.id, copy_id.clone())?;
-                            has_ref.set_ref(ref_to_set.index, res, ref_to_set.clone());
+                            has_ref.set_ref(*index, *res, *ref_to_set);
                         }
                     }
                     Ok(())

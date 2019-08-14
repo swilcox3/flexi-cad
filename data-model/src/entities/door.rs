@@ -114,6 +114,10 @@ impl UpdateFromRefs for Door {
         vec![self.dir.refer.clone()]
     }
 
+    fn get_num_refs(&self) -> usize {
+        1
+    }
+
     fn set_ref(&mut self, index: ReferInd, result: RefGeometry, other_ref: Reference) {
         match index.index {
             0 => self.dir.set_reference(result, other_ref),

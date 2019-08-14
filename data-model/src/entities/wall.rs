@@ -128,6 +128,10 @@ impl UpdateFromRefs for Wall {
         results
     }
 
+    fn get_num_refs(&self) -> usize {
+        2 + self.openings.len()
+    }
+
     fn set_ref(&mut self, index: ReferInd, result: RefGeometry, other_ref: Reference) {
         match index.index {
             0 => self.first_pt.set_reference(result, other_ref),
