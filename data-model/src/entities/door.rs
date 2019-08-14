@@ -114,13 +114,20 @@ impl UpdateFromRefs for Door {
         vec![self.dir.refer.clone()]
     }
 
-    fn get_num_refs(&self) -> usize {
-        1
+    fn set_ref(&mut self, index: ReferInd, result: &RefGeometry, other_ref: Reference, snap_pt: &Option<Point3f>) {
+        match index.index {
+            0 => self.dir.set_reference(result, other_ref, snap_pt),
+            _ => ()
+        }
     }
 
-    fn set_ref(&mut self, index: ReferInd, result: RefGeometry, other_ref: Reference) {
+    fn add_ref(&mut self, _: &RefGeometry, _: Reference, _: &Option<Point3f>) -> bool {
+        return false;
+    }
+
+    fn delete_ref(&mut self, index: ReferInd) {
         match index.index {
-            0 => self.dir.set_reference(result, other_ref),
+            0 => self.dir.refer = None,
             _ => ()
         }
     }
@@ -133,7 +140,6 @@ impl UpdateFromRefs for Door {
             }
         }
     }
-
 
     fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>) {
         if let Some(geom) = results.get(0) {

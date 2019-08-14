@@ -90,19 +90,27 @@ impl UpdateFromRefs for TestObj {
         results
     }
 
-    fn get_num_refs(&self) -> usize {
-        2
-    }
-
     fn clear_refs(&mut self) {
         self.point.refer = None;
         self.point_2.refer = None;
     }
 
-    fn set_ref(&mut self, index: ReferInd, result: RefGeometry, other_ref: Reference) {
+    fn add_ref(&mut self, _: &RefGeometry, _: Reference, _: &Option<Point3f>) -> bool {
+        false
+    }
+
+    fn set_ref(&mut self, index: ReferInd, result: &RefGeometry, other_ref: Reference, snap_pt: &Option<Point3f>) {
         match index.index {
-            0 => self.point.set_reference(result, other_ref),
-            1 => self.point_2.set_reference(result, other_ref),
+            0 => self.point.set_reference(result, other_ref, snap_pt),
+            1 => self.point_2.set_reference(result, other_ref, snap_pt),
+            _ => ()
+        }
+    }
+
+    fn delete_ref(&mut self, index: ReferInd) {
+        match index.index {
+            0 => self.point.refer = None,
+            1 => self.point_2.refer = None,
             _ => ()
         }
     }
@@ -127,8 +135,8 @@ impl UpdateFromRefs for TestObj {
 
 impl Position for TestObj {
     fn move_obj(&mut self, delta: &Vector3f) {
-        self.point = self.point.geom.pt + delta;
-        self.point_2 = self.point_2.geom.pt + delta;
+        self.point.geom.pt += *delta;
+        self.point_2.geom.pt += *delta;
     }
 }
 

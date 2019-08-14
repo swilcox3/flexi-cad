@@ -148,11 +148,28 @@ pub fn delete_obj(file: &PathBuf, event: &UndoEventID, id: &RefID) -> Result<Dat
     }
 }
 
-pub fn set_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, index: ReferInd, result: RefGeometry, refer: Reference) -> Result<(), DBError> {
+pub fn add_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, result: &RefGeometry, refer: Reference, snap_pt: &Option<Point3f>) -> Result<(), DBError> {
     modify_obj(&file, &event, &obj, |owner| {
         match owner.query_mut::<UpdateFromRefs>() {
             Some(joinable) => {
-                joinable.set_ref(index, result.clone(), refer.clone());
+                if joinable.add_ref(result, refer.clone(), snap_pt) {
+                    Ok(())
+                }
+                else {
+                    Err(error_other("Reference not added"))
+                }
+            }
+            None => Err(DBError::ObjLacksTrait)
+        }
+    })?;
+    add_dep(&file, &refer.id, obj.clone())
+}
+
+pub fn set_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, index: ReferInd, result: &RefGeometry, refer: Reference, snap_pt: &Option<Point3f>) -> Result<(), DBError> {
+    modify_obj(&file, &event, &obj, |owner| {
+        match owner.query_mut::<UpdateFromRefs>() {
+            Some(joinable) => {
+                joinable.set_ref(index, result, refer.clone(), snap_pt);
                 Ok(())
             }
             None => Err(DBError::ObjLacksTrait)

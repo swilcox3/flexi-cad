@@ -23,6 +23,41 @@ pub struct Rect {
     pub pt_3: Point3f,
 }
 
+pub trait Updatable {
+    fn get_geom(&self) -> RefGeometry;
+    fn update_geom(&mut self, geom: &RefGeometry, snap_pt: &Option<Point3f>);
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct UpdatableGeometry<T: Updatable> {
+    pub refer: Option<Reference>,
+    pub geom: T
+}
+
+impl<T: Updatable> UpdatableGeometry<T> {
+    pub fn new(geom: T) -> UpdatableGeometry<T> {
+        UpdatableGeometry {
+            refer: None,
+            geom: geom
+        }
+    }
+
+    pub fn update(&mut self, ref_geom: &Option<RefGeometry>) {
+        if let Some(geom) = ref_geom {
+            self.geom.update_geom(&geom, &None);
+        }
+        else {
+            self.refer = None;
+        }
+    }
+
+    pub fn set_reference(&mut self, result: &RefGeometry, refer: Reference, snap_pt: &Option<Point3f>) {
+        self.refer = Some(refer);
+        self.geom.update_geom(&result, snap_pt);
+    }
+}
+
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RefPoint {
     pub pt: Point3f
@@ -33,7 +68,7 @@ impl Updatable for RefPoint {
         RefGeometry::Point{pt: self.pt}
     }
     
-    fn update_geom(&mut self, geom: &RefGeometry) {
+    fn update_geom(&mut self, geom: &RefGeometry, _: &Option<Point3f>) {
         if let RefGeometry::Point{pt} = geom {
             self.pt = *pt;
         }
@@ -65,8 +100,11 @@ impl Updatable for RefLineSeg {
         RefGeometry::Line{pt_1: self.pt_1, pt_2: self.pt_2}
     }
     
-    fn update_geom(&mut self, geom: &RefGeometry) {
+    fn update_geom(&mut self, geom: &RefGeometry, snap_pt: &Option<Point3f>) {
         if let RefGeometry::Line{pt_1, pt_2} = geom {
+            if let Some(snap) = snap_pt {
+                self.interp = get_interp_along_line(pt_1, pt_2, snap);
+            }
             let dir = pt_2 - pt_1;
             let norm = dir.normalize();
             self.pt_1 = pt_1 + dir * self.interp.val;
@@ -97,29 +135,12 @@ impl Updatable for RefRect {
         RefGeometry::Rect{pt_1: self.pt_1, pt_2: self.pt_2, pt_3: self.pt_3}
     }
     
-    fn update_geom(&mut self, geom: &RefGeometry) {
+    fn update_geom(&mut self, geom: &RefGeometry, _: &Option<Point3f>) {
         if let RefGeometry::Rect{pt_1, pt_2, pt_3} = geom {
             self.pt_1 = *pt_1;
             self.pt_2 = *pt_2;
             self.pt_3 = *pt_3;
         }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct MeshData {
-    pub id: RefID,
-    pub positions: Vec<WorldCoord>,
-    pub indices: Vec<u64>,
-    pub metadata: Option<serde_json::Value>,
-}
-
-impl MeshData {
-    pub fn push_pt(&mut self, pt: Point3f) {
-        //Bake in coordinate transformations to graphical space
-        self.positions.push(pt.x);
-        self.positions.push(pt.z);
-        self.positions.push(-pt.y);
     }
 }
 
@@ -140,13 +161,12 @@ pub struct ReferInd {
 pub struct Reference {
     pub id: RefID,
     pub index: ResultInd,
-    pub ref_type: RefType
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd)]
 pub enum RefType {
     Point,
-    Line{interp: Interp},
+    Line,
     Rect,
     Any,
 }
@@ -162,7 +182,7 @@ impl RefType {
                     false
                 }
             }
-            RefType::Line{..} => {
+            RefType::Line => {
                 if let RefGeometry::Line{..} = other {
                     true
                 }
@@ -194,61 +214,58 @@ pub enum RefGeometry {
 }
 
 impl RefGeometry {
-    pub fn distance2(&self, in_pt: &Point3f) -> (WorldCoord, RefType) {
+    pub fn distance2(&self, in_pt: &Point3f) -> WorldCoord {
         match *self {
-            RefGeometry::Point{pt} => (pt.distance2(*in_pt), RefType::Point),
+            RefGeometry::Point{pt} => pt.distance2(*in_pt),
             RefGeometry::Line{pt_1, pt_2} => {
-                let (projected, interp) = project_on_line(&pt_1, &pt_2, in_pt);
-                (projected.distance2(*in_pt), RefType::Line{interp: interp})
+                let projected = project_on_line(&pt_1, &pt_2, in_pt);
+                projected.distance2(*in_pt)
             }
-            RefGeometry::Rect{pt_1, ..} => (pt_1.distance2(*in_pt), RefType::Rect)
+            RefGeometry::Rect{pt_1, ..} => pt_1.distance2(*in_pt)
         }
     }
-}
 
-pub trait Updatable {
-    fn get_geom(&self) -> RefGeometry;
-    fn update_geom(&mut self, geom: &RefGeometry);
+    pub fn get_type(&self) -> RefType {
+        match *self {
+            RefGeometry::Point{..} => RefType::Point,
+            RefGeometry::Line{..} => RefType::Line,
+            RefGeometry::Rect{..} => RefType::Rect
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct UpdatableGeometry<T: Updatable> {
-    pub refer: Option<Reference>,
-    pub geom: T
+pub struct MeshData {
+    pub id: RefID,
+    pub positions: Vec<WorldCoord>,
+    pub indices: Vec<u64>,
+    pub metadata: Option<serde_json::Value>,
 }
 
-impl<T: Updatable> UpdatableGeometry<T> {
-    pub fn new(geom: T) -> UpdatableGeometry<T> {
-        UpdatableGeometry {
-            refer: None,
-            geom: geom
-        }
-    }
-
-    pub fn update(&mut self, ref_geom: &Option<RefGeometry>) {
-        if let Some(geom) = ref_geom {
-            self.geom.update_geom(&geom);
-        }
-        else {
-            self.refer = None;
-        }
-    }
-
-    pub fn set_reference(&mut self, result: RefGeometry, refer: Reference) {
-        self.refer = Some(refer);
-        self.update(&Some(result));
+impl MeshData {
+    pub fn push_pt(&mut self, pt: Point3f) {
+        //Bake in coordinate transformations to graphical space
+        self.positions.push(pt.x);
+        self.positions.push(pt.z);
+        self.positions.push(-pt.y);
     }
 }
+
 
 pub trait Position {
     fn move_obj(&mut self, delta: &Vector3f);
 }
 
-pub fn project_on_line(first: &Point3f, second: &Point3f, project: &Point3f) -> (Point3f, Interp) {
+pub fn project_on_line(first: &Point3f, second: &Point3f, project: &Point3f) -> Point3f {
     let dir = second - first;
     let proj_vec = project.to_vec().project_on(dir);
-    let interp = (proj_vec.magnitude2() / dir.magnitude2()).sqrt();
-    (EuclideanSpace::from_vec(proj_vec), Interp::new(interp))
+    EuclideanSpace::from_vec(proj_vec)
+}
+
+pub fn get_interp_along_line(first: &Point3f, second: &Point3f, project: &Point3f) -> Interp {
+    let dir = second - first;
+    let proj_vec = project.to_vec().project_on(dir);
+    Interp::new((proj_vec.magnitude2() / dir.magnitude2()).sqrt())
 }
 
 ///A value between 0 and 1

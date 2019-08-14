@@ -128,17 +128,37 @@ impl UpdateFromRefs for Wall {
         results
     }
 
-    fn get_num_refs(&self) -> usize {
-        2 + self.openings.len()
-    }
-
-    fn set_ref(&mut self, index: ReferInd, result: RefGeometry, other_ref: Reference) {
+    fn set_ref(&mut self, index: ReferInd, result: &RefGeometry, other_ref: Reference, snap_pt: &Option<Point3f>) {
         match index.index {
-            0 => self.first_pt.set_reference(result, other_ref),
-            1 => self.second_pt.set_reference(result, other_ref),
+            0 => self.first_pt.set_reference(result, other_ref, snap_pt),
+            1 => self.second_pt.set_reference(result, other_ref, snap_pt),
             _ => {
                 if let Some(open) = self.openings.get_mut(index.index - 2) {
-                    open.set_reference(result, other_ref);
+                    open.set_reference(result, other_ref, snap_pt);
+                }
+            }
+        }
+    }
+
+    fn add_ref(&mut self, result: &RefGeometry, other_ref: Reference, snap_pt: &Option<Point3f>) -> bool {
+        if let RefGeometry::Rect{pt_1, pt_2, pt_3} = result {
+            let mut new_open = UpdatableGeometry::new(RefRect::new(*pt_1, *pt_2, *pt_3));
+            new_open.set_reference(result, other_ref, snap_pt);
+            self.openings.push(new_open);
+            true
+        }
+        else {
+            false
+        }
+    }
+
+    fn delete_ref(&mut self, index: ReferInd) {
+        match index.index {
+            0 => self.first_pt.refer = None,
+            1 => self.second_pt.refer = None,
+            _ => {
+                if self.openings.len() > (index.index - 2) {
+                    self.openings.remove(index.index - 2);
                 }
             }
         }
