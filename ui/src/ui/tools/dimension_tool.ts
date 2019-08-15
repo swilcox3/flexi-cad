@@ -33,13 +33,6 @@ export class DimensionTool {
 
     onMouseDown(pt: math.Point3d, picked: BABYLON.Mesh)
     {
-        this.createDimension(new math.Point3d(pt.x, pt.y, 0), picked);
-        this.curTemp = null;
-    }
-
-    onMouseMove(pt: math.Point3d, hovered: BABYLON.Mesh)
-    {
-        const joinable = this.canAttach(hovered);
         if(this.curTemp == null)
         {
             var first = new math.Point3d(pt.x, pt.y, 0)
@@ -47,7 +40,16 @@ export class DimensionTool {
             this.curTemp = new kernel.Dimension(first, second, this.offset);
             ops.renderTempObject(this.curTemp)
         }
-        else
+        else {
+            this.createDimension(new math.Point3d(pt.x, pt.y, 0), picked);
+            this.curTemp = null;
+        }
+    }
+
+    onMouseMove(pt: math.Point3d, hovered: BABYLON.Mesh)
+    {
+        const joinable = this.canAttach(hovered);
+        if(this.curTemp != null)
         {
             this.curTemp.set("second", new math.Point3d(pt.x, pt.y, 0));
             this.drawDimension()

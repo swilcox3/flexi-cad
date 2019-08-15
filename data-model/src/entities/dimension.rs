@@ -42,11 +42,11 @@ impl Data for Dimension{
 
         let data = json!({
             "id": self.get_id().clone(),
-            "first": serde_json::to_string(&graphic_space(&self.first.geom.pt)).map_err(error_other)?,
-            "first_off": serde_json::to_string(&graphic_space(&line_1)).map_err(error_other)?,
-            "second": serde_json::to_string(&graphic_space(&self.second.geom.pt)).map_err(error_other)?,
-            "second_off": serde_json::to_string(&graphic_space(&line_2)).map_err(error_other)?,
-            "text_pos": serde_json::to_string(&graphic_space(&text_pos)).map_err(error_other)?,
+            "first": graphic_space(&self.first.geom.pt),
+            "first_off": graphic_space(&line_1),
+            "second": graphic_space(&self.second.geom.pt),
+            "second_off": graphic_space(&line_2),
+            "text_pos": graphic_space(&text_pos),
             "text": text,
             "offset": self.offset,
             "metadata": {

@@ -117,7 +117,7 @@ function renderNext(filename: string)
     kernel.get_updates(filename, (err: any, updates: any) => {
         if(!err) {
             updates.forEach((msg: any) => {
-                console.log(msg);
+                //console.log(msg);
                 if(msg.Delete) {
                     renderers.get(filename).deleteMesh(msg.Delete.key)
                 }
@@ -128,7 +128,6 @@ function renderNext(filename: string)
                         renderers.get(filename).renderMesh(msg.Mesh.data, id)
                     }
                     if(msg.Other) {
-                        console.log("made it")
                         id = msg.Other.data.id;
                         renderers.get(filename).renderObject(msg.Other.data, id)
                     }
