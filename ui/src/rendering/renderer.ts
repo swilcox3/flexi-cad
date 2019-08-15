@@ -139,15 +139,14 @@ export class Renderer {
     }
 
     renderObject(json: any, id: string, temp?:boolean) {
-        console.log(json)
         var mesh = this._scene.getMeshByName(id) as BABYLON.Mesh
         switch (json.metadata.type) {
             case "Dimension":
-                var first = new BABYLON.Vector3(json.first.x, 10, json.first.z);
-                var first_off = new BABYLON.Vector3(json.first_off.x, 10, json.first_off.z);
-                var second = new BABYLON.Vector3(json.second.x, 10, json.second.z);
-                var second_off = new BABYLON.Vector3(json.second_off.x, 10, json.second_off.z);
-                var text_pos = new BABYLON.Vector3(json.text_pos.x, 10, json.text_pos.z);
+                var first = new BABYLON.Vector3(json.first.x, 1, json.first.z);
+                var first_off = new BABYLON.Vector3(json.first_off.x, 1, json.first_off.z);
+                var second = new BABYLON.Vector3(json.second.x, 1, json.second.z);
+                var second_off = new BABYLON.Vector3(json.second_off.x, 1, json.second_off.z);
+                var text_pos = new BABYLON.Vector3(json.text_pos.x, 1, json.text_pos.z);
 
                 if(!mesh) {
                     /*var writer = new this._textwriter(json.text);
@@ -196,6 +195,18 @@ export class Renderer {
 
     deleteMesh(id:string) {
         var mesh = this._scene.getMeshByName(id)
+        if(mesh) {
+            mesh.dispose()
+        }
+        var mesh = this._scene.getMeshByName(id + "_line1")
+        if(mesh) {
+            mesh.dispose()
+        }
+        var mesh = this._scene.getMeshByName(id + "_line2")
+        if(mesh) {
+            mesh.dispose()
+        }
+        var mesh = this._scene.getMeshByName(id + "_line3")
         if(mesh) {
             mesh.dispose()
         }

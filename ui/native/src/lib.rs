@@ -188,6 +188,25 @@ fn snap_to_point(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
+fn can_refer_to(mut cx: FunctionContext) -> JsResult<JsBoolean> {
+    let path = cx.argument::<JsString>(0)?.value();
+    let id_1 = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
+    let result = operations_kernel::can_refer_to(&PathBuf::from(path), &id_1).unwrap();
+    Ok(cx.boolean(result))
+}
+
+fn get_closest_point(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let path = cx.argument::<JsString>(0)?.value();
+    let id_1 = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
+    let arg_2 = cx.argument::<JsValue>(2)?;
+    let point = neon_serde::from_value(&mut cx, arg_2)?;
+    let (_, ref_pt) = operations_kernel::get_closest_result(&PathBuf::from(&path), &id_1, &RefType::Point, &point).unwrap().unwrap();
+    match ref_pt {
+        RefGeometry::Point{pt} => Ok(neon_serde::to_value(&mut cx, &pt).unwrap()),
+        _ => panic!("Not a point")
+    }
+}
+
 fn move_object(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
@@ -309,6 +328,8 @@ register_module!(mut cx, {
     cx.export_function("set_objects_datas", set_objects_datas)?;
     cx.export_function("copy_objects", copy_objects)?;
     cx.export_function("debug_state", debug_state)?;
+    cx.export_function("can_refer_to", can_refer_to)?;
+    cx.export_function("get_closest_point", get_closest_point)?;
     cx.export_class::<wall::JsWall>("Wall")?;
     cx.export_class::<door::JsDoor>("Door")?;
     cx.export_class::<dimension::JsDimension>("Dimension")?;

@@ -17,7 +17,7 @@ export class DimensionTool {
     }
 
     canAttach(hovered: BABYLON.Mesh) {
-        return hovered && hovered.metadata.type == "Wall";
+        return hovered && ops.canReferTo(hovered.name);
     }
 
     createDimension(pt: math.Point3d, picked: BABYLON.Mesh)
@@ -27,6 +27,7 @@ export class DimensionTool {
         }
         ops.createObj(this.undoEventId, this.curTemp)
         if(this.canAttach(picked)) {
+            ops.snapToPoint(this.undoEventId, this.curTemp.get("id"), picked.name, this.curTemp.get("first"))
             ops.snapToPoint(this.undoEventId, this.curTemp.get("id"), picked.name, pt)
         }
     }
@@ -35,7 +36,13 @@ export class DimensionTool {
     {
         if(this.curTemp == null)
         {
-            var first = new math.Point3d(pt.x, pt.y, 0)
+            var first = null;
+            if(this.canAttach(picked)) {
+                first = ops.getClosestPoint(picked.name, new math.Point3d(pt.x, pt.y, 0));
+            }
+            else {
+                first = new math.Point3d(pt.x, pt.y, 0)
+            }
             var second = new math.Point3d(pt.x + 1, pt.y, 0)
             this.curTemp = new kernel.Dimension(first, second, this.offset);
             ops.renderTempObject(this.curTemp)

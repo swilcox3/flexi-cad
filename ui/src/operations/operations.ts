@@ -188,6 +188,16 @@ export function joinAtPoints(event: string, id_1: string, id_2: string, pt: math
     return waitForAllUpdates([id_1, id_2])
 }
 
+export function canReferTo(id:string)
+{
+    return kernel.can_refer_to(filename, id)
+}
+
+export function getClosestPoint(id:string, pt: math.Point3d)
+{
+    return kernel.get_closest_point(filename, id, pt)
+}
+
 export function snapToPoint(event: string, id: string, snap_to_id: string, pt: math.Point3d)
 {
     kernel.snap_to_point(filename, event, id, snap_to_id, pt)
