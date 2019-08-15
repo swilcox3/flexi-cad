@@ -33,10 +33,21 @@ impl Data for Dimension{
     }
 
     fn update(&self) -> Result<UpdateMsg, DBError> {
+        let perp = get_perp_2d(&self.first.geom.pt, &self.second.geom.pt);
+        let line_1 = self.first.geom.pt + perp * self.offset; 
+        let line_2 = self.second.geom.pt + perp * self.offset;
+        let text_pos = line_1 + (line_2 - line_1)*0.5;
+        let distance = (line_2 - line_1).magnitude();
+        let text = format!("{:.*}", 2, distance);
+
         let data = json!({
             "id": self.get_id().clone(),
-            "first": serde_json::to_string(&self.first).map_err(error_other)?,
-            "second": serde_json::to_string(&self.second).map_err(error_other)?,
+            "first": serde_json::to_string(&graphic_space(&self.first.geom.pt)).map_err(error_other)?,
+            "first_off": serde_json::to_string(&graphic_space(&line_1)).map_err(error_other)?,
+            "second": serde_json::to_string(&graphic_space(&self.second.geom.pt)).map_err(error_other)?,
+            "second_off": serde_json::to_string(&graphic_space(&line_2)).map_err(error_other)?,
+            "text_pos": serde_json::to_string(&graphic_space(&text_pos)).map_err(error_other)?,
+            "text": text,
             "offset": self.offset,
             "metadata": {
                 "type": "Dimension",

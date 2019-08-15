@@ -96,6 +96,10 @@ export function renderTempObject(obj: DataObject)
         renderers.get(filename).renderMesh(msg.Mesh.data, msg.Mesh.data.id)
         return msg.Mesh.data.id
     }
+    if(msg.Other) {
+        renderers.get(filename).renderObject(msg.Other.data, msg.Other.data.id)
+        return msg.Other.data.id
+    }
 }
 
 export function deleteTempObject(id: string)
@@ -113,20 +117,31 @@ function renderNext(filename: string)
     kernel.get_updates(filename, (err: any, updates: any) => {
         if(!err) {
             updates.forEach((msg: any) => {
-                //console.log(msg);
-                if(msg.Mesh) {
-                    renderers.get(filename).renderMesh(msg.Mesh.data, msg.Mesh.data.id)
-                    let callbacks = pendingCallbacks.get(msg.Mesh.data.id)
-                    if(callbacks) {
-                        let mesh = renderers.get(filename).getMesh(msg.Mesh.data.id)
-                        callbacks.forEach((callback) => {
-                            callback(mesh)
-                        })
-                    }
-                    pendingCallbacks.delete(msg.Mesh.data.id)
-                }
+                console.log(msg);
                 if(msg.Delete) {
                     renderers.get(filename).deleteMesh(msg.Delete.key)
+                }
+                else {
+                    var id = null;
+                    if(msg.Mesh) {
+                        id = msg.Mesh.data.id;
+                        renderers.get(filename).renderMesh(msg.Mesh.data, id)
+                    }
+                    if(msg.Other) {
+                        console.log("made it")
+                        id = msg.Other.data.id;
+                        renderers.get(filename).renderObject(msg.Other.data, id)
+                    }
+                    if(id) {
+                        let callbacks = pendingCallbacks.get(id)
+                        if(callbacks) {
+                            let mesh = renderers.get(filename).getMesh(id)
+                            callbacks.forEach((callback) => {
+                                callback(mesh)
+                            })
+                        }
+                        pendingCallbacks.delete(id)
+                    }
                 }
             })
         }
@@ -172,6 +187,12 @@ export function joinAtPoints(event: string, id_1: string, id_2: string, pt: math
 {
     kernel.join_at_points(filename, event, id_1, id_2, pt)
     return waitForAllUpdates([id_1, id_2])
+}
+
+export function snapToPoint(event: string, id: string, snap_to_id: string, pt: math.Point3d)
+{
+    kernel.snap_to_point(filename, event, id, snap_to_id, pt)
+    return waitForUpdate(id)
 }
 
 export function snapToLine(event: string, id: string, snap_to_id: string, pt: math.Point3d) 

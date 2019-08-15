@@ -282,6 +282,10 @@ pub fn get_perp_2d(first: &Point3f, second: &Point3f) -> Vector3f {
     (second - first).cross(Vector3f::unit_z()).normalize()
 }
 
+pub fn graphic_space(pt: &Point3f) -> Point3f {
+    Point3f::new(pt.x, pt.z, -pt.y)
+}
+
 ///A value between 0 and 1
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, PartialOrd)]
 pub struct Interp {

@@ -19,6 +19,7 @@ use serde::{Serialize, Deserialize};
 
 mod wall;
 mod door;
+mod dimension;
 mod math;
 
 lazy_static!{
@@ -176,6 +177,17 @@ fn snap_to_line(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
+fn snap_to_point(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let path = cx.argument::<JsString>(0)?.value();
+    let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
+    let id_1 = RefID::from_str(&cx.argument::<JsString>(2)?.value()).unwrap();
+    let id_2 = RefID::from_str(&cx.argument::<JsString>(3)?.value()).unwrap();
+    let arg_4 = cx.argument::<JsValue>(4)?;
+    let point = neon_serde::from_value(&mut cx, arg_4)?;
+    operations_kernel::snap_obj_to_other(PathBuf::from(&path), &event, id_1, &id_2, &RefType::Point, &point).unwrap();
+    Ok(cx.undefined())
+}
+
 fn move_object(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
@@ -288,6 +300,7 @@ register_module!(mut cx, {
     cx.export_function("cancel_event", cancel_event)?;
     cx.export_function("join_at_points", join_at_points)?;
     cx.export_function("snap_to_line", snap_to_line)?;
+    cx.export_function("snap_to_point", snap_to_point)?;
     cx.export_function("move_object", move_object)?;
     cx.export_function("move_objects", move_objects)?;
     cx.export_function("delete_object", delete_object)?;
@@ -298,7 +311,7 @@ register_module!(mut cx, {
     cx.export_function("debug_state", debug_state)?;
     cx.export_class::<wall::JsWall>("Wall")?;
     cx.export_class::<door::JsDoor>("Door")?;
-    cx.export_class::<door::JsDimension>("Dimension")?;
+    cx.export_class::<dimension::JsDimension>("Dimension")?;
     cx.export_function("project_on_line", math::project_on_line)?;
     Ok(())
 });

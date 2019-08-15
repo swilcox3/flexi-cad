@@ -27,43 +27,30 @@ export class DimensionTool {
         }
         ops.createObj(this.undoEventId, this.curTemp)
         if(this.canAttach(picked)) {
-            ops.snapToLine(this.undoEventId, picked.name, this.curTemp.get("id"), pt)
+            ops.snapToPoint(this.undoEventId, this.curTemp.get("id"), picked.name, pt)
         }
     }
 
     onMouseDown(pt: math.Point3d, picked: BABYLON.Mesh)
     {
-        this.createDoor(new math.Point3d(pt.x, pt.y, 0), picked);
+        this.createDimension(new math.Point3d(pt.x, pt.y, 0), picked);
         this.curTemp = null;
     }
 
     onMouseMove(pt: math.Point3d, hovered: BABYLON.Mesh)
     {
-        const joinable = this.canJoinToWall(hovered);
+        const joinable = this.canAttach(hovered);
         if(this.curTemp == null)
         {
             var first = new math.Point3d(pt.x, pt.y, 0)
-            var second = new math.Point3d(pt.x + this.length, pt.y, 0)
-            this.curTemp = new kernel.Door(first, second, this.width, this.height);
+            var second = new math.Point3d(pt.x + 1, pt.y, 0)
+            this.curTemp = new kernel.Dimension(first, second, this.offset);
             ops.renderTempObject(this.curTemp)
         }
         else
         {
-            if(joinable) {
-                var first_promise = ops.getObjectData(hovered.name, "First");
-                var second_promise = ops.getObjectData(hovered.name, "Second");
-                Promise.all([first_promise, second_promise])
-                .then(([first, second]) => {
-                    var project = math.projectOnLine(first, second, new math.Point3d(pt.x, pt.y, 0));
-                    this.curTemp.set("first", project);
-                    this.curTemp.set_dir(new math.Point3d(second.x - first.x, second.y - first.y, 0));
-                });
-            }
-            else {
-                this.curTemp.set("first", new math.Point3d(pt.x, pt.y, 0));
-                this.curTemp.set("second", new math.Point3d(pt.x + this.length, pt.y, 0));
-            }
-            this.drawDoor()
+            this.curTemp.set("second", new math.Point3d(pt.x, pt.y, 0));
+            this.drawDimension()
         }
         return joinable;
     }
@@ -76,7 +63,7 @@ export class DimensionTool {
         ops.deleteTempObject(this.curTemp.get("id"))
     }
 
-    drawDoor()
+    drawDimension()
     {
         if(this.curTemp) {
             ops.renderTempObject(this.curTemp)
@@ -86,7 +73,7 @@ export class DimensionTool {
     finish(pt: math.Point3d, picked: BABYLON.Mesh)
     {
         if(this.curTemp) {
-            this.createDoor(new math.Point3d(pt.x, pt.y, 0), picked);
+            this.createDimension(new math.Point3d(pt.x, pt.y, 0), picked);
         }
         if(this.undoEventId) {
             ops.endUndoEvent(this.undoEventId)

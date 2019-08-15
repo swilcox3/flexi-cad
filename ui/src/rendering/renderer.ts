@@ -1,7 +1,9 @@
 import * as BABYLON from "babylonjs";
+import * as BABYLONGUI from "babylonjs-gui"
 var gui = require('../ui/gui')
 var mouse = require('../ui/mouse_events')
 var uiController = require('../ui/controller')
+var meshwriter = require("meshwriter");
 
 function getHoveredMesh(scene: BABYLON.Scene, ground: BABYLON.Mesh)
 {
@@ -17,6 +19,7 @@ export class Renderer {
     private _engine: BABYLON.Engine
     private _scene: BABYLON.Scene
     private _highlight: BABYLON.HighlightLayer
+    private _textwriter: any
 
     createScene(canvas: HTMLCanvasElement, engine: BABYLON.Engine) {
         this._canvas = canvas;
@@ -25,6 +28,8 @@ export class Renderer {
         const scene = new BABYLON.Scene(engine);
         var _highlight = new BABYLON.HighlightLayer("highlight1", scene);
         this._scene = scene;
+        //@ts-ignore
+        this._textwriter = BABYLON.MeshWriter(this._scene);
         // This creates and positions a free camera (non-mesh)
         const camera = new BABYLON.ArcRotateCamera("camera1", -Math.PI / 2, 1.0, 110, BABYLON.Vector3.Zero(), scene);
         camera.panningSensibility = 50;
@@ -126,6 +131,51 @@ export class Renderer {
         vertexData.positions = triangles.positions;
         vertexData.indices = triangles.indices;
         vertexData.applyToMesh(mesh);
+    }
+
+    renderObject(json: any, id: string, temp?:boolean) {
+        var mesh = this._scene.getMeshByName(id)
+        switch (json.metadata.type) {
+            case "Dimension":
+                var first = new BABYLON.Vector3(json.first.x, json.first.y, json.first.z);
+                var first_off = new BABYLON.Vector3(json.first_off.x, json.first_off.y, json.first_off.z);
+                var second = new BABYLON.Vector3(json.second.x, json.second.y, json.second.z);
+                var second_off = new BABYLON.Vector3(json.second_off.x, json.second_off.y, json.second_off.z);
+                var text_pos = new BABYLON.Vector3(json.text_pos.x, json.text_pos.y, json.text_pos.z);
+
+                if(!mesh) {
+                    var writer = new this._textwriter(json.text);
+                    mesh = writer.getMesh();
+                    mesh.name = id;
+                }
+                mesh.metadata = json.metadata;
+                mesh.position.copyFrom(text_pos);
+
+                var line_1 = this._scene.getMeshByName(id + "_line1");
+                if(!line_1) {
+                    var line_1_pts = [first, first_off];
+                    line_1 = BABYLON.MeshBuilder.CreateLines(id + "_line1", {points: line_1_pts, updatable: true}, this._scene)
+                    line_1.parent = mesh;
+                }
+                else {
+                    var positions = line_1.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+                    positions = [first.x, first.y, first.z, first_off.x, first_off.y, first_off.z]
+                    line_1.updateVerticesData(BABYLON.VertexBuffer.PositionKind, positions);
+                }
+                
+                var line_2 = this._scene.getMeshByName(id + "_line1");
+                if(!line_2) {
+                    var line_2_pts = [second, second_off];
+                    line_2 = BABYLON.MeshBuilder.CreateLines(id + "_line2", {points: line_2_pts, updatable: true}, this._scene)
+                    line_2.parent = mesh;
+                }
+                else {
+                    var positions = line_2.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+                    positions = [second.x, second.y, second.z, second_off.x, second_off.y, second_off.z]
+                    line_2.updateVerticesData(BABYLON.VertexBuffer.PositionKind, positions);
+                }
+                break;
+        }
     }
 
     deleteMesh(id:string) {
