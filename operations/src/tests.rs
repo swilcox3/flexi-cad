@@ -1,5 +1,4 @@
 use crate::*;
-use futures::Future;
 use serde::{Serialize, Deserialize};
 
 pub trait Store: Send + Sync {
@@ -138,58 +137,4 @@ impl Position for TestObj {
         self.point.geom.pt += *delta;
         self.point_2.geom.pt += *delta;
     }
-}
-
-use std::sync::{Arc, Mutex};
-use crate::scheduler::Scheduler;
-use tokio::timer::Delay;
-use std::time::{Duration, Instant};
-
-lazy_static! {
-    static ref COUNTER: Arc<Mutex<u64>> = Arc::new(Mutex::new(1));
-    static ref SET: Arc<Mutex<HashSet<String>>> = {
-        let mut set = HashSet::new();
-        for i in 1..100 {
-            set.insert(format!("Obj {:?}", i));
-        }
-        Arc::new(Mutex::new(set))
-    };
-}
-#[test]
-fn test_blocking()
-{
-    let factory = move || {
-        let clone = Arc::clone(&COUNTER);
-        let mut lock = clone.lock().unwrap();
-        let data = format!("Obj {:?}", lock);
-        *lock = *lock + 1;
-        if true {
-            Ok(TestObj::new(&data))
-        }
-        else {
-            Err(DBError::NotFound)
-        }
-    };
-    let fut = futures::future::ok(0)
-        .and_then(move |_| {
-            for _ in 1..100 {
-                Scheduler::spawn_fut(Scheduler::blocking(factory)
-                    .map_err(|e| panic!("{:?}", e))
-                    .map(|obj| {
-                        let clone = Arc::clone(&SET);
-                        let mut lock = clone.lock().unwrap();
-                        lock.remove(&obj.data);
-                    }));
-            }
-            Scheduler::spawn_fut(Delay::new(Instant::now() + Duration::from_secs(1))
-                .map_err(|e| panic!("{:?}", e))
-                .and_then(|_| {
-                    let clone = Arc::clone(&SET);
-                    let lock = clone.lock().unwrap();
-                    assert_eq!(lock.len(), 0);
-                    Ok(())
-                }));
-            Ok(())
-        });
-    Scheduler::spawn_fut(fut);
 }

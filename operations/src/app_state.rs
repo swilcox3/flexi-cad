@@ -2,7 +2,6 @@ use ccl::dhashmap::DHashMap;
 use std::path::PathBuf;
 use crate::*;
 use crossbeam_channel::Sender;
-use crate::scheduler::Scheduler;
 use operation_manager::OperationManager;
 
 lazy_static!{
@@ -30,10 +29,9 @@ pub fn init_file(file: PathBuf, updates: Sender<UpdateMsg>) {
 pub fn open_file(file: PathBuf, updates: Sender<UpdateMsg>) -> Result<(), DBError> {
     let ops = OperationManager::open(&file, updates)?;
     APP_STATE.files.insert(file.clone(), ops);
-    Scheduler::spawn(move || {
-        match APP_STATE.files.get(&file) {
-            Some(ops) => ops.update_all(),
-            None => Err(DBError::NotFound)
+    rayon::spawn(move || {
+        if let Some(ops) = APP_STATE.files.get(&file) {
+            ops.update_all().unwrap();
         }
     });
     Ok(())
@@ -179,23 +177,17 @@ pub fn set_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, index: ReferInd
 }
 
 pub fn update_deps(file: PathBuf, id: RefID) {
-    Scheduler::spawn(move || {
-        match APP_STATE.files.get(&file) {
-            Some(ops) => {
-                ops.update_deps(&id)
-            }
-            None => Err(DBError::NotFound)
+    rayon::spawn(move || {
+        if let Some(ops) = APP_STATE.files.get(&file) {
+            ops.update_deps(&id).unwrap();
         }
     });
 }
 
 pub fn update_all_deps(file: PathBuf, ids: Vec<RefID>) {
-    Scheduler::spawn(move || {
-        match APP_STATE.files.get(&file) {
-            Some(ops) => {
-                ops.update_all_deps(&ids)
-            }
-            None => Err(DBError::NotFound)
+    rayon::spawn(move || {
+        if let Some(ops) = APP_STATE.files.get(&file) {
+            ops.update_all_deps(&ids).unwrap();
         }
     });
 }

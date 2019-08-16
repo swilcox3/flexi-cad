@@ -1,9 +1,7 @@
 #![allow(dead_code)]
 extern crate ccl;
 #[macro_use] extern crate lazy_static;
-extern crate tokio;
-extern crate futures;
-extern crate tokio_threadpool;
+extern crate rayon;
 extern crate crossbeam_channel;
 extern crate data_model;
 #[cfg(test)] #[macro_use]
@@ -16,7 +14,6 @@ extern crate bincode;
 mod tests;
 
 mod operation_manager;
-mod scheduler;
 mod app_state;
 mod entity_ops;
 
@@ -26,6 +23,7 @@ pub use entity_ops::*;
 pub use std::path::PathBuf;
 pub use std::collections::{HashSet, HashMap, VecDeque};
 pub use app_state::*;
+pub use rayon::prelude::*;
 
 pub fn demo(file: &PathBuf, position: &Point3f) -> Result<(), DBError> {
     let side_length = 50.0;
@@ -55,7 +53,7 @@ pub fn demo(file: &PathBuf, position: &Point3f) -> Result<(), DBError> {
     let door = Door::new(RefID::new_v4(), door_pos, door_pos + Vector3f::new(5.0, 0.0, 0.0), width / 2.0, height - 1.0);
     let door_id = door.get_id().clone();
     app_state::add_obj(file, &event, Box::new(door))?;
-    snap_to_ref(file, &event, &door_id, &id_1, &RefType::Line, &door_pos)?;
+    join_refs(file, &event, &door_id, &id_1, &RefType::Line, &RefType::Rect, &door_pos)?;
     let offset = 5.0;
     let dim_1 = Dimension::new(RefID::new_v4(), position.clone(), position_2.clone(), offset);
     let dim_2 = Dimension::new(RefID::new_v4(), position_2.clone(), position_3.clone(), offset);
@@ -81,12 +79,14 @@ pub fn demo(file: &PathBuf, position: &Point3f) -> Result<(), DBError> {
 }
 
 pub fn demo_100(file: PathBuf, position: Point3f) {
-    scheduler::Scheduler::spawn(move || {
-        for i in 0..10 {
-            for j in 0..10 {
-                demo(&file, &(position + Vector3f::new(75.0 * i as f64, 75.0 * j as f64, 0.0)))?;
-            }
-        }
-        Ok(())
+    rayon::ThreadPoolBuilder::new().num_threads(6).build_global().unwrap();
+    rayon::spawn(move || {
+        let i_s: Vec<u64> = (0..10).collect();
+        let j_s: Vec<u64> = (0..10).collect();
+        i_s.par_iter().for_each(|i| {
+            j_s.par_iter().for_each(|j| {
+                demo(&file, &(position + Vector3f::new(75.0 * (*i as f64), 75.0 * (*j as f64), 0.0))).unwrap();
+            });
+        });
     });
 }
