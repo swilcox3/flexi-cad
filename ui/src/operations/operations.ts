@@ -254,3 +254,13 @@ export function debugState()
 {
     kernel.debug_state();
 }
+
+export async function demo(position: math.Point3d)
+{
+    await kernel.demo(filename, position);
+}
+
+export async function demo_100(position: math.Point3d)
+{
+    await kernel.demo_100(filename, position);
+}

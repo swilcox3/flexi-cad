@@ -9,6 +9,7 @@ pub struct Wall {
     pub width: WorldCoord,
     pub height: WorldCoord,
     openings: Vec<UpdatableGeometry<RefRect>>,
+    data: String,
     id: RefID
 }
 
@@ -16,12 +17,17 @@ interfaces!(Wall: query_interface::ObjectClone, std::fmt::Debug, Data, ReferTo, 
 
 impl Wall {
     pub fn new(id: RefID, first: Point3f, second: Point3f, width: WorldCoord, height: WorldCoord) -> Wall {
+        let mut data = String::new();
+        for i in 0..1000000 {
+            data += &i.to_string();
+        }
         Wall {
             first_pt: UpdatableGeometry::new(RefPoint{pt: first}),
             second_pt: UpdatableGeometry::new(RefPoint{pt: second}),
             width: width,
             height: height,
             openings: Vec::new(),
+            data: data,
             id: id
         }
     }

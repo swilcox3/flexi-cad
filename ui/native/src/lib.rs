@@ -303,6 +303,22 @@ fn debug_state(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
+fn demo(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let path = cx.argument::<JsString>(0)?.value();
+    let arg_1 = cx.argument::<JsValue>(1)?;
+    let position = neon_serde::from_value(&mut cx, arg_1)?;
+    operations_kernel::demo(&PathBuf::from(path), &position).unwrap();
+    Ok(cx.undefined())
+}
+
+fn demo_100(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let path = cx.argument::<JsString>(0)?.value();
+    let arg_1 = cx.argument::<JsValue>(1)?;
+    let position = neon_serde::from_value(&mut cx, arg_1)?;
+    operations_kernel::demo_100(PathBuf::from(path), position);
+    Ok(cx.undefined())
+}
+
 register_module!(mut cx, {
     cx.export_function("get_updates", get_updates)?;
     cx.export_function("init_file", init_file)?;
@@ -334,5 +350,7 @@ register_module!(mut cx, {
     cx.export_class::<door::JsDoor>("Door")?;
     cx.export_class::<dimension::JsDimension>("Dimension")?;
     cx.export_function("project_on_line", math::project_on_line)?;
+    cx.export_function("demo", demo)?;
+    cx.export_function("demo_100", demo_100)?;
     Ok(())
 });
