@@ -69,7 +69,8 @@ impl OperationManager {
     pub fn cancel_event(&self, event_id: &UndoEventID) -> Result<(), DBError> {
         let set = self.data.cancel_event(event_id)?;
         self.update_set(&set)?;
-        self.update_all_deps(set.iter())
+        let deps: Vec<RefID> = set.into_iter().collect();
+        self.update_all_deps(&deps)
     }
 
     pub fn take_undo_snapshot(&self, event_id: &UndoEventID, key: &RefID) -> Result<(), DBError> {
@@ -79,13 +80,15 @@ impl OperationManager {
     pub fn undo_latest(&self, user: &UserID) -> Result<(), DBError> {
         let set = self.data.undo_latest(user)?;
         self.update_set(&set)?;
-        self.update_all_deps(set.iter())
+        let deps: Vec<RefID> = set.into_iter().collect();
+        self.update_all_deps(&deps)
     }
 
     pub fn redo_latest(&self, user: &UserID) -> Result<(), DBError> {
         let set = self.data.redo_latest(user)?;
         self.update_set(&set)?;
-        self.update_all_deps(set.iter())
+        let deps: Vec<RefID> = set.into_iter().collect();
+        self.update_all_deps(&deps)
     }
 
     pub fn update_all(&self) -> Result<(), DBError> {
@@ -184,7 +187,7 @@ impl OperationManager {
         self.update_set_from_refs(&deps)
     }
 
-    pub fn update_all_deps<'a>(&self, ids: impl Iterator<Item=&'a RefID>) -> Result<(), DBError>{
+    pub fn update_all_deps<'a>(&self, ids: &Vec<RefID>) -> Result<(), DBError>{
         let deps = self.deps.get_all_deps(ids);
         self.update_set_from_refs(&deps)
     }

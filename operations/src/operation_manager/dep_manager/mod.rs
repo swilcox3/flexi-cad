@@ -12,21 +12,35 @@ impl DependencyManager {
         }
     }
 
+    fn get_obj_deps(&self, obj: &RefID, results: &mut HashSet<RefID>) {
+        if let Some(set) = self.pub_subs.get(obj) {
+            for key in &(*set) {
+                if results.insert(key.clone()) {
+                    self.get_obj_deps(key, results);
+                }
+            }
+        }
+    }
+
     pub fn get_deps(&self, obj: &RefID) -> HashSet<RefID> {
         let mut results = HashSet::new();
-        if let Some(set) = self.pub_subs.get(obj) {
-            results = set.clone()
-        }
+        results.insert(*obj);  //We have to do some fancy things here to make sure we don't get cycles.
+        self.get_obj_deps(obj, &mut results);
+        results.remove(obj);
         results
     }
 
-    pub fn get_all_deps<'a>(&self, ids: impl Iterator<Item=&'a RefID>) -> HashSet<RefID> 
+    pub fn get_all_deps(&self, ids: &Vec<RefID>) -> HashSet<RefID> 
     {
         let mut results = HashSet::new();
         for id in ids {
-            if let Some(set) = self.pub_subs.get(id) {
-                results.extend(set.clone());
-            }
+            results.insert(*id);
+        }
+        for id in ids {
+            self.get_obj_deps(id, &mut results);
+        }
+        for id in ids {
+            results.remove(id);
         }
         results
     }

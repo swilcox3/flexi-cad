@@ -208,6 +208,11 @@ impl Position for Wall {
     fn move_obj(&mut self, delta: &Vector3f) {
         self.first_pt.geom.pt += *delta;
         self.second_pt.geom.pt += *delta;
+        for open in &mut self.openings {
+            open.geom.pt_1 += *delta;
+            open.geom.pt_2 += *delta;
+            open.geom.pt_3 += *delta;
+        }
     }
 }
 

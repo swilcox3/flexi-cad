@@ -34,7 +34,7 @@ export class Renderer {
         //@ts-ignore
         this._textwriter = global.MeshWriter(this._scene);
         // This creates and positions a free camera (non-mesh)
-        const camera = new BABYLON.ArcRotateCamera("camera1", -Math.PI / 2, 1.0, 110, BABYLON.Vector3.Zero(), scene);
+        const camera = new BABYLON.ArcRotateCamera("camera1", -Math.PI / 2, 1.0, 500, new BABYLON.Vector3(500, 0, -500), scene);
         camera.panningSensibility = 50;
         camera.panningInertia = .7;
         // This attaches the camera to the canvas
@@ -45,7 +45,7 @@ export class Renderer {
         light.intensity = 0.7;
         light.parent = camera;
 
-        var ground = BABYLON.Mesh.CreateGround("ground", 1000, 1000, 0, scene, false);
+        var ground = BABYLON.Mesh.CreateGround("ground", 10000, 10000, 0, scene, false);
         var groundMaterial = new BABYLON.StandardMaterial("ground", scene);
         groundMaterial.specularColor = BABYLON.Color3.Black();
         ground.material = groundMaterial;

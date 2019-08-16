@@ -193,7 +193,7 @@ pub fn update_all_deps(file: PathBuf, ids: Vec<RefID>) {
     Scheduler::spawn(move || {
         match APP_STATE.files.get(&file) {
             Some(ops) => {
-                ops.update_all_deps(ids.iter())
+                ops.update_all_deps(&ids)
             }
             None => Err(DBError::NotFound)
         }
