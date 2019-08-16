@@ -125,6 +125,14 @@ export default class GUI
         this.newButton("demo", "Demo 1", () => {
            demoUnit(new math.Point3d(0, 0, 0)) 
         })
+        this.newButton("demo 2", "Demo 100", () => {
+            var position = new math.Point3d(0, 0, 0);
+            for(let i = 0; i < 10; i++) {
+                for(let j = 0; j < 10; j++) {
+                    demoUnit(new math.Point3d(position.x + 75*i, position.y + 75*j, 0)) 
+                }
+            }
+        })
     }
 
     createPropPair(parent: BABYLONGUI.Grid, curRow: number, objIds:Array<string>, label:string, value:string) {

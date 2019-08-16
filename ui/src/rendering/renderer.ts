@@ -151,7 +151,7 @@ export class Renderer {
                 var second_off = new BABYLON.Vector3(json.second_off.x, 1, json.second_off.z);
                 var text_pos = new BABYLON.Vector3(json.text_pos.x, 1, json.text_pos.z);
 
-                if(mesh) {
+                /*if(mesh) {
                     mesh.dispose();
                 }
                 var writer = new this._textwriter(json.text, {
@@ -160,7 +160,10 @@ export class Renderer {
                     "letter-thickness": .5,
                 });
                 mesh = writer.getMesh();
-                mesh.name = id;
+                mesh.name = id;*/
+                if(!mesh) {
+                    mesh = new BABYLON.MeshBuilder.CreateSphere(id, {diameter: 2}, this._scene);
+                }
                 this.applyNewMeshProps(mesh, temp);
                 mesh.metadata = json.metadata;
                 mesh.position = text_pos;
