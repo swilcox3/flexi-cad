@@ -1,5 +1,8 @@
 /operations/target
 /data-model/target
+/server/target
+/server/Cargo.lock
+/server/log
 **/*.rs.bk
 /operations/Cargo.lock
 /data-model/Cargo.lock
