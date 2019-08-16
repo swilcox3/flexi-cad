@@ -4,9 +4,6 @@ import * as BABYLONGUI from "babylonjs-gui"
 var gui = require('../ui/gui')
 var mouse = require('../ui/mouse_events')
 var uiController = require('../ui/controller')
-const earcut = require("earcut");
-(window as any).earcut = earcut;
-require("./meshwriter.min")
 
 function getHoveredMesh(scene: BABYLON.Scene, ground: BABYLON.Mesh)
 {
@@ -22,7 +19,6 @@ export class Renderer {
     private _engine: BABYLON.Engine
     private _scene: BABYLON.Scene
     private _highlight: BABYLON.HighlightLayer
-    private _textwriter: any
 
     createScene(canvas: HTMLCanvasElement, engine: BABYLON.Engine) {
         this._canvas = canvas;
@@ -31,8 +27,6 @@ export class Renderer {
         const scene = new BABYLON.Scene(engine);
         var _highlight = new BABYLON.HighlightLayer("highlight1", scene);
         this._scene = scene;
-        //@ts-ignore
-        this._textwriter = global.MeshWriter(this._scene);
         // This creates and positions a free camera (non-mesh)
         const camera = new BABYLON.ArcRotateCamera("camera1", -Math.PI / 2, 1.0, 500, new BABYLON.Vector3(500, 0, -500), scene);
         camera.panningSensibility = 50;
@@ -151,16 +145,6 @@ export class Renderer {
                 var second_off = new BABYLON.Vector3(json.second_off.x, 1, json.second_off.z);
                 var text_pos = new BABYLON.Vector3(json.text_pos.x, 1, json.text_pos.z);
 
-                /*if(mesh) {
-                    mesh.dispose();
-                }
-                var writer = new this._textwriter(json.text, {
-                    "anchor": "right",
-                    "letter-height": 7,
-                    "letter-thickness": .5,
-                });
-                mesh = writer.getMesh();
-                mesh.name = id;*/
                 if(!mesh) {
                     mesh = new BABYLON.MeshBuilder.CreateSphere(id, {diameter: 2}, this._scene);
                 }

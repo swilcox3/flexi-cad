@@ -18,7 +18,7 @@ interfaces!(Wall: query_interface::ObjectClone, std::fmt::Debug, Data, ReferTo, 
 impl Wall {
     pub fn new(id: RefID, first: Point3f, second: Point3f, width: WorldCoord, height: WorldCoord) -> Wall {
         let mut data = String::new();
-        for i in 0..1000000 {
+        for i in 0..100000 {
             data += &i.to_string();
         }
         Wall {
