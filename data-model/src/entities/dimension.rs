@@ -38,7 +38,7 @@ impl Data for Dimension{
         let line_2 = self.second.geom.pt + perp * self.offset;
         let text_pos = line_1 + (line_2 - line_1)*0.5;
         let distance = (line_2 - line_1).magnitude();
-        let text = format!("{:.*}", 2, distance);
+        let text = format!("{:.3}", distance);
 
         let data = json!({
             "id": self.get_id().clone(),

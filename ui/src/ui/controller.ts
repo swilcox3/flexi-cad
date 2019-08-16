@@ -1,5 +1,5 @@
 const gui = require('./gui')
-import * as BABYLON from "babylonjs";
+var BABYLON = require('babylonjs')
 import * as math from '../utils/math'
 import * as ops from '../operations/operations'
 

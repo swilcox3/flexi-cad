@@ -1,7 +1,7 @@
 var kernel = require('../../native/index.node')
 import {Renderer} from '../rendering/renderer'
 import * as math from '../utils/math'
-import * as BABYLON from "babylonjs";
+var BABYLON = require("babylonjs")
 
 var renderers: Map<String, Renderer> = new Map()
 var filename: string
