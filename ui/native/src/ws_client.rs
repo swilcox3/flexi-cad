@@ -6,7 +6,7 @@ use websocket::result::WebSocketError;
 use websocket::{ClientBuilder, OwnedMessage};
 use data_model::{CmdMsg, UpdateMsg};
 
-pub fn connect(address: String, input: mpsc::Receiver<CmdMsg>, output: crossbeam_channel::Sender<UpdateMsg>) {
+pub fn connect(address: &str, input: mpsc::Receiver<CmdMsg>, output: crossbeam_channel::Sender<UpdateMsg>) {
 	std::thread::spawn(|| {
         let mut runtime = tokio::runtime::current_thread::Builder::new()
             .build()
@@ -33,7 +33,7 @@ pub fn connect(address: String, input: mpsc::Receiver<CmdMsg>, output: crossbeam
                         }
                     })
                     .select(input.map(|msg| {
-                        OwnedMessage::Text(serde_json::to_string(&msg))
+                        OwnedMessage::Text(serde_json::to_string(&msg).unwrap())
                     }).map_err(|_| WebSocketError::NoDataAvailable))
                     .forward(sink)
             });
