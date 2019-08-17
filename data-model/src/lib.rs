@@ -41,6 +41,12 @@ pub enum UpdateMsg {
     Other{data: serde_json::Value}
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CmdMsg {
+    func_name: String,
+    params: serde_json::Value
+}
+
 #[typetag::serde]
 pub trait Data : Object + Send + Sync {
     fn get_id(&self) -> &RefID;

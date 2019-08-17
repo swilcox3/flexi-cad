@@ -7,6 +7,9 @@ extern crate ccl;
 extern crate serde;
 extern crate serde_json;
 #[macro_use] extern crate lazy_static;
+extern crate websocket;
+extern crate futures;
+extern crate tokio;
 
 use neon::prelude::*;
 use std::path::PathBuf;
@@ -21,9 +24,11 @@ mod wall;
 mod door;
 mod dimension;
 mod math;
+mod ws_client;
 
 lazy_static!{
     static ref UPDATES: DHashMap<PathBuf, Receiver<UpdateMsg>> = DHashMap::default();
+    static ref SERVERS: DHashMap<String, futures::sync::mpsc::Sender<CmdMsg>> = DHashMap::default();
 }
 
 struct GetNextUpdate{
@@ -68,10 +73,14 @@ fn get_updates(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
 fn init_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
+    let connection = cx.argument::<JsString>(1)?.value();
     let (s, r) = crossbeam_channel::unbounded();
+    let (input, output) = futures::sync::mpsc::channel(5);
+    ws_client::connect(connection, output, s);
     let pathbuf = PathBuf::from(path);
-    operations_kernel::init_file(pathbuf.clone(), s);
+    //operations_kernel::init_file(pathbuf.clone(), s);
     UPDATES.insert(pathbuf, r);
+    SERVERS.insert(connection, input);
     Ok(cx.undefined())
 }
 
@@ -315,7 +324,13 @@ fn demo_100(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let arg_1 = cx.argument::<JsValue>(1)?;
     let position = neon_serde::from_value(&mut cx, arg_1)?;
-    operations_kernel::demo_100(PathBuf::from(path), position);
+    let connection = cx.argument::<JsString>(2)?.value();
+    //operations_kernel::demo_100(PathBuf::from(path), position);
+    let msg = data_model::CmdMsg{
+        func_name: String::from("demo_100"),
+        params: serde_json::to_string((PathBuf::from(path), position))
+    };
+    SERVERS.get(&connection).send(msg);
     Ok(cx.undefined())
 }
 
