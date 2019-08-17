@@ -81,7 +81,6 @@ fn init_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     UPDATES.insert(pathbuf, r);
     SERVERS.insert(connection.clone(), input);
     ws_client::connect(connection, output, s);
-    println!("made it out");
     Ok(cx.undefined())
 }
 
@@ -324,13 +323,14 @@ fn demo(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 fn demo_100(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let arg_1 = cx.argument::<JsValue>(1)?;
-    let position = neon_serde::from_value(&mut cx, arg_1)?;
+    let position: Point3f = neon_serde::from_value(&mut cx, arg_1)?;
     let connection = cx.argument::<JsString>(2)?.value();
     //operations_kernel::demo_100(PathBuf::from(path), position);
     let msg = data_model::CmdMsg{
         func_name: String::from("demo_100"),
-        params: json!([PathBuf::from(path), position])
+        params: json!([serde_json::to_value(path).unwrap(), serde_json::to_value(position).unwrap()])
     };
+    println!("{:?}", msg);
     SERVERS.get_mut(&connection).unwrap().try_send(msg).unwrap();
     Ok(cx.undefined())
 }

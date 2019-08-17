@@ -264,5 +264,5 @@ export async function demo(position: math.Point3d)
 
 export async function demo_100(position: math.Point3d)
 {
-    await kernel.demo_100(filename, position);
+    await kernel.demo_100(filename, position, connection);
 }

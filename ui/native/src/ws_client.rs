@@ -17,7 +17,6 @@ pub fn connect(address: String, input: mpsc::Receiver<CmdMsg>, output: crossbeam
             .add_protocol("rust-websocket")
             .async_connect_insecure()
             .and_then(|(duplex, _)| {
-                println!("Made it");
                 let (sink, stream) = duplex.split();
                 stream
                     .filter_map(|message| {
@@ -34,6 +33,7 @@ pub fn connect(address: String, input: mpsc::Receiver<CmdMsg>, output: crossbeam
                         }
                     })
                     .select(input.map(|msg| {
+                        println!("Sending message {:?}", msg);
                         OwnedMessage::Text(serde_json::to_string(&msg).unwrap())
                     }).map_err(|_| WebSocketError::NoDataAvailable))
                     .forward(sink)
