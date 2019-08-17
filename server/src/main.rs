@@ -4,9 +4,13 @@ extern crate actix_web_actors;
 extern crate serde;
 extern crate serde_json;
 extern crate operations_kernel;
+extern crate data_model;
 extern crate flexi_logger;
+extern crate crossbeam_channel;
 #[macro_use] extern crate log;
 extern crate structopt;
+#[macro_use] extern crate lazy_static;
+extern crate ccl;
 
 use actix_web::{web, App, HttpServer};
 use structopt::StructOpt;
@@ -15,8 +19,7 @@ use log::LevelFilter;
 
 mod ws_actor;
 
-pub fn start(url: &str, http_port: u16, ws_port: u16) {
-    let http_url = format!("{}:{}", url, http_port);
+pub fn start(url: &str, ws_port: u16) {
     let ws_url = format!("{}:{}", url, ws_port);
     HttpServer::new(move || {
         App::new()
@@ -25,7 +28,6 @@ pub fn start(url: &str, http_port: u16, ws_port: u16) {
                     .route(web::get().to(ws_actor::ws_index))
             )
     })
-    .bind(&http_url).unwrap()
     .bind(&ws_url).unwrap()
     .run().unwrap();
 }
@@ -36,10 +38,6 @@ struct Opt {
     ///URL to run the server from
     #[structopt(name="url", default_value="127.0.0.1")]
     url: String,
-
-    ///Port to run the http server from
-    #[structopt(name="http_port", default_value="8000")]
-    http_port: u16,
 
     ///Port to run websockets from
     #[structopt(name="ws_port", default_value="80")]
@@ -72,5 +70,5 @@ fn main() {
         .start()
         .unwrap();
 
-    start(&opt.url, opt.http_port, opt.ws_port);
+    start(&opt.url, opt.ws_port);
 }

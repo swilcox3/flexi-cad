@@ -4,7 +4,8 @@ import * as math from '../utils/math'
 var BABYLON = require("babylonjs")
 
 var renderers: Map<String, Renderer> = new Map()
-var filename: string
+var filename: string = "";
+var connection: string = "ws://127.0.0.1:80/ws"
 var pendingCallbacks: Map<String, Array<(obj: BABYLON.Mesh) => void>> = new Map()
 
 interface DataObject {
@@ -25,7 +26,8 @@ export function initFile(canvas: HTMLCanvasElement)
 {
     renderers.delete(filename)
     filename = "defaultNew.flx"
-    kernel.init_file(filename)
+    kernel.init_file(filename, connection)
+    console.log("continuing")
     renderers.set(filename, initRenderer(canvas))
     renderNext(filename)  //This will readd itself, so it's an infinite loop in the background
 }

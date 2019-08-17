@@ -5,7 +5,7 @@ extern crate data_model;
 extern crate crossbeam_channel;
 extern crate ccl;
 extern crate serde;
-extern crate serde_json;
+#[macro_use] extern crate serde_json;
 #[macro_use] extern crate lazy_static;
 extern crate websocket;
 extern crate futures;
@@ -76,11 +76,12 @@ fn init_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let connection = cx.argument::<JsString>(1)?.value();
     let (s, r) = crossbeam_channel::unbounded();
     let (input, output) = futures::sync::mpsc::channel(5);
-    ws_client::connect(&connection, output, s);
     let pathbuf = PathBuf::from(path);
     //operations_kernel::init_file(pathbuf.clone(), s);
     UPDATES.insert(pathbuf, r);
-    SERVERS.insert(connection, input);
+    SERVERS.insert(connection.clone(), input);
+    ws_client::connect(connection, output, s);
+    println!("made it out");
     Ok(cx.undefined())
 }
 
@@ -328,9 +329,9 @@ fn demo_100(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     //operations_kernel::demo_100(PathBuf::from(path), position);
     let msg = data_model::CmdMsg{
         func_name: String::from("demo_100"),
-        params: serde_json::to_string(&(PathBuf::from(path), position)).unwrap()
+        params: json!([PathBuf::from(path), position])
     };
-    SERVERS.get(&connection).unwrap().send(msg);
+    SERVERS.get_mut(&connection).unwrap().try_send(msg).unwrap();
     Ok(cx.undefined())
 }
 

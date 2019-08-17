@@ -1,22 +1,23 @@
 use futures::future::Future;
-use futures::sink::Sink;
 use futures::stream::Stream;
 use futures::sync::mpsc;
 use websocket::result::WebSocketError;
 use websocket::{ClientBuilder, OwnedMessage};
 use data_model::{CmdMsg, UpdateMsg};
 
-pub fn connect(address: &str, input: mpsc::Receiver<CmdMsg>, output: crossbeam_channel::Sender<UpdateMsg>) {
-	std::thread::spawn(|| {
+pub fn connect(address: String, input: mpsc::Receiver<CmdMsg>, output: crossbeam_channel::Sender<UpdateMsg>) {
+    println!("Connecting on {:?}", address);
+	std::thread::spawn(move || {
         let mut runtime = tokio::runtime::current_thread::Builder::new()
             .build()
             .unwrap();
 
-        let runner = ClientBuilder::new(address)
+        let runner = ClientBuilder::new(&address)
             .unwrap()
             .add_protocol("rust-websocket")
             .async_connect_insecure()
             .and_then(|(duplex, _)| {
+                println!("Made it");
                 let (sink, stream) = duplex.split();
                 stream
                     .filter_map(|message| {

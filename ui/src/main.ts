@@ -16,7 +16,7 @@ function createWindow(title: string) {
       slashes: true,
   }));
 
-  //newWindow.webContents.openDevTools();
+  newWindow.webContents.openDevTools();
 
   newWindow.once("ready-to-show", () => {
     if(title !== defaultNew) {

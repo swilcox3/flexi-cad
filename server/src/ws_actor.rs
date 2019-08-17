@@ -3,7 +3,14 @@ use std::time::{Duration, Instant};
 use actix::prelude::*;
 use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
+use std::path::PathBuf;
+use operations_kernel::*;
+use ccl::dhashmap::DHashMap;
+use crossbeam_channel::{Receiver};
 
+lazy_static! {
+    static ref UPDATES: DHashMap<PathBuf, Receiver<UpdateMsg>> = DHashMap::default();
+}
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 /// How long before lack of client response causes a timeout
@@ -12,7 +19,7 @@ const CLIENT_TIMEOUT: Duration = Duration::from_secs(30);
 /// do websocket handshake and start `MyWebSocket` actor
 pub fn ws_index(r: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
     let res = ws::start(MyWebSocket::new(), &r, stream);
-    debug!("{:?}", res.as_ref().unwrap());
+    println!("{:?}", res.as_ref().unwrap());
     res
 }
 
@@ -29,6 +36,10 @@ impl Actor for MyWebSocket {
 
     /// Method is called on actor start. We start the heartbeat process here.
     fn started(&mut self, ctx: &mut Self::Context) {
+        let (s, r) = crossbeam_channel::unbounded();
+        let path = PathBuf::from("defaultNew.flx");
+        operations_kernel::init_file(path.clone(), s);
+        UPDATES.insert(path.clone(), r);
         self.hb(ctx);
     }
 }
@@ -45,7 +56,12 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for MyWebSocket {
             ws::Message::Pong(_) => {
                 self.hb = Instant::now();
             }
-            ws::Message::Text(_) => {
+            ws::Message::Text(msg) => {
+                let cmd: data_model::CmdMsg = serde_json::from_str(&msg).unwrap();
+                println!("{:?}", cmd);
+                let path: PathBuf = serde_json::from_value(cmd.params[0].clone()).unwrap();
+                let position: Point3f = serde_json::from_value(cmd.params[1].clone()).unwrap();
+                operations_kernel::demo_100(path, position);
             }
             ws::Message::Binary(_) => (),
             ws::Message::Close(_) => {
@@ -78,7 +94,13 @@ impl MyWebSocket {
                 // don't try to send a ping
                 return;
             }
-
+            if let Some(r) = UPDATES.get(&PathBuf::from("defaultNew.flx")) {
+                 if r.len() > 0 {
+                    for msg in r.try_iter() {
+                        ctx.text(serde_json::to_string(&msg).unwrap());
+                    }
+                }
+            }
             ctx.ping("");
         });
     }
