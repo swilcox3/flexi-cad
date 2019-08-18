@@ -71,16 +71,36 @@ fn get_updates(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
-fn init_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let path = cx.argument::<JsString>(0)?.value();
-    let connection = cx.argument::<JsString>(1)?.value();
-    let (s, r) = crossbeam_channel::unbounded();
+fn connect(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let connection = cx.argument::<JsString>(0)?.value();
     let (input, output) = futures::sync::mpsc::channel(5);
-    let pathbuf = PathBuf::from(path);
-    //operations_kernel::init_file(pathbuf.clone(), s);
-    UPDATES.insert(pathbuf, r);
     SERVERS.insert(connection.clone(), input);
     ws_client::connect(connection, output, s);
+    Ok(cx.undefined())
+}
+
+fn send_msg(conn_arg: Handle<JsValue>, func_name: &str, params: Vec<serde_json::Value>) {
+    let connection = conn_arg.downcast::<JsString>().or_throw(&mut cx)?.value();
+    let msg = CmdMsg {
+        func_name: String::from(func_name),
+        params: params 
+    };
+    SERVERS.get_mut(&connection).unwrap().try_send(msg).unwrap();
+}
+
+fn init_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let path = cx.argument::<JsString>(0)?.value();
+    let (s, r) = crossbeam_channel::unbounded();
+    let pathbuf = PathBuf::from(path);
+    match cx.argument_opt(1) {
+        Some(conn_arg) => {
+            send_msg(conn_arg, "init_file", vec![serde_json::to_value(pathbuf).unwrap()])
+        }
+        None => {
+            operations_kernel::init_file(pathbuf.clone(), s);
+        }
+    }
+    UPDATES.insert(pathbuf, r);
     Ok(cx.undefined())
 }
 
@@ -88,7 +108,17 @@ fn open_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let (s, r) = crossbeam_channel::unbounded();
     let pathbuf = PathBuf::from(path);
-    operations_kernel::open_file(pathbuf.clone(), s).unwrap();
+    match cx.argument_opt(1) {
+        Some(conn_arg) => {
+            let connection = conn_arg.downcast::<JsString>().or_throw(&mut cx)?.value();
+            let (input, output) = futures::sync::mpsc::channel(5);
+            SERVERS.insert(connection.clone(), input);
+            ws_client::connect(connection, output, s);
+        }
+        None => {
+            operations_kernel::open_file(pathbuf.clone(), s).unwrap();
+        }
+    }
     UPDATES.insert(pathbuf, r);
     Ok(cx.undefined())
 }
@@ -324,14 +354,20 @@ fn demo_100(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let arg_1 = cx.argument::<JsValue>(1)?;
     let position: Point3f = neon_serde::from_value(&mut cx, arg_1)?;
-    let connection = cx.argument::<JsString>(2)?.value();
-    //operations_kernel::demo_100(PathBuf::from(path), position);
-    let msg = data_model::CmdMsg{
-        func_name: String::from("demo_100"),
-        params: json!([serde_json::to_value(path).unwrap(), serde_json::to_value(position).unwrap()])
-    };
-    println!("{:?}", msg);
-    SERVERS.get_mut(&connection).unwrap().try_send(msg).unwrap();
+    match cx.argument_opt(2) {
+        Some(conn_arg) => {
+            let connection = conn_arg.downcast::<JsString>().or_throw(&mut cx)?.value();
+            let msg = data_model::CmdMsg{
+                func_name: String::from("demo_100"),
+                params: json!([serde_json::to_value(path).unwrap(), serde_json::to_value(position).unwrap()])
+            };
+            println!("{:?}", msg);
+            SERVERS.get_mut(&connection).unwrap().try_send(msg).unwrap();
+        }
+        None => {
+            operations_kernel::demo_100(PathBuf::from(path), position);
+        }
+    }
     Ok(cx.undefined())
 }
 

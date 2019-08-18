@@ -44,7 +44,7 @@ pub enum UpdateMsg {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CmdMsg {
     pub func_name: String,
-    pub params: serde_json::Value
+    pub params: Vec<serde_json::Value>
 }
 
 #[typetag::serde]
