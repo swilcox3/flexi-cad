@@ -29,6 +29,7 @@ mod ws_client;
 lazy_static!{
     static ref UPDATES: DHashMap<PathBuf, Receiver<UpdateMsg>> = DHashMap::default();
     static ref SERVERS: DHashMap<String, futures::sync::mpsc::Sender<CmdMsg>> = DHashMap::default();
+    static ref USER: UserID = UserID::new_v4();
 }
 
 struct GetNextUpdate{
@@ -85,7 +86,8 @@ fn init_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let pathbuf = PathBuf::from(path);
     match cx.argument_opt(1) {
         Some(conn_arg) => {
-            let connection = conn_arg.downcast::<JsString>().or_throw(&mut cx)?.value();
+            let mut connection = conn_arg.downcast::<JsString>().or_throw(&mut cx)?.value();
+            connection += format!("?user_id={:?}", USER);
             let (input, output) = futures::sync::mpsc::channel(5);
             SERVERS.insert(connection.clone(), input);
             ws_client::connect(connection.clone(), output, s);
@@ -106,6 +108,7 @@ fn open_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     match cx.argument_opt(1) {
         Some(conn_arg) => {
             let connection = conn_arg.downcast::<JsString>().or_throw(&mut cx)?.value();
+            connection += format!("?user_id={:?}", USER);
             let (input, output) = futures::sync::mpsc::channel(5);
             SERVERS.insert(connection.clone(), input);
             ws_client::connect(connection, output, s);
@@ -137,7 +140,7 @@ fn save_as_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 fn begin_undo_event(mut cx: FunctionContext) -> JsResult<JsString> {
     let path = cx.argument::<JsString>(0)?.value();
     let desc = cx.argument::<JsString>(1)?.value();
-    let event = operations_kernel::begin_undo_event(&PathBuf::from(path), desc).unwrap();
+    let event = operations_kernel::begin_undo_event(&PathBuf::from(path), &USER, desc).unwrap();
     Ok(cx.string(format!("{:?}", event)))
 }
 

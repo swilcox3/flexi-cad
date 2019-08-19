@@ -10,14 +10,12 @@ lazy_static!{
 
 pub struct AppState {
     files: DHashMap<PathBuf, OperationManager>,
-    user_id: UserID
 }
 
 impl AppState {
     fn new() -> AppState {
         AppState {
             files: DHashMap::default(),
-            user_id: UserID::new_v4()
         }
     }
 }
@@ -72,9 +70,9 @@ pub fn save_as_file(orig_file: &PathBuf, file_new: PathBuf) -> Result<(), DBErro
     }
 }
 
-pub fn begin_undo_event(file: &PathBuf, desc: String) -> Result<UndoEventID, DBError> {
+pub fn begin_undo_event(file: &PathBuf, id: &UserID, desc: String) -> Result<UndoEventID, DBError> {
     match APP_STATE.files.get(file) {
-        Some(ops) => ops.begin_undo_event(&APP_STATE.user_id, desc),
+        Some(ops) => ops.begin_undo_event(&id, desc),
         None => Err(DBError::NotFound)
     }
 }
