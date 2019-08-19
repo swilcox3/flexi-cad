@@ -71,16 +71,7 @@ fn get_updates(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
-fn connect(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let connection = cx.argument::<JsString>(0)?.value();
-    let (input, output) = futures::sync::mpsc::channel(5);
-    SERVERS.insert(connection.clone(), input);
-    ws_client::connect(connection, output, s);
-    Ok(cx.undefined())
-}
-
-fn send_msg(conn_arg: Handle<JsValue>, func_name: &str, params: Vec<serde_json::Value>) {
-    let connection = conn_arg.downcast::<JsString>().or_throw(&mut cx)?.value();
+fn send_msg(connection: String, func_name: &str, params: Vec<serde_json::Value>) {
     let msg = CmdMsg {
         func_name: String::from(func_name),
         params: params 
@@ -94,7 +85,11 @@ fn init_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let pathbuf = PathBuf::from(path);
     match cx.argument_opt(1) {
         Some(conn_arg) => {
-            send_msg(conn_arg, "init_file", vec![serde_json::to_value(pathbuf).unwrap()])
+            let connection = conn_arg.downcast::<JsString>().or_throw(&mut cx)?.value();
+            let (input, output) = futures::sync::mpsc::channel(5);
+            SERVERS.insert(connection.clone(), input);
+            ws_client::connect(connection.clone(), output, s);
+            send_msg(connection, "init_file", vec![json!(pathbuf)]);
         }
         None => {
             operations_kernel::init_file(pathbuf.clone(), s);
@@ -357,12 +352,7 @@ fn demo_100(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     match cx.argument_opt(2) {
         Some(conn_arg) => {
             let connection = conn_arg.downcast::<JsString>().or_throw(&mut cx)?.value();
-            let msg = data_model::CmdMsg{
-                func_name: String::from("demo_100"),
-                params: json!([serde_json::to_value(path).unwrap(), serde_json::to_value(position).unwrap()])
-            };
-            println!("{:?}", msg);
-            SERVERS.get_mut(&connection).unwrap().try_send(msg).unwrap();
+            send_msg(connection, "demo_100", vec![json!(path), json!(position)]);
         }
         None => {
             operations_kernel::demo_100(PathBuf::from(path), position);
