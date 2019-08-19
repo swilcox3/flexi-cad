@@ -40,7 +40,7 @@ impl OperationManager {
                 }
             }
             let msg = obj.update()?;
-            self.send(msg);
+            ops.send(msg);
             Ok(())
         })?;
         Ok(ops)
@@ -114,7 +114,7 @@ impl OperationManager {
                 Ok(())
             }) {
                 match e {
-                    DBError::NotFound => self.send(UpdateMsg::Delete{key: *obj_id}).unwrap(),
+                    DBError::NotFound => self.send(UpdateMsg::Delete{key: *obj_id}),
                     _ => return Err(e)
                 }
             }
@@ -173,10 +173,10 @@ impl OperationManager {
         for dep_id in deps {
             match self.update_from_refs(&dep_id) {
                 Ok(msg) => {
-                    self.send(msg).unwrap();
+                    self.send(msg);
                 }
                 Err(DBError::NotFound) => {
-                    self.send(UpdateMsg::Delete{key: dep_id.clone()}).unwrap();
+                    self.send(UpdateMsg::Delete{key: dep_id.clone()});
                 }
                 Err(DBError::ObjLacksTrait) => {
                     //Check other update traits
@@ -235,13 +235,13 @@ impl OperationManager {
         }
         let msg = obj.update()?;
         self.data.add_obj(event, obj)?;
-        self.send(msg).unwrap();
+        self.send(msg);
         Ok(())
     }
 
     pub fn delete_obj(&self, event: &UndoEventID, id: &RefID) -> Result<DataObject, DBError> {
         let obj = self.data.delete_obj(event, id)?;
-        self.send(UpdateMsg::Delete{key: *id}).unwrap();
+        self.send(UpdateMsg::Delete{key: *id});
         self.update_deps(id)?;
         self.deps.delete_obj(id);
         Ok(obj)
@@ -250,7 +250,7 @@ impl OperationManager {
     pub fn modify_obj(&self, event: &UndoEventID, id: &RefID, mut callback: impl FnMut(&mut DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
         self.data.get_mut_obj(event, id, |mut obj| {
             callback(&mut obj)?;
-            self.send(obj.update()?).unwrap();
+            self.send(obj.update()?);
             Ok(())
         })
     }

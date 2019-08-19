@@ -66,7 +66,7 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for MyWebSocket {
             ws::Message::Text(msg) => {
                 let cmd: data_model::CmdMsg = serde_json::from_str(&msg).unwrap();
                 println!("{:?}", cmd);
-                if let Err(e) = MyWebSocket::route(cmd) {
+                if let Err(e) = self.route(cmd) {
                     ctx.text(e);
                 }
             }
@@ -87,7 +87,7 @@ impl MyWebSocket {
         }
     }
 
-    fn route(mut msg: CmdMsg) -> Result<(), String> {
+    fn route(&self, mut msg: CmdMsg) -> Result<(), String> {
         match msg.func_name.as_ref() {
             "init_file" => {
                 let (s, r) = crossbeam_channel::unbounded();
@@ -104,7 +104,7 @@ impl MyWebSocket {
             "demo_100" => {
                 let position: Point3f = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::demo_100(path, position);
+                operations_kernel::demo_100(path, self.id.clone(), position);
                 Ok(())
             }
             _ => {

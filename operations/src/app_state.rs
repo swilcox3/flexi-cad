@@ -21,7 +21,7 @@ impl AppState {
 }
 
 pub fn init_file(file: PathBuf, updates: Sender<UpdateMsg>) {
-    if let Some(ops) = APP_STATE.files.get_mut(file) {
+    if let Some(mut ops) = APP_STATE.files.get_mut(&file) {
         ops.updates.push(updates);
     }
     else {
@@ -30,7 +30,7 @@ pub fn init_file(file: PathBuf, updates: Sender<UpdateMsg>) {
 }
 
 pub fn open_file(file: PathBuf, updates: Sender<UpdateMsg>) -> Result<(), DBError> {
-    if let Some(ops) = APP_STATE.files.get_mut(file) {
+    if let Some(mut ops) = APP_STATE.files.get_mut(&file) {
         ops.updates.push(updates);
     }
     else {
@@ -84,16 +84,16 @@ pub fn end_undo_event(file: &PathBuf, event: UndoEventID) -> Result<(), DBError>
     }
 }
 
-pub fn undo_latest(file: &PathBuf) -> Result<(), DBError> {
+pub fn undo_latest(file: &PathBuf, user: &UserID) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
-        Some(ops) => ops.undo_latest(&APP_STATE.user_id),
+        Some(ops) => ops.undo_latest(user),
         None => Err(DBError::NotFound)
     }
 }
 
-pub fn redo_latest(file: &PathBuf) -> Result<(), DBError> {
+pub fn redo_latest(file: &PathBuf, user: &UserID) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
-        Some(ops) => ops.redo_latest(&APP_STATE.user_id),
+        Some(ops) => ops.redo_latest(user),
         None => Err(DBError::NotFound)
     }
 }

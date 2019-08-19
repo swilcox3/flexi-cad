@@ -80,22 +80,29 @@ fn send_msg(connection: String, func_name: &str, params: Vec<serde_json::Value>)
     SERVERS.get_mut(&connection).unwrap().try_send(msg).unwrap();
 }
 
+fn handle_conn(cx: &mut FunctionContext, index: i32) -> Option<String> {
+    if let Some(conn_arg) = cx.argument_opt(index) {
+        if conn_arg.is_a::<JsString>() {
+            let mut connection = conn_arg.downcast::<JsString>().unwrap().value();
+            connection += &format!("?user_id={}", USER.to_string());
+            return Some(connection);
+        }
+    }
+    return None;
+}
+
 fn init_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let (s, r) = crossbeam_channel::unbounded();
     let pathbuf = PathBuf::from(path);
-    match cx.argument_opt(1) {
-        Some(conn_arg) => {
-            let mut connection = conn_arg.downcast::<JsString>().or_throw(&mut cx)?.value();
-            connection += format!("?user_id={:?}", USER);
-            let (input, output) = futures::sync::mpsc::channel(5);
-            SERVERS.insert(connection.clone(), input);
-            ws_client::connect(connection.clone(), output, s);
-            send_msg(connection, "init_file", vec![json!(pathbuf)]);
-        }
-        None => {
-            operations_kernel::init_file(pathbuf.clone(), s);
-        }
+    if let Some(connection) = handle_conn(&mut cx, 1) {
+        let (input, output) = futures::sync::mpsc::channel(5);
+        SERVERS.insert(connection.clone(), input);
+        ws_client::connect(connection.clone(), output, s);
+        send_msg(connection, "init_file", vec![json!(pathbuf)]);
+    }
+    else {
+        operations_kernel::init_file(pathbuf.clone(), s.clone());
     }
     UPDATES.insert(pathbuf, r);
     Ok(cx.undefined())
@@ -105,17 +112,13 @@ fn open_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let (s, r) = crossbeam_channel::unbounded();
     let pathbuf = PathBuf::from(path);
-    match cx.argument_opt(1) {
-        Some(conn_arg) => {
-            let connection = conn_arg.downcast::<JsString>().or_throw(&mut cx)?.value();
-            connection += format!("?user_id={:?}", USER);
-            let (input, output) = futures::sync::mpsc::channel(5);
-            SERVERS.insert(connection.clone(), input);
-            ws_client::connect(connection, output, s);
-        }
-        None => {
-            operations_kernel::open_file(pathbuf.clone(), s).unwrap();
-        }
+    if let Some(connection) = handle_conn(&mut cx, 1) {
+        let (input, output) = futures::sync::mpsc::channel(5);
+        SERVERS.insert(connection.clone(), input);
+        ws_client::connect(connection, output, s);
+    }
+    else {
+        operations_kernel::open_file(pathbuf.clone(), s).unwrap();
     }
     UPDATES.insert(pathbuf, r);
     Ok(cx.undefined())
@@ -153,13 +156,13 @@ fn end_undo_event(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
 fn undo_latest(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
-    operations_kernel::undo_latest(&PathBuf::from(path)).unwrap();
+    operations_kernel::undo_latest(&PathBuf::from(path), &USER).unwrap();
     Ok(cx.undefined())
 }
 
 fn redo_latest(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
-    operations_kernel::redo_latest(&PathBuf::from(path)).unwrap();
+    operations_kernel::redo_latest(&PathBuf::from(path), &USER).unwrap();
     Ok(cx.undefined())
 }
 
@@ -344,7 +347,7 @@ fn demo(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let arg_1 = cx.argument::<JsValue>(1)?;
     let position = neon_serde::from_value(&mut cx, arg_1)?;
-    operations_kernel::demo(&PathBuf::from(path), &position).unwrap();
+    operations_kernel::demo(&PathBuf::from(path), &USER, &position).unwrap();
     Ok(cx.undefined())
 }
 
@@ -352,14 +355,11 @@ fn demo_100(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let arg_1 = cx.argument::<JsValue>(1)?;
     let position: Point3f = neon_serde::from_value(&mut cx, arg_1)?;
-    match cx.argument_opt(2) {
-        Some(conn_arg) => {
-            let connection = conn_arg.downcast::<JsString>().or_throw(&mut cx)?.value();
-            send_msg(connection, "demo_100", vec![json!(path), json!(position)]);
-        }
-        None => {
-            operations_kernel::demo_100(PathBuf::from(path), position);
-        }
+    if let Some(connection) = handle_conn(&mut cx, 2) {
+        send_msg(connection, "demo_100", vec![json!(path), json!(position)]);
+    }
+    else {
+        operations_kernel::demo_100(PathBuf::from(path), USER.clone(), position);
     }
     Ok(cx.undefined())
 }
