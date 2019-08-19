@@ -11,7 +11,7 @@ use crossbeam_channel::Sender;
 pub struct OperationManager {
     data: DataManager,
     deps: DependencyManager,
-    updates: Sender<UpdateMsg>,
+    pub updates: Vec<Sender<UpdateMsg>>,
 }
 
 impl OperationManager {
@@ -19,7 +19,7 @@ impl OperationManager {
         OperationManager {
             data: DataManager::new(),
             deps: DependencyManager::new(),
-            updates: sender,
+            updates: vec![sender],
         }
     }
 
@@ -28,7 +28,7 @@ impl OperationManager {
         let ops = OperationManager {
             data: data,
             deps: DependencyManager::new(),
-            updates: sender,
+            updates: vec![sender],
         };
         ops.data.iterate_all(&mut |obj: &DataObject| {
             if let Some(dep_obj) = obj.query_ref::<UpdateFromRefs>() {
@@ -40,10 +40,16 @@ impl OperationManager {
                 }
             }
             let msg = obj.update()?;
-            ops.updates.send(msg).unwrap();
+            self.send(msg);
             Ok(())
         })?;
         Ok(ops)
+    }
+
+    fn send(&self, msg: UpdateMsg) {
+        for upd in &self.updates {
+            upd.send(msg.clone()).unwrap();
+        }
     }
 
     pub fn save(&self, path: &PathBuf) -> Result<(), DBError> {
@@ -103,11 +109,12 @@ impl OperationManager {
     fn update_set(&self, set: &HashSet<RefID>) -> Result<(), DBError> {
         for obj_id in set {
             if let Err(e) = self.data.get_mut_obj_no_undo(&obj_id, &mut |obj: &mut DataObject| {
-                self.updates.send(obj.update()?).unwrap();
+                let msg = obj.update()?;
+                self.send(msg);
                 Ok(())
             }) {
                 match e {
-                    DBError::NotFound => self.updates.send(UpdateMsg::Delete{key: *obj_id}).unwrap(),
+                    DBError::NotFound => self.send(UpdateMsg::Delete{key: *obj_id}).unwrap(),
                     _ => return Err(e)
                 }
             }
@@ -166,10 +173,10 @@ impl OperationManager {
         for dep_id in deps {
             match self.update_from_refs(&dep_id) {
                 Ok(msg) => {
-                    self.updates.send(msg).unwrap();
+                    self.send(msg).unwrap();
                 }
                 Err(DBError::NotFound) => {
-                    self.updates.send(UpdateMsg::Delete{key: dep_id.clone()}).unwrap();
+                    self.send(UpdateMsg::Delete{key: dep_id.clone()}).unwrap();
                 }
                 Err(DBError::ObjLacksTrait) => {
                     //Check other update traits
@@ -228,13 +235,13 @@ impl OperationManager {
         }
         let msg = obj.update()?;
         self.data.add_obj(event, obj)?;
-        self.updates.send(msg).unwrap();
+        self.send(msg).unwrap();
         Ok(())
     }
 
     pub fn delete_obj(&self, event: &UndoEventID, id: &RefID) -> Result<DataObject, DBError> {
         let obj = self.data.delete_obj(event, id)?;
-        self.updates.send(UpdateMsg::Delete{key: *id}).unwrap();
+        self.send(UpdateMsg::Delete{key: *id}).unwrap();
         self.update_deps(id)?;
         self.deps.delete_obj(id);
         Ok(obj)
@@ -243,7 +250,7 @@ impl OperationManager {
     pub fn modify_obj(&self, event: &UndoEventID, id: &RefID, mut callback: impl FnMut(&mut DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
         self.data.get_mut_obj(event, id, |mut obj| {
             callback(&mut obj)?;
-            self.updates.send(obj.update()?).unwrap();
+            self.send(obj.update()?).unwrap();
             Ok(())
         })
     }

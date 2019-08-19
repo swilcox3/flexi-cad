@@ -7,9 +7,10 @@ use std::path::PathBuf;
 use operations_kernel::*;
 use ccl::dhashmap::DHashMap;
 use crossbeam_channel::{Receiver};
+use serde::Deserialize;
 
 lazy_static! {
-    static ref UPDATES: DHashMap<PathBuf, Receiver<UpdateMsg>> = DHashMap::default();
+    static ref UPDATES: DHashMap<PathBuf, Vec<Receiver<UpdateMsg>>> = DHashMap::default();
 }
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -20,9 +21,14 @@ fn error<T: std::fmt::Debug>(err: T) -> String {
     format!("ERROR: {:?}", err)
 }
 
+#[derive(Deserialize)]
+pub struct User {
+    user_id: UserID
+}
+
 /// do websocket handshake and start `MyWebSocket` actor
-pub fn ws_index(r: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
-    let res = ws::start(MyWebSocket::new(), &r, stream);
+pub fn ws_index(r: HttpRequest, user: web::Query<User>, stream: web::Payload) -> Result<HttpResponse, Error> {
+    let res = ws::start(MyWebSocket::new(user.user_id), &r, stream);
     println!("{:?}", res.as_ref().unwrap());
     res
 }
@@ -33,6 +39,7 @@ struct MyWebSocket {
     /// Client must send ping at least once per 10 seconds (CLIENT_TIMEOUT),
     /// otherwise we drop connection.
     hb: Instant,
+    id: UserID
 }
 
 impl Actor for MyWebSocket {
@@ -73,9 +80,10 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for MyWebSocket {
 }
 
 impl MyWebSocket {
-    fn new() -> Self {
+    fn new(id: UserID) -> Self {
         Self { 
             hb: Instant::now(),
+            id: id
         }
     }
 
@@ -85,7 +93,12 @@ impl MyWebSocket {
                 let (s, r) = crossbeam_channel::unbounded();
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::init_file(path.clone(), s);
-                UPDATES.insert(path, r);
+                if let Some(mut rcvs) = UPDATES.get_mut(&path) {
+                    rcvs.push(r);
+                }
+                else {
+                    UPDATES.insert(path, vec![r]);
+                }
                 Ok(())
             }
             "demo_100" => {
@@ -115,8 +128,8 @@ impl MyWebSocket {
                 // don't try to send a ping
                 return;
             }
-            if let Some(r) = UPDATES.get(&PathBuf::from("defaultNew.flx")) {
-                 if r.len() > 0 {
+            if let Some(rcvs) = UPDATES.get(&PathBuf::from("defaultNew.flx")) {
+                for r in &(*rcvs) {
                     for msg in r.try_iter() {
                         ctx.text(serde_json::to_string(&msg).unwrap());
                     }

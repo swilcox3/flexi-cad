@@ -3,7 +3,7 @@ import {Renderer} from '../rendering/renderer'
 import * as math from '../utils/math'
 var BABYLON = require("babylonjs")
 
-var renderers: Map<String, Renderer> = new Map()
+var renderer: Renderer = null;
 var filename: string = "";
 var connection: string = undefined;
 var pendingCallbacks: Map<String, Array<(obj: BABYLON.Mesh) => void>> = new Map()
@@ -17,9 +17,8 @@ interface DataObject {
 
 function initRenderer(canvas: HTMLCanvasElement)
 {
-    var renderer = new Renderer()
+    renderer = new Renderer()
     renderer.initialize(canvas)
-    return renderer
 }
 
 export function setConnection(conn: string) {
@@ -28,11 +27,9 @@ export function setConnection(conn: string) {
 
 export function initFile(canvas: HTMLCanvasElement)
 {
-    renderers.delete(filename)
     filename = "defaultNew.flx"
     kernel.init_file(filename, connection)
-    console.log("continuing")
-    renderers.set(filename, initRenderer(canvas))
+    initRenderer(canvas)
     renderNext(filename)  //This will readd itself, so it's an infinite loop in the background
 }
 
@@ -40,7 +37,7 @@ export function openFile(in_file:string, canvas:HTMLCanvasElement)
 {
     filename = in_file;
     kernel.open_file(filename, connection)
-    renderers.set(filename, initRenderer(canvas))
+    initRenderer(canvas)
     renderNext(filename)
 }
 
@@ -99,18 +96,18 @@ export function renderTempObject(obj: DataObject)
 {
     var msg = obj.getUpdateMsg();
     if(msg.Mesh) {
-        renderers.get(filename).renderMesh(msg.Mesh.data, msg.Mesh.data.id)
+        renderer.renderMesh(msg.Mesh.data, msg.Mesh.data.id)
         return msg.Mesh.data.id
     }
     if(msg.Other) {
-        renderers.get(filename).renderObject(msg.Other.data, msg.Other.data.id)
+        renderer.renderObject(msg.Other.data, msg.Other.data.id)
         return msg.Other.data.id
     }
 }
 
 export function deleteTempObject(id: string)
 {
-    renderers.get(filename).deleteMesh(id)
+    renderer.deleteMesh(id)
 }
 
 export function deleteObject(event: string, id: string)
@@ -125,22 +122,22 @@ function renderNext(filename: string)
             updates.forEach((msg: any) => {
                 //console.log(msg);
                 if(msg.Delete) {
-                    renderers.get(filename).deleteMesh(msg.Delete.key)
+                    renderer.deleteMesh(msg.Delete.key)
                 }
                 else {
                     var id = null;
                     if(msg.Mesh) {
                         id = msg.Mesh.data.id;
-                        renderers.get(filename).renderMesh(msg.Mesh.data, id)
+                        renderer.renderMesh(msg.Mesh.data, id)
                     }
                     if(msg.Other) {
                         id = msg.Other.data.id;
-                        renderers.get(filename).renderObject(msg.Other.data, id)
+                        renderer.renderObject(msg.Other.data, id)
                     }
                     if(id) {
                         let callbacks = pendingCallbacks.get(id)
                         if(callbacks) {
-                            let mesh = renderers.get(filename).getMesh(id)
+                            let mesh = renderer.getMesh(id)
                             callbacks.forEach((callback) => {
                                 callback(mesh)
                             })
@@ -247,7 +244,7 @@ export function setObjectsDatas(event: string, data: Array<[string, any]>)
 
 export function getMeshByID(id: string)
 {
-    return renderers.get(filename).getMesh(id)
+    return renderer.getMesh(id)
 }
 
 export function copyObjs(event: string, ids:Array<string>, delta: math.Point3d)

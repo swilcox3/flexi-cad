@@ -23,17 +23,27 @@ impl AppState {
 }
 
 pub fn init_file(file: PathBuf, updates: Sender<UpdateMsg>) {
-    APP_STATE.files.insert(file, OperationManager::new(updates));
+    if let Some(ops) = APP_STATE.files.get_mut(file) {
+        ops.updates.push(updates);
+    }
+    else {
+        APP_STATE.files.insert(file, OperationManager::new(updates));
+    }
 }
 
 pub fn open_file(file: PathBuf, updates: Sender<UpdateMsg>) -> Result<(), DBError> {
-    let ops = OperationManager::open(&file, updates)?;
-    APP_STATE.files.insert(file.clone(), ops);
-    rayon::spawn(move || {
-        if let Some(ops) = APP_STATE.files.get(&file) {
-            ops.update_all().unwrap();
-        }
-    });
+    if let Some(ops) = APP_STATE.files.get_mut(file) {
+        ops.updates.push(updates);
+    }
+    else {
+        let ops = OperationManager::open(&file, updates)?;
+        APP_STATE.files.insert(file.clone(), ops);
+        rayon::spawn(move || {
+            if let Some(ops) = APP_STATE.files.get(&file) {
+                ops.update_all().unwrap();
+            }
+        });
+    }
     Ok(())
 }
 
