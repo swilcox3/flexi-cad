@@ -83,8 +83,10 @@ fn send_msg(connection: String, func_name: &str, params: Vec<serde_json::Value>)
 fn handle_conn(cx: &mut FunctionContext, index: i32) -> Option<String> {
     if let Some(conn_arg) = cx.argument_opt(index) {
         if conn_arg.is_a::<JsString>() {
+            println!("made it");
             let mut connection = conn_arg.downcast::<JsString>().unwrap().value();
             connection += &format!("?user_id={}", USER.to_string());
+            println!("{:?}", connection);
             return Some(connection);
         }
     }

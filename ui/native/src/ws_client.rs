@@ -20,11 +20,11 @@ pub fn connect(address: String, input: mpsc::Receiver<CmdMsg>, output: crossbeam
                 let (sink, stream) = duplex.split();
                 stream
                     .filter_map(|message| {
-                        println!("Received Message: {:?}", message);
                         match message {
                             OwnedMessage::Close(e) => Some(OwnedMessage::Close(e)),
                             OwnedMessage::Ping(d) => Some(OwnedMessage::Pong(d)),
                             OwnedMessage::Text(msg) => {
+                                println!("Received Message: {:?}", msg);
                                 let update: UpdateMsg = serde_json::from_str(&msg).unwrap();
                                 output.send(update).unwrap();
                                 None

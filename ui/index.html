@@ -26,10 +26,16 @@
     <script>
         var ops = require('./app/operations/operations')
         var {ipcRenderer} = require('electron');
-        ipcRenderer.on('newFile', function(event) {
+        ipcRenderer.on('newFile', function(event, connection) {
+            if(connection !== undefined) {
+                ops.setConnection(connection)
+            }
             ops.initFile(document.getElementById('render-canvas'))
         })
-        ipcRenderer.on('openFile', function(event, path) {
+        ipcRenderer.on('openFile', function(event, path, connection) {
+            if(connection !== undefined) {
+                ops.setConnection(connection)
+            }
             ops.openFile(path, document.getElementById('render-canvas'))
         });
         ipcRenderer.on('saveFile', function(event) {

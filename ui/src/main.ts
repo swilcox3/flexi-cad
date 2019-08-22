@@ -17,13 +17,18 @@ function createWindow(title: string) {
   }));
 
   newWindow.webContents.openDevTools();
+  var connection: string = undefined;
 
   newWindow.once("ready-to-show", () => {
+    var response = dialog.showMessageBox(newWindow, {"type": "question", "buttons": ["Yes", "No"], "defaultId": 1, "message": "Connect to server?"})
+    if(response === 0) {
+      connection = "ws://127.0.0.1:80/ws"
+    }
     if(title !== defaultNew) {
-      newWindow.webContents.send("openFile", title)
+      newWindow.webContents.send("openFile", title, connection)
     }
     else {
-      newWindow.webContents.send("newFile");
+      newWindow.webContents.send("newFile", connection);
     }
     newWindow.show();
   });

@@ -20,15 +20,15 @@ export default class GUI
         this.objOverlay = null
     }
 
-    newButton(name: string, label: string, callback: ()=>void) {
+    newButton(name: string, label: string, panel: BABYLONGUI.Container, callback: ()=>void) {
         var button = BABYLONGUI.Button.CreateSimpleButton(name, label);
-        button.width = 1.0;
+        button.width = "100px";
         button.height = "40px";
         button.color = "white";
         button.cornerRadius = 20;
         button.background = "green";
         button.onPointerUpObservable.add(callback);
-        this.buttonPanel.addControl(button);
+        panel.addControl(button);
     }
 
     init()
@@ -44,36 +44,24 @@ export default class GUI
         this.objOverlay.width = "300px";
         this.objOverlay.horizontalAlignment = BABYLONGUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
         this.advancedTexture.addControl(this.objOverlay);
-        this.newButton("but1", "Wall", () => {
+        this.newButton("but1", "Wall", this.buttonPanel, () => {
             var tool = new WallTool()
             mySingleton.setActiveTool(tool)
         });
-        this.newButton("but2", "Door", () => {
+        this.newButton("but2", "Door", this.buttonPanel, () => {
             var tool = new DoorTool()
             mySingleton.setActiveTool(tool)
         })
-        this.newButton("but3", "Dimension", () => {
+        this.newButton("but3", "Dimension", this.buttonPanel, () => {
             var tool = new DimensionTool()
             mySingleton.setActiveTool(tool)
         })
-        this.newButton("demo", "Demo 1", () => {
+        this.newButton("demo", "Demo 1", this.buttonPanel, () => {
             ops.demo(new math.Point3d(0, 0, 0)) 
         })
-        this.newButton("demo 2", "Demo 100", () => {
+        this.newButton("demo 2", "Demo 100", this.buttonPanel, () => {
             ops.demo_100(new math.Point3d(0, 0, 0))
         });
-        this.connPanel = new BABYLONGUI.StackPanel();
-        this.connPanel.isVertical = false;
-        this.connPanel.height = "100px";
-        this.connPanel.horizontalAlignment = BABYLONGUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
-        this.connPanel.verticalAlignment = BABYLONGUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-        var connEdit = new BABYLONGUI.InputText("connEdit", "");
-        this.connPanel.addControl(connEdit);
-        var connBtn = BABYLONGUI.Button.CreateSimpleButton("connBtn", "Connect");
-        connBtn.onPointerUpObservable.add(() => {
-            ops.setConnection(connEdit.text)
-        });
-        this.connPanel.addControl(connBtn);
     }
 
     createPropPair(parent: BABYLONGUI.Grid, curRow: number, objIds:Array<string>, label:string, value:string) {

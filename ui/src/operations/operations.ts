@@ -5,7 +5,7 @@ var BABYLON = require("babylonjs")
 
 var renderer: Renderer = null;
 var filename: string = "";
-var connection: string = undefined;
+var connection: string = null;
 var pendingCallbacks: Map<String, Array<(obj: BABYLON.Mesh) => void>> = new Map()
 
 interface DataObject {
@@ -265,5 +265,6 @@ export async function demo(position: math.Point3d)
 
 export async function demo_100(position: math.Point3d)
 {
+    console.log(connection)
     await kernel.demo_100(filename, position, connection);
 }
