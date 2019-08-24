@@ -56,7 +56,7 @@ impl Data for Door {
             "Length" => Ok(json!(self.dir.geom.length)),
             "First" => serde_json::to_value(&self.dir.geom.pt_1).map_err(error_other),
             "Second" => serde_json::to_value(&self.dir.geom.pt_2).map_err(error_other),
-            _ => Err(DBError::NotFound)
+            _ => Err(DBError::PropertyNotFound)
         }
     }
 
@@ -78,7 +78,7 @@ impl Data for Door {
             Ok(())
         }
         else {
-            Err(DBError::NotFound)
+            Err(DBError::PropertyNotFound)
         }
     }
 }

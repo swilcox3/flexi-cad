@@ -48,7 +48,7 @@ pub fn open_file(file: PathBuf, updates: Sender<UpdateMsg>) -> Result<(), DBErro
 pub fn save_file(file: &PathBuf) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.save(file),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
@@ -66,7 +66,7 @@ pub fn save_as_file(orig_file: &PathBuf, file_new: PathBuf) -> Result<(), DBErro
                 }
             }
         }
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
@@ -76,91 +76,91 @@ pub fn send_read_result(file: &PathBuf, query_id: QueryID, data: serde_json::Val
             ops.send(UpdateMsg::Read{query_id, data});
             Ok(())
         }
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
 pub fn begin_undo_event(file: &PathBuf, id: &UserID, desc: String) -> Result<UndoEventID, DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.begin_undo_event(&id, desc),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
 pub fn end_undo_event(file: &PathBuf, event: UndoEventID) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.end_undo_event(event),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
 pub fn undo_latest(file: &PathBuf, user: &UserID) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.undo_latest(user),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
 pub fn redo_latest(file: &PathBuf, user: &UserID) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.redo_latest(user),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
 pub fn suspend_event(file: &PathBuf, event: &UndoEventID) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.suspend_event(event),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
 pub fn resume_event(file: &PathBuf, event: &UndoEventID) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.resume_event(event),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
 pub fn cancel_event(file: &PathBuf, event: &UndoEventID) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.cancel_event(event),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
 pub fn take_undo_snapshot(file: &PathBuf, event: &UndoEventID, key: &RefID) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.take_undo_snapshot(event, key),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
 pub fn add_obj(file: &PathBuf, event: &UndoEventID, obj: DataObject) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.add_object(&event, obj),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
 pub fn get_obj(file: &PathBuf, id: &RefID, mut callback: impl FnMut(&DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.get_obj(id, &mut callback),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
 pub fn modify_obj(file: &PathBuf, event: &UndoEventID, id: &RefID, mut callback: impl FnMut(&mut DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.modify_obj(event, id, &mut callback),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
 pub fn delete_obj(file: &PathBuf, event: &UndoEventID, id: &RefID) -> Result<DataObject, DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.delete_obj(event, id),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
@@ -213,21 +213,21 @@ pub fn update_all_deps(file: PathBuf, ids: Vec<RefID>) {
 pub fn add_dep(file: &PathBuf, publisher: &RefID, subscriber: RefID) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => Ok(ops.add_dep(publisher, subscriber)),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
 pub fn remove_dep(file: &PathBuf, publisher: &RefID, subscriber: &RefID) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => Ok(ops.remove_dep(publisher, subscriber)),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 
 pub fn copy_obj(file: &PathBuf, event: &UndoEventID, id: &RefID) -> Result<RefID, DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.copy_obj(event, id),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::FileNotFound)
     }
 }
 

@@ -26,7 +26,7 @@ pub fn get_obj_data(file: &PathBuf, id: &RefID, prop_name: &str) -> Result<serde
     })?;
     match val {
         Some(data) => Ok(data),
-        None => Err(DBError::NotFound)
+        None => Err(DBError::PropertyNotFound)
     }
 }
 

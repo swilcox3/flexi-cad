@@ -106,8 +106,8 @@ fn test_dep_redo() {
         ops.end_undo_event(event).unwrap();
         ops.update_deps(&id_1).unwrap();
         ops.undo_latest(&USER).unwrap();
-        assert_eq!(ops.get_obj(&id_1, &mut |_: &DataObject| {Ok(())}), Err(DBError::NotFound));
-        assert_eq!(ops.get_obj(&id_2, &mut |_: &DataObject| {Ok(())}), Err(DBError::NotFound));
+        assert_eq!(ops.get_obj(&id_1, &mut |_: &DataObject| {Ok(())}), Err(DBError::ObjNotFound));
+        assert_eq!(ops.get_obj(&id_2, &mut |_: &DataObject| {Ok(())}), Err(DBError::ObjNotFound));
         ops.redo_latest(&USER).unwrap();
         ops.get_obj(&id_1, |read_1| {
             let point_ref = read_1.query_ref::<ReferTo>().unwrap();

@@ -62,7 +62,7 @@ impl Data for Dimension{
             "Offset" => Ok(json!(self.offset)),
             "First" => serde_json::to_value(&self.first.geom.pt).map_err(error_other),
             "Second" => serde_json::to_value(&self.second.geom.pt).map_err(error_other),
-            _ => Err(DBError::NotFound)
+            _ => Err(DBError::PropertyNotFound)
         }
     }
 
@@ -76,7 +76,7 @@ impl Data for Dimension{
             Ok(())
         }
         else {
-            Err(DBError::NotFound)
+            Err(DBError::PropertyNotFound)
         }
     }
 }

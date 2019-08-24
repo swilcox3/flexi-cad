@@ -74,7 +74,7 @@ impl Data for Wall {
             "Height" => Ok(json!(self.height)),
             "First" => serde_json::to_value(&self.first_pt.geom.pt).map_err(error_other),
             "Second" => serde_json::to_value(&self.second_pt.geom.pt).map_err(error_other),
-            _ => Err(DBError::NotFound)
+            _ => Err(DBError::PropertyNotFound)
         }
     }
 
@@ -92,7 +92,7 @@ impl Data for Wall {
             Ok(())
         }
         else {
-            Err(DBError::NotFound)
+            Err(DBError::PropertyNotFound)
         }
     }
 }

@@ -8,6 +8,7 @@ extern crate data_model;
 extern crate query_interface;
 #[macro_use] extern crate serde_json;
 extern crate bincode;
+#[macro_use] extern crate log;
 
 #[cfg(test)]
 mod tests;

@@ -99,7 +99,7 @@ pub fn snap_to_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, other_obj: 
         Ok(())
     }
     else {
-        Err(DBError::NotFound)
+        Err(DBError::NotFound(String::from("Nothing to snap to")))
     }
 }
 

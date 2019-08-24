@@ -44,7 +44,7 @@ impl Data for TestObj {
     fn get_data(&self, prop_name: &str) -> Result<serde_json::Value, DBError> {
         match prop_name {
             "data" => Ok(json!(self.data)),
-            _ => Err(DBError::NotFound)
+            _ => Err(DBError::PropertyNotFound)
         }
     }
 

@@ -167,7 +167,7 @@ impl PendingEvents {
                     Ok(())
                 })
             }
-            None => Err(DBError::NotFound)
+            None => Err(DBError::NoUndoEvent)
         }
     }
 
@@ -177,7 +177,7 @@ impl PendingEvents {
                 event.suspended = event.suspended + 1;
                 Ok(())
             }
-            None => Err(DBError::NotFound)
+            None => Err(DBError::NoUndoEvent)
         }
     }
 
@@ -189,7 +189,7 @@ impl PendingEvents {
                 }
                 Ok(())
             }
-            None => Err(DBError::NotFound)
+            None => Err(DBError::NoUndoEvent)
         }
     }
 
@@ -199,7 +199,7 @@ impl PendingEvents {
                 let redo = db.undo(event)?;
                 Ok(redo.get_changed_objects())
             }
-            None => Err(DBError::NotFound)
+            None => Err(DBError::NoUndoEvent)
         }
     }
 

@@ -53,6 +53,7 @@ impl FileDatabase {
     pub fn add(&self, obj: DataObject) -> Result<(), DBError> {
         let key = obj.get_id();
         if !self.db.contains_key(key) {
+            trace!("Adding to object {:?} database with key: {:?}", obj, key);
             self.db.insert(key.clone(), obj);
             Ok(())
         }
@@ -63,13 +64,16 @@ impl FileDatabase {
 
     pub fn get(&self, key: &RefID, mut callback: impl FnMut(&DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
         if *key == RefID::nil() {
-            return Err(DBError::NotFound);
+            return Err(DBError::ObjNotFound);
         }
         let try_get = || {
             match self.db.try_get(key) {
-                Ok(obj) => callback(&(*obj)),
+                Ok(obj) => {
+                    trace!("Getting object {:?} for read from database ", obj);
+                    callback(&(*obj))
+                }
                 Err(TryGetError::WouldBlock) => Err(DBError::TimedOut),
-                _ => Err(DBError::NotFound),
+                _ => Err(DBError::ObjNotFound),
             }
         };
         run_timeout(try_get)
@@ -86,20 +90,26 @@ impl FileDatabase {
 
     pub fn remove(&self, key: &RefID) -> Result<DataObject, DBError> {
         match self.db.remove(key) {
-            Some(val) => Ok(val.1),
-            None => Err(DBError::NotFound),
+            Some(val) => {
+                trace!("Removing obj {:?} from database", val.1);
+                Ok(val.1)
+            }
+            None => Err(DBError::ObjNotFound),
         }
     }
 
     pub fn get_mut(&self, key: &RefID, mut callback: impl FnMut(&mut DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
         if *key == RefID::nil() {
-            return Err(DBError::NotFound);
+            return Err(DBError::ObjNotFound);
         }
         let try_get = || {
             match self.db.try_get_mut(key) {
-                Ok(mut obj) => callback(&mut (*obj)),
+                Ok(mut obj) => {
+                    trace!("Getting obj {:?} for write from database", obj);
+                    callback(&mut (*obj))
+                }
                 Err(TryGetError::WouldBlock) => Err(DBError::TimedOut),
-                _ => Err(DBError::NotFound),
+                _ => Err(DBError::ObjNotFound),
             }
         };
         run_timeout(try_get)
@@ -107,20 +117,22 @@ impl FileDatabase {
 
     pub fn duplicate(&self, key: &RefID) -> Result<DataObject, DBError> {
         if *key == RefID::nil() {
-            return Err(DBError::NotFound);
+            return Err(DBError::ObjNotFound);
         }
         match self.db.get(key) {
             Some(obj) => {
+                trace!("Duplicating obj {:?}", obj);
                 let mut copy = obj.clone();
                 let id = RefID::new_v4();
                 copy.set_id(id);
                 Ok(copy)
             }
-            None => Err(DBError::NotFound)
+            None => Err(DBError::ObjNotFound)
         }
     }
 
     pub fn undo(&self, event: UndoEvent) -> Result<UndoEvent, DBError> {
+        trace!("Undoing event {:?}", event);
         let mut redo = event.clone();
         redo.changes.clear();
         for change in event.changes.iter().rev() {
@@ -128,7 +140,7 @@ impl FileDatabase {
                 Change::Add{key} => {
                     match self.db.remove(&key) {
                         Some(val) => redo.changes.push(Change::Delete{obj: val.1}),
-                        None => return Err(DBError::NotFound),
+                        None => return Err(DBError::ObjNotFound),
                     }
                 }
                 Change::Modify{obj} => {
@@ -136,7 +148,7 @@ impl FileDatabase {
                         Some(val) => {
                             redo.changes.push(Change::Modify{obj: val.1});
                         }
-                        None => return Err(DBError::NotFound),
+                        None => return Err(DBError::ObjNotFound),
                     }
                     self.db.insert(obj.get_id().clone(), obj.clone());
                 }

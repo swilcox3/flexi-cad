@@ -114,7 +114,7 @@ impl OperationManager {
                 Ok(())
             }) {
                 match e {
-                    DBError::NotFound => self.send(UpdateMsg::Delete{key: *obj_id}),
+                    DBError::ObjNotFound => self.send(UpdateMsg::Delete{key: *obj_id}),
                     _ => return Err(e)
                 }
             }
@@ -175,7 +175,7 @@ impl OperationManager {
                 Ok(msg) => {
                     self.send(msg);
                 }
-                Err(DBError::NotFound) => {
+                Err(DBError::ObjNotFound) => {
                     self.send(UpdateMsg::Delete{key: dep_id.clone()});
                 }
                 Err(DBError::ObjLacksTrait) => {

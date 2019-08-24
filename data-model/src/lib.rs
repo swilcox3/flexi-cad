@@ -20,17 +20,20 @@ pub use cgmath::prelude::*;
 #[derive(Debug, PartialEq)]
 pub enum DBError
 {
-    NotFound,
-    Locked,
+    NotFound(String),
+    Locked(String),
     Overwrite,
     NoUndoEvent,
-    ObjLacksTrait,
+    ObjNotFound,
+    FileNotFound,
+    PropertyNotFound,
+    ObjLacksTrait(String),
     TimedOut,
-    Other{msg: String}
+    Other(String)
 }
 
 pub fn error_other<T: std::fmt::Debug>(err: T) -> DBError {
-    DBError::Other{msg: format!("{:?}", err)}
+    DBError::Other(format!("{:?}", err))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
