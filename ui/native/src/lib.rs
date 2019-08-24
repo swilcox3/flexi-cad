@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate neon;
+#[cfg(feature = "kernel")]
 extern crate operations_kernel;
 extern crate data_model;
 extern crate crossbeam_channel;
@@ -17,7 +18,6 @@ use data_model::*;
 use std::str::FromStr;
 use crossbeam_channel::Receiver;
 use ccl::dhashmap::DHashMap;
-use serde::{Serialize, Deserialize};
 
 mod wall;
 mod door;
@@ -96,14 +96,17 @@ fn init_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let (s, r) = crossbeam_channel::unbounded();
     let pathbuf = PathBuf::from(path);
-    if let Some(connection) = handle_conn(&mut cx, 1) {
-        let (input, output) = futures::sync::mpsc::channel(5);
-        SERVERS.insert(connection.clone(), input);
-        ws_client::connect(connection.clone(), output, s);
-        send_msg(connection, "init_file", vec![json!(pathbuf)]);
-    }
-    else {
-        operations_kernel::init_file(pathbuf.clone(), s.clone());
+    match handle_conn(&mut cx, 1) {
+        Some(connection) => {
+            let (input, output) = futures::sync::mpsc::channel(5);
+            SERVERS.insert(connection.clone(), input);
+            ws_client::connect(connection.clone(), output, s);
+            send_msg(connection, "init_file", vec![json!(pathbuf)]);
+        }
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::init_file(pathbuf.clone(), s.clone()),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
     }
     UPDATES.insert(pathbuf, r);
     Ok(cx.undefined())
@@ -113,13 +116,16 @@ fn open_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let (s, r) = crossbeam_channel::unbounded();
     let pathbuf = PathBuf::from(path);
-    if let Some(connection) = handle_conn(&mut cx, 1) {
-        let (input, output) = futures::sync::mpsc::channel(5);
-        SERVERS.insert(connection.clone(), input);
-        ws_client::connect(connection, output, s);
-    }
-    else {
-        operations_kernel::open_file(pathbuf.clone(), s).unwrap();
+    match handle_conn(&mut cx, 1) {
+        Some(connection) => {
+            let (input, output) = futures::sync::mpsc::channel(5);
+            SERVERS.insert(connection.clone(), input);
+            ws_client::connect(connection, output, s);
+        }
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::open_file(pathbuf.clone(), s).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
     }
     UPDATES.insert(pathbuf, r);
     Ok(cx.undefined())
@@ -128,14 +134,26 @@ fn open_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 fn save_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let pathbuf = PathBuf::from(path);
-    operations_kernel::save_file(&pathbuf).unwrap();
+    match handle_conn(&mut cx, 1) {
+        Some(connection) => send_msg(connection, "save_file", vec![json!(pathbuf)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::save_file(&pathbuf).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.undefined())
 }
 
 fn save_as_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let orig_path = PathBuf::from(cx.argument::<JsString>(0)?.value());
     let new_path = PathBuf::from(cx.argument::<JsString>(1)?.value());
-    operations_kernel::save_as_file(&orig_path, new_path.clone()).unwrap();
+    match handle_conn(&mut cx, 2) {
+        Some(connection) => send_msg(connection, "save_as_file", vec![json!(orig_path), json!(new_path)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::save_as_file(&orig_path, new_path.clone()).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     let (_, r) = UPDATES.remove(&orig_path).unwrap();
     UPDATES.insert(new_path, r);
     Ok(cx.undefined())
@@ -145,47 +163,89 @@ fn begin_undo_event(mut cx: FunctionContext) -> JsResult<JsString> {
     let path = cx.argument::<JsString>(0)?.value();
     let desc = cx.argument::<JsString>(1)?.value();
     let query_id = QueryID::new_v4();
-    operations_kernel::begin_undo_event(&PathBuf::from(path), &USER, desc, query_id.clone()).unwrap();
+    match handle_conn(&mut cx, 2) {
+        Some(connection) => send_msg(connection, "begin_undo_event", vec![json!(path), json!(desc), json!(query_id)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::begin_undo_event(&PathBuf::from(path), &USER, desc, query_id.clone()).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.string(format!("{:?}", query_id)))
 }
 
 fn end_undo_event(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let id = cx.argument::<JsString>(1)?.value();
-    operations_kernel::end_undo_event(&PathBuf::from(path), RefID::from_str(&id).unwrap()).unwrap();
+    match handle_conn(&mut cx, 2) {
+        Some(connection) => send_msg(connection, "end_undo_event", vec![json!(path), json!(id)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::end_undo_event(&PathBuf::from(path), RefID::from_str(&id).unwrap()).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.undefined())
 }
 
 fn undo_latest(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
-    operations_kernel::undo_latest(&PathBuf::from(path), &USER).unwrap();
+    match handle_conn(&mut cx, 1) {
+        Some(connection) => send_msg(connection, "undo_latest", vec![json!(path)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::undo_latest(&PathBuf::from(path), &USER).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.undefined())
 }
 
 fn redo_latest(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
-    operations_kernel::redo_latest(&PathBuf::from(path), &USER).unwrap();
+    match handle_conn(&mut cx, 1) {
+        Some(connection) => send_msg(connection, "redo_latest", vec![json!(path)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::redo_latest(&PathBuf::from(path), &USER).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.undefined())
 }
 
 fn suspend_event(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let id = cx.argument::<JsString>(1)?.value();
-    operations_kernel::suspend_event(&PathBuf::from(path), &RefID::from_str(&id).unwrap()).unwrap();
+    match handle_conn(&mut cx, 2) {
+        Some(connection) => send_msg(connection, "suspend_event", vec![json!(path), json!(id)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::suspend_event(&PathBuf::from(path), &RefID::from_str(&id).unwrap()).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.undefined())
 }
 
 fn resume_event(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let id = cx.argument::<JsString>(1)?.value();
-    operations_kernel::resume_event(&PathBuf::from(path), &RefID::from_str(&id).unwrap()).unwrap();
+    match handle_conn(&mut cx, 2) {
+        Some(connection) => send_msg(connection, "resume_event", vec![json!(path), json!(id)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::resume_event(&PathBuf::from(path), &RefID::from_str(&id).unwrap()).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.undefined())
 }
 
 fn cancel_event(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let id = cx.argument::<JsString>(1)?.value();
-    operations_kernel::cancel_event(&PathBuf::from(path), &RefID::from_str(&id).unwrap()).unwrap();
+    match handle_conn(&mut cx, 2) {
+        Some(connection) => send_msg(connection, "cancel_event", vec![json!(path), json!(id)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::cancel_event(&PathBuf::from(path), &RefID::from_str(&id).unwrap()).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.undefined())
 }
 
@@ -193,7 +253,13 @@ fn take_undo_snapshot(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let event_id = cx.argument::<JsString>(1)?.value();
     let obj_id = cx.argument::<JsString>(2)?.value();
-    operations_kernel::take_undo_snapshot(&PathBuf::from(path), &RefID::from_str(&event_id).unwrap(), &RefID::from_str(&obj_id).unwrap()).unwrap();
+    match handle_conn(&mut cx, 3) {
+        Some(connection) => send_msg(connection, "take_undo_snapshot", vec![json!(path), json!(event_id), json!(obj_id)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::take_undo_snapshot(&PathBuf::from(path), &RefID::from_str(&event_id).unwrap(), &RefID::from_str(&obj_id).unwrap()).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.undefined())
 }
 
@@ -204,7 +270,13 @@ fn join_at_points(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let id_2 = RefID::from_str(&cx.argument::<JsString>(3)?.value()).unwrap();
     let arg_4 = cx.argument::<JsValue>(4)?;
     let point = neon_serde::from_value(&mut cx, arg_4)?;
-    operations_kernel::join_objs(PathBuf::from(&path), &event, id_1, id_2, &RefType::Point, &RefType::Point, &point).unwrap();
+    match handle_conn(&mut cx, 5) {
+        Some(connection) => send_msg(connection, "join_objs", vec![json!(path), json!(event), json!(id_1), json!(id_2), json!(RefType::Point), json!(RefType::Point), json!(point)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::join_objs(PathBuf::from(&path), &event, id_1, id_2, &RefType::Point, &RefType::Point, &point).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.undefined())
 }
 
@@ -215,7 +287,13 @@ fn snap_to_line(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let id_2 = RefID::from_str(&cx.argument::<JsString>(3)?.value()).unwrap();
     let arg_4 = cx.argument::<JsValue>(4)?;
     let point = neon_serde::from_value(&mut cx, arg_4)?;
-    operations_kernel::join_objs(PathBuf::from(&path), &event, id_1, id_2, &RefType::Rect, &RefType::Line, &point).unwrap();
+    match handle_conn(&mut cx, 5) {
+        Some(connection) => send_msg(connection, "join_objs", vec![json!(path), json!(event), json!(id_1), json!(id_2), json!(RefType::Rect), json!(RefType::Line), json!(point)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::join_objs(PathBuf::from(&path), &event, id_1, id_2, &RefType::Rect, &RefType::Line, &point).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.undefined())
 }
 
@@ -226,7 +304,13 @@ fn snap_to_point(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let id_2 = RefID::from_str(&cx.argument::<JsString>(3)?.value()).unwrap();
     let arg_4 = cx.argument::<JsValue>(4)?;
     let point = neon_serde::from_value(&mut cx, arg_4)?;
-    operations_kernel::snap_obj_to_other(PathBuf::from(&path), &event, id_1, &id_2, &RefType::Point, &point).unwrap();
+    match handle_conn(&mut cx, 5) {
+        Some(connection) => send_msg(connection, "snap_obj_to_other", vec![json!(path), json!(event), json!(id_1), json!(id_2), json!(RefType::Point), json!(point)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::snap_obj_to_other(PathBuf::from(&path), &event, id_1, &id_2, &RefType::Point, &point).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.undefined())
 }
 
@@ -234,7 +318,13 @@ fn can_refer_to(mut cx: FunctionContext) -> JsResult<JsString> {
     let path = cx.argument::<JsString>(0)?.value();
     let id_1 = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let query_id = QueryID::new_v4();
-    operations_kernel::can_refer_to(&PathBuf::from(path), &id_1, query_id.clone()).unwrap();
+    match handle_conn(&mut cx, 2) {
+        Some(connection) => send_msg(connection, "can_refer_to", vec![json!(path), json!(id_1), json!(query_id)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::can_refer_to(&PathBuf::from(path), &id_1, query_id.clone()).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.string(format!("{:?}", query_id)))
 }
 
@@ -244,7 +334,13 @@ fn get_closest_point(mut cx: FunctionContext) -> JsResult<JsString> {
     let arg_2 = cx.argument::<JsValue>(2)?;
     let point = neon_serde::from_value(&mut cx, arg_2)?;
     let query_id = QueryID::new_v4();
-    operations_kernel::get_closest_result(&PathBuf::from(&path), &id_1, &RefType::Point, &point, query_id.clone()).unwrap();
+    match handle_conn(&mut cx, 3) {
+        Some(connection) => send_msg(connection, "get_closest_result", vec![json!(path), json!(id_1), json!(RefType::Point), json!(point), json!(query_id)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::get_closest_result(&PathBuf::from(&path), &id_1, &RefType::Point, &point, query_id.clone()).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.string(format!("{:?}", query_id)))
 }
 
@@ -254,7 +350,13 @@ fn move_object(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let id_1 = RefID::from_str(&cx.argument::<JsString>(2)?.value()).unwrap();
     let arg_3 = cx.argument::<JsValue>(3)?;
     let delta = neon_serde::from_value(&mut cx, arg_3)?;
-    operations_kernel::move_obj(PathBuf::from(path), &event, id_1, &delta).unwrap();
+    match handle_conn(&mut cx, 4) {
+        Some(connection) => send_msg(connection, "move_obj", vec![json!(path), json!(event), json!(id_1), json!(delta)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::move_obj(PathBuf::from(path), &event, id_1, &delta).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.undefined())
 }
 
@@ -262,7 +364,13 @@ fn delete_object(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let id_1 = RefID::from_str(&cx.argument::<JsString>(2)?.value()).unwrap();
-    let _ = operations_kernel::delete_obj(&PathBuf::from(path), &event, &id_1).unwrap();
+    match handle_conn(&mut cx, 4) {
+        Some(connection) => send_msg(connection, "delete_obj", vec![json!(path), json!(event), json!(id_1)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::delete_obj(&PathBuf::from(path), &event, &id_1).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.undefined())
 }
 
@@ -271,7 +379,13 @@ fn get_object_data(mut cx: FunctionContext) -> JsResult<JsString> {
     let id = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let prop_name = cx.argument::<JsString>(2)?.value();
     let query_id = QueryID::new_v4();
-    operations_kernel::get_obj_data(&PathBuf::from(path), &id, &prop_name, query_id.clone()).unwrap();
+    match handle_conn(&mut cx, 3) {
+        Some(connection) => send_msg(connection, "get_obj_data", vec![json!(path), json!(id), json!(prop_name), json!(query_id)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::get_obj_data(&PathBuf::from(path), &id, &prop_name, query_id.clone()).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.string(format!("{:?}", query_id)))
 }
 
@@ -281,12 +395,15 @@ fn set_object_data(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let id_1 = RefID::from_str(&cx.argument::<JsString>(2)?.value()).unwrap();
     let arg_3 = cx.argument::<JsString>(3)?.value();
     let data: serde_json::Value = serde_json::from_str(&arg_3).unwrap();
-    operations_kernel::set_obj_data(PathBuf::from(path), &event, id_1, &data).unwrap();
+    match handle_conn(&mut cx, 4) {
+        Some(connection) => send_msg(connection, "set_obj_data", vec![json!(path), json!(event), json!(id_1), json!(data)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::set_obj_data(PathBuf::from(path), &event, id_1, &data).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.undefined())
 }
-
-#[derive(Serialize, Deserialize)]
-struct UpdateEntry(RefID, serde_json::Value);
 
 fn set_objects_datas(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
@@ -297,7 +414,13 @@ fn set_objects_datas(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         let val = arg_2.get(&mut cx, i)?;
         data.push(neon_serde::from_value(&mut cx, val)?);
     }
-    operations_kernel::set_objs_data(PathBuf::from(path), &event, data).unwrap();
+    match handle_conn(&mut cx, 3) {
+        Some(connection) => send_msg(connection, "set_objs_data", vec![json!(path), json!(event), json!(data)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::set_objs_data(PathBuf::from(path), &event, data).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.undefined())
 }
 
@@ -314,7 +437,13 @@ fn move_objects(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         let val_str:Handle<JsString> = val.downcast().unwrap();
         data.insert(RefID::from_str(&val_str.value()).unwrap());
     }
-    operations_kernel::move_objs(PathBuf::from(path), &event, data, &delta).unwrap();
+    match handle_conn(&mut cx, 4) {
+        Some(connection) => send_msg(connection, "move_objs", vec![json!(path), json!(event), json!(data), json!(delta)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::move_objs(PathBuf::from(path), &event, data, &delta).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(ret)
 }
 
@@ -329,7 +458,13 @@ fn copy_objects(mut cx: FunctionContext) -> JsResult<JsString> {
         data.insert(RefID::from_str(&val_str.value()).unwrap());
     }
     let query_id = QueryID::new_v4();
-    operations_kernel::copy_objs(PathBuf::from(path), &event, data, query_id.clone()).unwrap();
+    match handle_conn(&mut cx, 3) {
+        Some(connection) => send_msg(connection, "copy_objs", vec![json!(path), json!(event), json!(data), json!(query_id)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::copy_objs(PathBuf::from(path), &event, data, query_id.clone()).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.string(format!("{:?}", query_id)))
 }
 
@@ -337,7 +472,13 @@ fn demo(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let arg_1 = cx.argument::<JsValue>(1)?;
     let position = neon_serde::from_value(&mut cx, arg_1)?;
-    operations_kernel::demo(&PathBuf::from(path), &USER, &position).unwrap();
+    match handle_conn(&mut cx, 2) {
+        Some(connection) => send_msg(connection, "demo", vec![json!(path), json!(position)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::demo(&PathBuf::from(path), &USER, &position).unwrap(),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
+    }
     Ok(cx.undefined())
 }
 
@@ -345,11 +486,12 @@ fn demo_100(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let arg_1 = cx.argument::<JsValue>(1)?;
     let position: Point3f = neon_serde::from_value(&mut cx, arg_1)?;
-    if let Some(connection) = handle_conn(&mut cx, 2) {
-        send_msg(connection, "demo_100", vec![json!(path), json!(position)]);
-    }
-    else {
-        operations_kernel::demo_100(PathBuf::from(path), USER.clone(), position);
+    match handle_conn(&mut cx, 2) {
+        Some(connection) => send_msg(connection, "demo_100", vec![json!(path), json!(position)]),
+        #[cfg(feature = "kernel")]
+        None => operations_kernel::demo_100(PathBuf::from(path), USER.clone(), position),
+        #[cfg(not(feature = "kernel"))]
+        None => panic("No connection"),
     }
     Ok(cx.undefined())
 }
