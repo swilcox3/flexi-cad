@@ -13,8 +13,7 @@ extern crate tokio;
 
 use neon::prelude::*;
 use std::path::PathBuf;
-use operations_kernel::*;
-use operations_kernel::RefID;
+use data_model::*;
 use std::str::FromStr;
 use crossbeam_channel::Receiver;
 use ccl::dhashmap::DHashMap;
@@ -145,8 +144,9 @@ fn save_as_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 fn begin_undo_event(mut cx: FunctionContext) -> JsResult<JsString> {
     let path = cx.argument::<JsString>(0)?.value();
     let desc = cx.argument::<JsString>(1)?.value();
-    let event = operations_kernel::begin_undo_event(&PathBuf::from(path), &USER, desc).unwrap();
-    Ok(cx.string(format!("{:?}", event)))
+    let query_id = QueryID::new_v4();
+    operations_kernel::begin_undo_event(&PathBuf::from(path), &USER, desc, query_id.clone()).unwrap();
+    Ok(cx.string(format!("{:?}", query_id)))
 }
 
 fn end_undo_event(mut cx: FunctionContext) -> JsResult<JsUndefined> {
@@ -230,23 +230,22 @@ fn snap_to_point(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
-fn can_refer_to(mut cx: FunctionContext) -> JsResult<JsBoolean> {
+fn can_refer_to(mut cx: FunctionContext) -> JsResult<JsString> {
     let path = cx.argument::<JsString>(0)?.value();
     let id_1 = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
-    let result = operations_kernel::can_refer_to(&PathBuf::from(path), &id_1).unwrap();
-    Ok(cx.boolean(result))
+    let query_id = QueryID::new_v4();
+    operations_kernel::can_refer_to(&PathBuf::from(path), &id_1, query_id.clone()).unwrap();
+    Ok(cx.string(format!("{:?}", query_id)))
 }
 
-fn get_closest_point(mut cx: FunctionContext) -> JsResult<JsValue> {
+fn get_closest_point(mut cx: FunctionContext) -> JsResult<JsString> {
     let path = cx.argument::<JsString>(0)?.value();
     let id_1 = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let arg_2 = cx.argument::<JsValue>(2)?;
     let point = neon_serde::from_value(&mut cx, arg_2)?;
-    let (_, ref_pt) = operations_kernel::get_closest_result(&PathBuf::from(&path), &id_1, &RefType::Point, &point).unwrap().unwrap();
-    match ref_pt {
-        RefGeometry::Point{pt} => Ok(neon_serde::to_value(&mut cx, &pt).unwrap()),
-        _ => panic!("Not a point")
-    }
+    let query_id = QueryID::new_v4();
+    operations_kernel::get_closest_result(&PathBuf::from(&path), &id_1, &RefType::Point, &point, query_id.clone()).unwrap();
+    Ok(cx.string(format!("{:?}", query_id)))
 }
 
 fn move_object(mut cx: FunctionContext) -> JsResult<JsUndefined> {
@@ -255,7 +254,7 @@ fn move_object(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let id_1 = RefID::from_str(&cx.argument::<JsString>(2)?.value()).unwrap();
     let arg_3 = cx.argument::<JsValue>(3)?;
     let delta = neon_serde::from_value(&mut cx, arg_3)?;
-    operations_kernel::move_obj(PathBuf::from(path), event, id_1, delta).unwrap();
+    operations_kernel::move_obj(PathBuf::from(path), &event, id_1, &delta).unwrap();
     Ok(cx.undefined())
 }
 
@@ -267,12 +266,13 @@ fn delete_object(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
-fn get_object_data(mut cx: FunctionContext) -> JsResult<JsValue> {
+fn get_object_data(mut cx: FunctionContext) -> JsResult<JsString> {
     let path = cx.argument::<JsString>(0)?.value();
     let id = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let prop_name = cx.argument::<JsString>(2)?.value();
-    let val = operations_kernel::get_obj_data(&PathBuf::from(path), &id, &prop_name).unwrap();
-    Ok(neon_serde::to_value(&mut cx, &val)?)
+    let query_id = QueryID::new_v4();
+    operations_kernel::get_obj_data(&PathBuf::from(path), &id, &prop_name, query_id.clone()).unwrap();
+    Ok(cx.string(format!("{:?}", query_id)))
 }
 
 fn set_object_data(mut cx: FunctionContext) -> JsResult<JsUndefined> {
@@ -281,7 +281,7 @@ fn set_object_data(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let id_1 = RefID::from_str(&cx.argument::<JsString>(2)?.value()).unwrap();
     let arg_3 = cx.argument::<JsString>(3)?.value();
     let data: serde_json::Value = serde_json::from_str(&arg_3).unwrap();
-    operations_kernel::set_obj_data(PathBuf::from(path), event, id_1, data).unwrap();
+    operations_kernel::set_obj_data(PathBuf::from(path), &event, id_1, &data).unwrap();
     Ok(cx.undefined())
 }
 
@@ -297,7 +297,7 @@ fn set_objects_datas(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         let val = arg_2.get(&mut cx, i)?;
         data.push(neon_serde::from_value(&mut cx, val)?);
     }
-    operations_kernel::set_objs_data(PathBuf::from(path), event, data).unwrap();
+    operations_kernel::set_objs_data(PathBuf::from(path), &event, data).unwrap();
     Ok(cx.undefined())
 }
 
@@ -314,11 +314,11 @@ fn move_objects(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         let val_str:Handle<JsString> = val.downcast().unwrap();
         data.insert(RefID::from_str(&val_str.value()).unwrap());
     }
-    operations_kernel::move_objs(PathBuf::from(path), event, data, delta).unwrap();
+    operations_kernel::move_objs(PathBuf::from(path), &event, data, &delta).unwrap();
     Ok(ret)
 }
 
-fn copy_objects(mut cx: FunctionContext) -> JsResult<JsArray> {
+fn copy_objects(mut cx: FunctionContext) -> JsResult<JsString> {
     let path = cx.argument::<JsString>(0)?.value();
     let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let arg_2 = cx.argument::<JsArray>(2)?;
@@ -328,21 +328,9 @@ fn copy_objects(mut cx: FunctionContext) -> JsResult<JsArray> {
         let val_str:Handle<JsString> = val.downcast().unwrap();
         data.insert(RefID::from_str(&val_str.value()).unwrap());
     }
-    let copy_ids = operations_kernel::copy_objs(PathBuf::from(path), event, data).unwrap();
-    let js_array = JsArray::new(&mut cx, copy_ids.len() as u32);
-    let mut i: u32 = 0;
-    for pair in copy_ids {
-        let js_value = neon_serde::to_value(&mut cx, &pair)?;
-        js_array.set(&mut cx, i, js_value).unwrap();
-        i = i + 1;
-    }
-    Ok(js_array)
-}
-
-fn debug_state(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let debug = operations_kernel::debug_state();
-    println!("{}", debug);
-    Ok(cx.undefined())
+    let query_id = QueryID::new_v4();
+    operations_kernel::copy_objs(PathBuf::from(path), &event, data, query_id.clone()).unwrap();
+    Ok(cx.string(format!("{:?}", query_id)))
 }
 
 fn demo(mut cx: FunctionContext) -> JsResult<JsUndefined> {
@@ -390,7 +378,6 @@ register_module!(mut cx, {
     cx.export_function("set_object_data", set_object_data)?;
     cx.export_function("set_objects_datas", set_objects_datas)?;
     cx.export_function("copy_objects", copy_objects)?;
-    cx.export_function("debug_state", debug_state)?;
     cx.export_function("can_refer_to", can_refer_to)?;
     cx.export_function("get_closest_point", get_closest_point)?;
     cx.export_class::<wall::JsWall>("Wall")?;

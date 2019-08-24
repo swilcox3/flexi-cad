@@ -80,19 +80,20 @@ export default class GUI
         edit.width = 1
         edit.metadata = label
         edit.onBlurObservable.add((evt) => {
-            var event = ops.beginUndoEvent("prop set");
-            var data = {[evt.metadata]: Number(evt.text)};
-            if(objIds.length == 1) {
-                ops.setObjectData(event, objIds[0], data);
-            }
-            else {
-                var dataArray: Array<[string, any]> = [];
-                objIds.forEach((id: string) => {
-                    dataArray.push([id, data])
-                })
-                ops.setObjectsDatas(event, dataArray)
-            }
-            ops.endUndoEvent(event)
+            ops.beginUndoEvent("prop set").then((event)=> {
+                var data = {[evt.metadata]: Number(evt.text)};
+                if(objIds.length == 1) {
+                    ops.setObjectData(event, objIds[0], data);
+                }
+                else {
+                    var dataArray: Array<[string, any]> = [];
+                    objIds.forEach((id: string) => {
+                        dataArray.push([id, data])
+                    })
+                    ops.setObjectsDatas(event, dataArray)
+                }
+                ops.endUndoEvent(event)
+            })
         })
         parent.addControl(edit, curRow, 1);
     }

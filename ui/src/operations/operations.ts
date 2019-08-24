@@ -6,7 +6,8 @@ var BABYLON = require("babylonjs")
 var renderer: Renderer = null;
 var filename: string = "";
 var connection: string = null;
-var pendingCallbacks: Map<String, Array<(obj: BABYLON.Mesh) => void>> = new Map()
+var pendingChanges: Map<String, Array<(obj: BABYLON.Mesh) => void>> = new Map();
+var pendingReads: Map<String, (val: any) => void> = new Map();
 
 interface DataObject {
     get(prop: string): string,
@@ -53,7 +54,8 @@ export function saveAsFile(in_file:string)
 
 export function beginUndoEvent(desc: string)
 {
-    return kernel.begin_undo_event(filename, desc, connection)
+    const query = kernel.begin_undo_event(filename, desc, connection)
+    return waitForRead(query)
 }
 
 export function endUndoEvent(event: string)
@@ -125,24 +127,33 @@ function renderNext(filename: string)
                     renderer.deleteMesh(msg.Delete.key)
                 }
                 else {
-                    var id = null;
-                    if(msg.Mesh) {
-                        id = msg.Mesh.data.id;
-                        renderer.renderMesh(msg.Mesh.data, id)
-                    }
-                    if(msg.Other) {
-                        id = msg.Other.data.id;
-                        renderer.renderObject(msg.Other.data, id)
-                    }
-                    if(id) {
-                        let callbacks = pendingCallbacks.get(id)
-                        if(callbacks) {
-                            let mesh = renderer.getMesh(id)
-                            callbacks.forEach((callback) => {
-                                callback(mesh)
-                            })
+                    if(msg.Read) {
+                        var cb = pendingReads.get(msg.Read.query_id) 
+                        if(cb) {
+                            cb(msg.Read.data)
+                            pendingReads.delete(msg.Read.query_id)
                         }
-                        pendingCallbacks.delete(id)
+                    }
+                    else {
+                        var id = null;
+                        if(msg.Mesh) {
+                            id = msg.Mesh.data.id;
+                            renderer.renderMesh(msg.Mesh.data, id)
+                        }
+                        if(msg.Other) {
+                            id = msg.Other.data.id;
+                            renderer.renderObject(msg.Other.data, id)
+                        }
+                        if(id) {
+                            let callbacks = pendingChanges.get(id)
+                            if(callbacks) {
+                                let mesh = renderer.getMesh(id)
+                                callbacks.forEach((callback) => {
+                                    callback(mesh)
+                                })
+                            }
+                            pendingChanges.delete(id)
+                        }
                     }
                 }
             })
@@ -151,30 +162,53 @@ function renderNext(filename: string)
     })
 }
 
-function addPendingCallback(id: string, callback: (obj: BABYLON.Mesh) => void) 
+function addPendingChange(id: string, callback: (obj: BABYLON.Mesh) => void) 
 {
-    var arr = pendingCallbacks.get(id)
+    var arr = pendingChanges.get(id)
     if(!arr) {
         arr = []
     }
     arr.push(callback)
-    pendingCallbacks.set(id, arr)
+    pendingChanges.set(id, arr)
 }
 
-function waitForUpdate(id: string)
+function addPendingRead(id: string, callback: (val: any) => void)
+{
+    pendingReads.set(id, callback)
+}
+
+function waitForChange(id: string)
 {
     return new Promise((resolve: (value: BABYLON.Mesh)=>void, reject) => {
-        addPendingCallback(id, (mesh: BABYLON.Mesh) => {
+        addPendingChange(id, (mesh: BABYLON.Mesh) => {
             resolve(mesh)
         })
     })
 }
 
-function waitForAllUpdates(ids: Array<string>)
+function waitForRead(id: string)
+{
+    return new Promise((resolve: (val: any)=>void, reject) => {
+        addPendingRead(id, (val: any) => {
+            resolve(val)
+        })
+    })
+}
+
+function waitForAllChanges(ids: Array<string>)
 {
     var promises: Array<Promise<BABYLON.Mesh>> = [];
     ids.forEach((id) => {
-        promises.push(waitForUpdate(id))
+        promises.push(waitForChange(id))
+    })
+    return Promise.all(promises)
+}
+
+function waitForAllReads(ids: Array<string>)
+{
+    var promises: Array<Promise<BABYLON.Mesh>> = [];
+    ids.forEach((id) => {
+        promises.push(waitForRead(id))
     })
     return Promise.all(promises)
 }
@@ -182,64 +216,67 @@ function waitForAllUpdates(ids: Array<string>)
 export function createObj(event: string, obj: DataObject)
 {
     obj.addObject(filename, event)
-    return waitForUpdate(obj.get("id"));
+    return waitForChange(obj.get("id"));
 }
 
 export function joinAtPoints(event: string, id_1: string, id_2: string, pt: math.Point3d) 
 {
     kernel.join_at_points(filename, event, id_1, id_2, pt, connection)
-    return waitForAllUpdates([id_1, id_2])
+    return waitForAllChanges([id_1, id_2])
 }
 
 export function canReferTo(id:string)
 {
-    return kernel.can_refer_to(filename, id, connection)
+    const query = kernel.can_refer_to(filename, id, connection)
+    return waitForRead(query)
 }
 
 export function getClosestPoint(id:string, pt: math.Point3d)
 {
-    return kernel.get_closest_point(filename, id, pt, connection)
+    const query = kernel.get_closest_point(filename, id, pt, connection)
+    return waitForRead(query)
 }
 
 export function snapToPoint(event: string, id: string, snap_to_id: string, pt: math.Point3d)
 {
     kernel.snap_to_point(filename, event, id, snap_to_id, pt, connection)
-    return waitForUpdate(id)
+    return waitForChange(id)
 }
 
 export function snapToLine(event: string, id: string, snap_to_id: string, pt: math.Point3d) 
 {
     kernel.snap_to_line(filename, event, id, snap_to_id, pt, connection)
-    return waitForUpdate(id)
+    return waitForChange(id)
 }
 
 export function moveObj(event: string, id: string, delta: math.Point3d)
 {
     kernel.move_object(filename, event, id, delta, connection)
-    return waitForUpdate(id)
+    return waitForChange(id)
 }
 
 export function moveObjs(event: string, ids: Array<string>, delta: math.Point3d)
 {
     kernel.move_objects(filename, event, ids, delta, connection)
-    return waitForAllUpdates(ids)
+    return waitForAllChanges(ids)
 }
 
-export async function getObjectData(id: string, prop_name: string)
+export function getObjectData(id: string, prop_name: string)
 {
-    return await kernel.get_object_data(filename, id, prop_name, connection)
+    const query = kernel.get_object_data(filename, id, prop_name, connection)
+    return waitForRead(query)
 }
 
 export function setObjectData(event: string, id: string, data:any) 
 {
     kernel.set_object_data(filename, event, id, JSON.stringify(data), connection)
-    return waitForUpdate(id)
+    return waitForChange(id)
 }
 
 export function setObjectsDatas(event: string, data: Array<[string, any]>)
 {
     kernel.set_objects_datas(filename, event, data, connection)
-    return waitForAllUpdates(data.map(val => val[0]))
+    return waitForAllChanges(data.map(val => val[0]))
 }
 
 export function getMeshByID(id: string)
@@ -250,12 +287,7 @@ export function getMeshByID(id: string)
 export function copyObjs(event: string, ids:Array<string>, delta: math.Point3d)
 {
     var copyIds: Array<[string, string]> = kernel.copy_objects(filename, event, ids, delta, connection);
-    return waitForAllUpdates(copyIds.map(val => val[1]))
-}
-
-export function debugState()
-{
-    kernel.debug_state(connection);
+    return waitForAllChanges(copyIds.map(val => val[1]))
 }
 
 export async function demo(position: math.Point3d)

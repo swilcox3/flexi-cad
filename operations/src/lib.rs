@@ -103,6 +103,16 @@ pub fn join_objs(file: PathBuf, event: &UndoEventID, first: RefID, second: RefID
     Ok(())
 }
 
+pub fn can_refer_to(file: &PathBuf, obj_id: &RefID, query_id: QueryID) -> LibResult {
+    let can_refer = entity_ops::can_refer_to(file, obj_id)?;
+    app_state::send_read_result(file, query_id, json!(can_refer))
+}
+
+pub fn get_closest_result(file: &PathBuf, obj_id: &RefID, only_match: &RefType, guess: &Point3f, query_id: QueryID) -> LibResult {
+    let res = entity_ops::get_closest_result(file, obj_id, only_match, guess)?;
+    app_state::send_read_result(file, query_id, json!(res))
+}
+
 pub fn demo(file: &PathBuf, user: &UserID, position: &Point3f) -> Result<(), DBError> {
     let side_length = 50.0;
     let width = 1.0;

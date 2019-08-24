@@ -22,10 +22,10 @@ export class DoorTool {
         return hovered && hovered.metadata.type == "Wall";
     }
 
-    createDoor(pt: math.Point3d, picked: BABYLON.Mesh)
+    async createDoor(pt: math.Point3d, picked: BABYLON.Mesh)
     {
         if(!this.undoEventId) {
-            this.undoEventId = ops.beginUndoEvent("Create Door")
+            this.undoEventId = await ops.beginUndoEvent("Create Door")
         }
         ops.createObj(this.undoEventId, this.curTemp)
         if(this.canJoinToWall(picked)) {
@@ -85,10 +85,10 @@ export class DoorTool {
         }
     }
 
-    finish(pt: math.Point3d, picked: BABYLON.Mesh)
+    async finish(pt: math.Point3d, picked: BABYLON.Mesh)
     {
         if(this.curTemp) {
-            this.createDoor(new math.Point3d(pt.x, pt.y, 0), picked);
+            await this.createDoor(new math.Point3d(pt.x, pt.y, 0), picked);
         }
         if(this.undoEventId) {
             ops.endUndoEvent(this.undoEventId)

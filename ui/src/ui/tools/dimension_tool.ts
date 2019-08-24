@@ -16,14 +16,14 @@ export class DimensionTool {
         this.undoEventId = ''
     }
 
-    canAttach(hovered: BABYLON.Mesh) {
-        return hovered && ops.canReferTo(hovered.name);
+    async canAttach(hovered: BABYLON.Mesh) {
+        return hovered && await ops.canReferTo(hovered.name);
     }
 
-    createDimension(pt: math.Point3d, picked: BABYLON.Mesh)
+    async createDimension(pt: math.Point3d, picked: BABYLON.Mesh)
     {
         if(!this.undoEventId) {
-            this.undoEventId = ops.beginUndoEvent("Create Dimension")
+            this.undoEventId = await ops.beginUndoEvent("Create Dimension")
         }
         ops.createObj(this.undoEventId, this.curTemp)
         if(this.canAttach(picked)) {
@@ -32,13 +32,13 @@ export class DimensionTool {
         }
     }
 
-    onMouseDown(pt: math.Point3d, picked: BABYLON.Mesh)
+    async onMouseDown(pt: math.Point3d, picked: BABYLON.Mesh)
     {
         if(this.curTemp == null)
         {
             var first = null;
-            if(this.canAttach(picked)) {
-                first = ops.getClosestPoint(picked.name, new math.Point3d(pt.x, pt.y, 0));
+            if(await this.canAttach(picked)) {
+                first = await ops.getClosestPoint(picked.name, new math.Point3d(pt.x, pt.y, 0));
             }
             else {
                 first = new math.Point3d(pt.x, pt.y, 0)
@@ -53,9 +53,9 @@ export class DimensionTool {
         }
     }
 
-    onMouseMove(pt: math.Point3d, hovered: BABYLON.Mesh)
+    async onMouseMove(pt: math.Point3d, hovered: BABYLON.Mesh)
     {
-        const joinable = this.canAttach(hovered);
+        const joinable = await this.canAttach(hovered);
         if(this.curTemp != null)
         {
             this.curTemp.set("second", new math.Point3d(pt.x, pt.y, 0));
@@ -79,10 +79,10 @@ export class DimensionTool {
         }
     }
 
-    finish(pt: math.Point3d, picked: BABYLON.Mesh)
+    async finish(pt: math.Point3d, picked: BABYLON.Mesh)
     {
         if(this.curTemp) {
-            this.createDimension(new math.Point3d(pt.x, pt.y, 0), picked);
+            await this.createDimension(new math.Point3d(pt.x, pt.y, 0), picked);
         }
         if(this.undoEventId) {
             ops.endUndoEvent(this.undoEventId)

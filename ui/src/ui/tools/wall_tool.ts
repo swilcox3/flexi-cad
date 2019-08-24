@@ -22,10 +22,10 @@ export class WallTool {
         return hovered && hovered.metadata.type == "Wall" && hovered.name != this.lastId && hovered.name != this.curTemp.get("id");
     }
 
-    createWall(picked: BABYLON.Mesh)
+    async createWall(picked: BABYLON.Mesh)
     {
         if(!this.undoEventId) {
-            this.undoEventId = ops.beginUndoEvent("Create Wall")
+            this.undoEventId = await ops.beginUndoEvent("Create Wall")
         }
         ops.createObj(this.undoEventId, this.curTemp)
         if(this.lastId) {
@@ -81,9 +81,9 @@ export class WallTool {
         }
     }
 
-    finish(pt: math.Point3d, picked: BABYLON.Mesh)
+    async finish(pt: math.Point3d, picked: BABYLON.Mesh)
     {
-        this.createWall(picked);
+        await this.createWall(picked);
         if(this.undoEventId) {
             ops.endUndoEvent(this.undoEventId)
         }

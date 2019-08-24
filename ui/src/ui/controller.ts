@@ -53,10 +53,10 @@ class SelectionController
         this.selectedObjs.delete(mesh);
     }
 
-    deleteSelected()
+    async deleteSelected()
     {
         if(this.selectedObjs.size > 0) {
-            var event = ops.beginUndoEvent("Delete objs");
+            var event = await ops.beginUndoEvent("Delete objs");
             this.selectedObjs.forEach((obj) => {
                 ops.deleteObject(event, obj.name)
             });
@@ -93,10 +93,10 @@ class MoveObjectsController
         this.moveEvent = '';
     }
 
-    move(ev: any, objs: Set<BABYLON.Mesh>)
+    async move(ev: any, objs: Set<BABYLON.Mesh>)
     {
         if(!this.moveEvent) {
-            this.moveEvent = ops.beginUndoEvent("Move objects")
+            this.moveEvent = await ops.beginUndoEvent("Move objects");
             objs.forEach((mesh) => {
                 ops.takeUndoSnapshot(this.moveEvent, mesh.name)
             })
@@ -266,11 +266,11 @@ class UIController
         }
     }
 
-    pasteClipboard()
+    async pasteClipboard()
     {
         if(this.activeTool == null)
         {
-            const event = ops.beginUndoEvent("copy objs");
+            const event = await ops.beginUndoEvent("copy objs");
             var copyIdsPromise = ops.copyObjs(event, this.clipboard, new math.Point3d(20, 0, 0))
             ops.endUndoEvent(event);
             this.selection.deselectAll();
