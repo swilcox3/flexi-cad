@@ -68,8 +68,8 @@ impl Data for Wall {
         Ok(UpdateMsg::Mesh{data: data})
     }
 
-    fn get_data(&self, prop_name: &String) -> Result<serde_json::Value, DBError> {
-        match prop_name.as_ref() {
+    fn get_data(&self, prop_name: &str) -> Result<serde_json::Value, DBError> {
+        match prop_name {
             "Width" => Ok(json!(self.width)),
             "Height" => Ok(json!(self.height)),
             "First" => serde_json::to_value(&self.first_pt.geom.pt).map_err(error_other),

@@ -1,4 +1,4 @@
-use crate::*;
+use crate::prelude::*;
 use serde::{Serialize, Deserialize};
 
 pub trait Store: Send + Sync {
@@ -41,8 +41,8 @@ impl Data for TestObj {
         Ok(UpdateMsg::Other{data: serde_json::to_value(&self).unwrap()})
     }
 
-    fn get_data(&self, prop_name: &String) -> Result<serde_json::Value, DBError> {
-        match prop_name.as_ref() {
+    fn get_data(&self, prop_name: &str) -> Result<serde_json::Value, DBError> {
+        match prop_name {
             "data" => Ok(json!(self.data)),
             _ => Err(DBError::NotFound)
         }

@@ -1,4 +1,4 @@
-use crate::*;
+use crate::prelude::*;
 
 fn get_result(file: &PathBuf, obj: &RefID, index: ResultInd) -> Result<Option<RefGeometry>, DBError> {
     let mut res_opt = None;
@@ -106,17 +106,5 @@ pub fn snap_to_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, other_obj: 
 pub fn join_refs(file: &PathBuf, event: &UndoEventID, first: &RefID, second: &RefID, first_wants: &RefType, second_wants: &RefType, guess: &Point3f) -> Result<(), DBError> {
     snap_to_ref(file, event, second, first, second_wants, guess)?;
     snap_to_ref(file, event, first, second, first_wants, guess)?;
-    Ok(())
-}
-
-pub fn snap_obj_to_other(file: PathBuf, event: &UndoEventID, obj: RefID, other_obj: &RefID, only_match: &RefType, guess: &Point3f) -> Result<(), DBError> {
-    snap_to_ref(&file, event, &obj, other_obj, only_match, guess)?;
-    app_state::update_deps(file, obj);
-    Ok(())
-}
-
-pub fn join_objs(file: PathBuf, event: &UndoEventID, first: RefID, second: RefID, first_wants: &RefType, second_wants: &RefType, guess: &Point3f) -> Result<(), DBError> {
-    join_refs(&file, event, &first, &second, first_wants, second_wants, guess)?;
-    app_state::update_all_deps(file, vec![first, second]);
     Ok(())
 }

@@ -3,7 +3,7 @@ mod dep_manager;
 #[cfg(test)]
 mod tests;
 
-use crate::*;
+use crate::prelude::*;
 use data_manager::*;
 use dep_manager::*;
 use crossbeam_channel::Sender;
@@ -46,7 +46,7 @@ impl OperationManager {
         Ok(ops)
     }
 
-    fn send(&self, msg: UpdateMsg) {
+    pub fn send(&self, msg: UpdateMsg) {
         for upd in &self.updates {
             upd.send(msg.clone()).unwrap();
         }

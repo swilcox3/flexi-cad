@@ -38,6 +38,7 @@ pub enum UpdateMsg {
     Empty,
     Delete{key: RefID},
     Mesh{data: MeshData},
+    Read{query_id: QueryID, data: serde_json::Value},
     Other{data: serde_json::Value}
 }
 
@@ -51,7 +52,7 @@ pub struct CmdMsg {
 pub trait Data : Object + Send + Sync {
     fn get_id(&self) -> &RefID;
     fn update(&self) -> Result<UpdateMsg, DBError>;
-    fn get_data(&self, prop_name: &String) -> Result<serde_json::Value, DBError>;
+    fn get_data(&self, prop_name: &str) -> Result<serde_json::Value, DBError>;
     fn set_data(&mut self, data: &serde_json::Value) -> Result<(), DBError>;
     //Only use this if you know exactly what you're doing.
     fn set_id(&mut self, id: RefID);
@@ -62,6 +63,7 @@ pub type DataObject = Box<dyn Data>;
 pub type RefID = Uuid;
 pub type UserID = Uuid;
 pub type UndoEventID = Uuid;
+pub type QueryID = Uuid;
 
 pub trait ReferTo {
     fn get_result(&self, index: ResultInd) -> Option<RefGeometry>;

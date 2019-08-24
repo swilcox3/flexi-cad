@@ -57,8 +57,8 @@ impl Data for Dimension{
         Ok(UpdateMsg::Other{data: data})
     }
 
-    fn get_data(&self, prop_name: &String) -> Result<serde_json::Value, DBError> {
-        match prop_name.as_ref() {
+    fn get_data(&self, prop_name: &str) -> Result<serde_json::Value, DBError> {
+        match prop_name {
             "Offset" => Ok(json!(self.offset)),
             "First" => serde_json::to_value(&self.first.geom.pt).map_err(error_other),
             "Second" => serde_json::to_value(&self.second.geom.pt).map_err(error_other),

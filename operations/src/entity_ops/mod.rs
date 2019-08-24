@@ -3,39 +3,21 @@ mod tests;
 mod snapping;
 pub use snapping::*;
 
-use crate::*;
+use crate::prelude::*;
 
-pub fn move_obj(file: PathBuf, event: UndoEventID, id: RefID, delta: Vector3f) -> Result<(), DBError> {
-    app_state::modify_obj(&file, &event, &id, |obj| {
+pub fn move_obj(file: &PathBuf, event: &UndoEventID, id: &RefID, delta: &Vector3f) -> Result<(), DBError> {
+    app_state::modify_obj(file, event, id, |obj| {
         match obj.query_mut::<Position>() {
             Some(movable) => {
-                movable.move_obj(&delta);
+                movable.move_obj(delta);
                 Ok(())
             }
             None => Err(DBError::ObjLacksTrait)
         }
-    })?;
-    app_state::update_deps(file, id);
-    Ok(())
+    })
 }
 
-pub fn move_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>, delta: Vector3f) -> Result<(), DBError> {
-    for id in &ids {
-        app_state::modify_obj(&file, &event, id, |obj| {
-            match obj.query_mut::<Position>() {
-                Some(movable) => {
-                    movable.move_obj(&delta);
-                    Ok(())
-                }
-                None => Err(DBError::ObjLacksTrait)
-            }
-        })?;
-    }
-    app_state::update_all_deps(file, ids.into_iter().collect());
-    Ok(())
-}
-
-pub fn get_obj_data(file: &PathBuf, id: &RefID, prop_name: &String) -> Result<serde_json::Value, DBError> {
+pub fn get_obj_data(file: &PathBuf, id: &RefID, prop_name: &str) -> Result<serde_json::Value, DBError> {
     let mut val = None;
     app_state::get_obj(file, id, |obj| {
         let data = obj.get_data(prop_name)?;
@@ -48,27 +30,13 @@ pub fn get_obj_data(file: &PathBuf, id: &RefID, prop_name: &String) -> Result<se
     }
 }
 
-pub fn set_obj_data(file: PathBuf, event: UndoEventID, id: RefID, data: serde_json::Value) -> Result<(), DBError> {
-    app_state::modify_obj(&file, &event, &id, |obj| {
-        obj.set_data(&data)
-    })?;
-    app_state::update_deps(file, id);
-    Ok(())
+pub fn set_obj_data(file: &PathBuf, event: &UndoEventID, id: &RefID, data: &serde_json::Value) -> Result<(), DBError> {
+    app_state::modify_obj(file, event, id, |obj| {
+        obj.set_data(data)
+    })
 }
 
-pub fn set_objs_data(file: PathBuf, event: UndoEventID, data: Vec<(RefID, serde_json::Value)>) ->Result<(), DBError> {
-    let mut keys = HashSet::new();
-    for (id, val) in data {
-        app_state::modify_obj(&file, &event, &id, |obj| {
-            obj.set_data(&val)
-        })?;
-        keys.insert(id);
-    }
-    app_state::update_all_deps(file, keys.into_iter().collect());
-    Ok(())
-}
-
-pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>) -> Result<HashMap<RefID, RefID>, DBError> {
+pub fn copy_objs(file: &PathBuf, event: &UndoEventID, ids: HashSet<RefID>) -> Result<(Vec<RefID>, HashMap<RefID, RefID>), DBError> {
     let mut orig_to_copy = HashMap::new();
     for id in &ids {
         let copy_id = app_state::copy_obj(&file, &event, id)?;
@@ -116,6 +84,5 @@ pub fn copy_objs(file: PathBuf, event: UndoEventID, ids: HashSet<RefID>) -> Resu
         }
         to_update.push(id);
     }
-    app_state::update_all_deps(file, to_update);
-    Ok(orig_to_copy)
+    Ok((to_update, orig_to_copy))
 }

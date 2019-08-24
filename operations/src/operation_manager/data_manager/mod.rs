@@ -1,5 +1,5 @@
 use std::sync::{Mutex};
-use crate::*;
+use crate::prelude::*;
 
 #[cfg(test)]
 mod tests;

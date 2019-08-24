@@ -6,24 +6,102 @@ extern crate crossbeam_channel;
 extern crate data_model;
 #[cfg(test)] #[macro_use]
 extern crate query_interface;
-#[cfg(test)] #[macro_use]
-extern crate serde_json;
+#[macro_use] extern crate serde_json;
 extern crate bincode;
 
 #[cfg(test)]
 mod tests;
 
 mod operation_manager;
-mod app_state;
-mod entity_ops;
+pub mod app_state;
+pub mod entity_ops;
 
-pub use data_model::*;
-pub use entity_ops::*;
+mod prelude {
+    pub use data_model::*;
+    pub use crate::entity_ops;
+    pub use std::path::PathBuf;
+    pub use crate::app_state;
+    pub use rayon::prelude::*;
+    pub use std::collections::{HashSet, HashMap, VecDeque};
+}
 
-pub use std::path::PathBuf;
-pub use std::collections::{HashSet, HashMap, VecDeque};
-pub use app_state::*;
-pub use rayon::prelude::*;
+use prelude::*;
+
+///This is the only value that can be returned from a library interface.
+type LibResult = Result<(), DBError>;
+
+pub use app_state::{open_file, init_file, save_file, save_as_file, end_undo_event, undo_latest, redo_latest, suspend_event, resume_event,
+    cancel_event, take_undo_snapshot, add_obj, copy_obj};
+
+pub fn begin_undo_event(file: &PathBuf, user_id: &UserID, desc: String, query_id: QueryID) -> LibResult {
+    let undo_id = app_state::begin_undo_event(file, user_id, desc)?;
+    app_state::send_read_result(file, query_id, json!(undo_id))
+} 
+
+pub fn get_obj(file: &PathBuf, obj_id: &RefID, query_id: QueryID) -> LibResult {
+    app_state::get_obj(file, obj_id, |obj| {
+        app_state::send_read_result(file, query_id, json!(obj))
+    })
+}
+
+pub fn delete_obj(file: &PathBuf, event: &UndoEventID, obj_id: &RefID) -> LibResult {
+    app_state::delete_obj(file, event, obj_id)?;
+    Ok(())
+}
+
+pub fn move_obj(file: PathBuf, event: &UndoEventID, obj_id: RefID, delta: &Vector3f) -> LibResult {
+    entity_ops::move_obj(&file, event, &obj_id, delta)?;
+    app_state::update_deps(file, obj_id);
+    Ok(())
+}
+
+pub fn move_objs(file: PathBuf, event: &UndoEventID, ids: HashSet<RefID>, delta: &Vector3f) -> LibResult {
+    for id in &ids {
+        entity_ops::move_obj(&file, event, id, delta)?;
+    }
+    app_state::update_all_deps(file, ids.into_iter().collect());
+    Ok(())
+}
+
+pub fn get_obj_data(file: &PathBuf, obj_id: &RefID, prop_name: &str, query_id: QueryID) -> LibResult {
+    let data = entity_ops::get_obj_data(file, obj_id, prop_name)?;
+    app_state::send_read_result(file, query_id, data)
+}
+
+pub fn set_obj_data(file: PathBuf, event: &UndoEventID, obj_id: RefID, data: &serde_json::Value) -> LibResult {
+    entity_ops::set_obj_data(&file, event, &obj_id, data)?;
+    app_state::update_deps(file, obj_id);
+    Ok(())
+}
+
+pub fn set_objs_data(file: PathBuf, event: &UndoEventID, data: Vec<(RefID, serde_json::Value)>) -> LibResult {
+    let mut keys = HashSet::new();
+    for (id, val) in data {
+        entity_ops::set_obj_data(&file, event, &id, &val)?;
+        keys.insert(id);
+    }
+    app_state::update_all_deps(file, keys.into_iter().collect());
+    Ok(())
+}
+
+pub fn copy_objs(file: PathBuf, event: &UndoEventID, ids: HashSet<RefID>, query_id: QueryID) -> LibResult {
+    let (to_update, copied) = entity_ops::copy_objs(&file, event, ids)?;
+    app_state::send_read_result(&file, query_id, json!(copied))?;
+    app_state::update_all_deps(file, to_update);
+    Ok(())
+}
+
+pub fn snap_obj_to_other(file: PathBuf, event: &UndoEventID, obj: RefID, other_obj: &RefID, only_match: &RefType, guess: &Point3f) -> LibResult {
+    entity_ops::snap_to_ref(&file, event, &obj, other_obj, only_match, guess)?;
+    app_state::update_deps(file, obj);
+    Ok(())
+}
+
+pub fn join_objs(file: PathBuf, event: &UndoEventID, first: RefID, second: RefID, first_wants: &RefType, second_wants: &RefType, guess: &Point3f) -> LibResult {
+    entity_ops::join_refs(&file, event, &first, &second, first_wants, second_wants, guess)?;
+    app_state::update_all_deps(file, vec![first, second]);
+    Ok(())
+}
 
 pub fn demo(file: &PathBuf, user: &UserID, position: &Point3f) -> Result<(), DBError> {
     let side_length = 50.0;
@@ -45,15 +123,15 @@ pub fn demo(file: &PathBuf, user: &UserID, position: &Point3f) -> Result<(), DBE
     app_state::add_obj(file, &event, Box::new(wall_2))?;
     app_state::add_obj(file, &event, Box::new(wall_3))?;
     app_state::add_obj(file, &event, Box::new(wall_4))?;
-    join_refs(file, &event, &id_1, &id_2, &RefType::Point, &RefType::Point, &position_2)?;
-    join_refs(file, &event, &id_2, &id_3, &RefType::Point, &RefType::Point, &position_3)?;
-    join_refs(file, &event, &id_3, &id_4, &RefType::Point, &RefType::Point, &position_4)?;
-    join_refs(file, &event, &id_4, &id_1, &RefType::Point, &RefType::Point, position)?;
+    entity_ops::join_refs(file, &event, &id_1, &id_2, &RefType::Point, &RefType::Point, &position_2)?;
+    entity_ops::join_refs(file, &event, &id_2, &id_3, &RefType::Point, &RefType::Point, &position_3)?;
+    entity_ops::join_refs(file, &event, &id_3, &id_4, &RefType::Point, &RefType::Point, &position_4)?;
+    entity_ops::join_refs(file, &event, &id_4, &id_1, &RefType::Point, &RefType::Point, position)?;
     let door_pos = position + Vector3f::new(side_length / 2.0, 0.0, 0.0);
     let door = Door::new(RefID::new_v4(), door_pos, door_pos + Vector3f::new(5.0, 0.0, 0.0), width / 2.0, height - 1.0);
     let door_id = door.get_id().clone();
     app_state::add_obj(file, &event, Box::new(door))?;
-    join_refs(file, &event, &door_id, &id_1, &RefType::Line, &RefType::Rect, &door_pos)?;
+    entity_ops::join_refs(file, &event, &door_id, &id_1, &RefType::Line, &RefType::Rect, &door_pos)?;
     let offset = 5.0;
     let dim_1 = Dimension::new(RefID::new_v4(), position.clone(), position_2.clone(), offset);
     let dim_2 = Dimension::new(RefID::new_v4(), position_2.clone(), position_3.clone(), offset);
@@ -67,15 +145,17 @@ pub fn demo(file: &PathBuf, user: &UserID, position: &Point3f) -> Result<(), DBE
     app_state::add_obj(file, &event, Box::new(dim_2))?;
     app_state::add_obj(file, &event, Box::new(dim_3))?;
     app_state::add_obj(file, &event, Box::new(dim_4))?;
-    snap_to_ref(file, &event, &dim_id_1, &id_1, &RefType::Point, position)?;
-    snap_to_ref(file, &event, &dim_id_1, &id_1, &RefType::Point, &position_2)?;
-    snap_to_ref(file, &event, &dim_id_2, &id_2, &RefType::Point, &position_2)?;
-    snap_to_ref(file, &event, &dim_id_2, &id_2, &RefType::Point, &position_3)?;
-    snap_to_ref(file, &event, &dim_id_3, &id_3, &RefType::Point, &position_3)?;
-    snap_to_ref(file, &event, &dim_id_3, &id_3, &RefType::Point, &position_4)?;
-    snap_to_ref(file, &event, &dim_id_4, &id_4, &RefType::Point, &position_4)?;
-    snap_to_ref(file, &event, &dim_id_4, &id_4, &RefType::Point, position)?;
-    app_state::end_undo_event(file, event)
+    entity_ops::snap_to_ref(file, &event, &dim_id_1, &id_1, &RefType::Point, position)?;
+    entity_ops::snap_to_ref(file, &event, &dim_id_1, &id_1, &RefType::Point, &position_2)?;
+    entity_ops::snap_to_ref(file, &event, &dim_id_2, &id_2, &RefType::Point, &position_2)?;
+    entity_ops::snap_to_ref(file, &event, &dim_id_2, &id_2, &RefType::Point, &position_3)?;
+    entity_ops::snap_to_ref(file, &event, &dim_id_3, &id_3, &RefType::Point, &position_3)?;
+    entity_ops::snap_to_ref(file, &event, &dim_id_3, &id_3, &RefType::Point, &position_4)?;
+    entity_ops::snap_to_ref(file, &event, &dim_id_4, &id_4, &RefType::Point, &position_4)?;
+    entity_ops::snap_to_ref(file, &event, &dim_id_4, &id_4, &RefType::Point, position)?;
+    app_state::end_undo_event(file, event)?;
+    app_state::update_all_deps(file.clone(), vec![id_1, id_2, id_3, id_4, door_id, dim_id_1, dim_id_2, dim_id_3, dim_id_4]);
+    Ok(())
 }
 
 pub fn demo_100(file: PathBuf, user: UserID, position: Point3f) {

@@ -1,8 +1,8 @@
 use ccl::dhashmap::DHashMap;
 use std::path::PathBuf;
-use crate::*;
+use crate::prelude::*;
 use crossbeam_channel::Sender;
-use operation_manager::OperationManager;
+use crate::operation_manager::OperationManager;
 
 lazy_static!{
     static ref APP_STATE: AppState = AppState::new();
@@ -65,6 +65,16 @@ pub fn save_as_file(orig_file: &PathBuf, file_new: PathBuf) -> Result<(), DBErro
                     Err(e)
                 }
             }
+        }
+        None => Err(DBError::NotFound)
+    }
+}
+
+pub fn send_read_result(file: &PathBuf, query_id: QueryID, data: serde_json::Value) -> Result<(), DBError> {
+    match APP_STATE.files.get(file) {
+        Some(ops) => {
+            ops.send(UpdateMsg::Read{query_id, data});
+            Ok(())
         }
         None => Err(DBError::NotFound)
     }
