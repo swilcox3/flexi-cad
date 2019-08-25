@@ -1,4 +1,4 @@
-use ccl::dhashmap::DHashMap;
+use ccl::dhashmap::{DHashMap};
 use std::path::PathBuf;
 use crate::prelude::*;
 use crossbeam_channel::Sender;
@@ -18,6 +18,7 @@ impl AppState {
             files: DHashMap::default(),
         }
     }
+
 }
 
 pub fn init_file(file: PathBuf, updates: Sender<UpdateMsg>) {

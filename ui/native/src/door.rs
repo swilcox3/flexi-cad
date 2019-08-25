@@ -3,6 +3,16 @@ use neon::prelude::*;
 use std::path::PathBuf;
 use std::str::FromStr;
 
+pub fn handle_conn(cx: &mut CallContext<JsDoor>, index: i32) -> Option<String> {
+    if let Some(conn_arg) = cx.argument_opt(index) {
+        if conn_arg.is_a::<JsString>() {
+            let connection = conn_arg.downcast::<JsString>().unwrap().value();
+            return Some(connection);
+        }
+    }
+    return None;
+}
+
 declare_types! {
     pub class JsDoor for Door {
         init(mut cx) {
@@ -153,7 +163,13 @@ declare_types! {
             {
                 let guard = cx.lock();
                 let door = this.borrow(&guard).clone();
-                operations_kernel::add_obj(&PathBuf::from(path), &RefID::from_str(&event).unwrap(), Box::new(door)).unwrap();
+                match handle_conn(&mut cx, 2) {
+                    Some(connection) => crate::send_msg(connection, "add_door", vec![json!(path), json!(event), json!(door)]),
+                    #[cfg(feature = "kernel")]
+                    None => operations_kernel::add_obj(&PathBuf::from(path), &RefID::from_str(&event).unwrap(), Box::new(door)).unwrap(),
+                    #[cfg(not(feature = "kernel"))]
+                    None => panic("No connection"),
+                }
             }
             Ok(cx.undefined().upcast())
         }

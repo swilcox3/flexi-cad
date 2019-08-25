@@ -29,7 +29,7 @@ pub struct User {
 /// do websocket handshake and start `MyWebSocket` actor
 pub fn ws_index(r: HttpRequest, user: web::Query<User>, stream: web::Payload) -> Result<HttpResponse, Error> {
     let res = ws::start(MyWebSocket::new(user.user_id), &r, stream);
-    println!("{:?}", res.as_ref().unwrap());
+    info!("{:?}", res.as_ref().unwrap());
     res
 }
 
@@ -65,8 +65,9 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for MyWebSocket {
             }
             ws::Message::Text(msg) => {
                 let cmd: data_model::CmdMsg = serde_json::from_str(&msg).unwrap();
-                println!("{:?}", cmd);
+                info!("{:?}", cmd);
                 if let Err(e) = self.route(cmd) {
+                    error!("{:?}", e);
                     ctx.text(e);
                 }
             }
@@ -174,6 +175,24 @@ impl MyWebSocket {
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::get_closest_result(&path, &id, &type_1, &point, query).map_err(error)
             }
+            "add_wall" => {
+                let wall: Wall = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
+                let event: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
+                operations_kernel::add_obj(&path, &event, Box::new(wall)).map_err(error)
+            }
+            "add_door" => {
+                let door: Door = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
+                let event: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
+                operations_kernel::add_obj(&path, &event, Box::new(door)).map_err(error)
+            }
+            "add_dimension" => {
+                let dim: Dimension = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
+                let event: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
+                operations_kernel::add_obj(&path, &event, Box::new(dim)).map_err(error)
+            }
             "move_obj" => {
                 let delta: Vector3f = serde_json::from_value(msg.params.remove(3)).map_err(error)?;
                 let id: RefID = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
@@ -256,6 +275,7 @@ impl MyWebSocket {
             if let Some(rcvs) = UPDATES.get(&PathBuf::from("defaultNew.flx")) {
                 for r in &(*rcvs) {
                     for msg in r.try_iter() {
+                        info!("Sending msg: {:?}", msg);
                         ctx.text(serde_json::to_string(&msg).unwrap());
                     }
                 }

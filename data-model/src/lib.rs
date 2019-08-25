@@ -27,7 +27,7 @@ pub enum DBError
     ObjNotFound,
     FileNotFound,
     PropertyNotFound,
-    ObjLacksTrait(String),
+    ObjLacksTrait,
     TimedOut,
     Other(String)
 }

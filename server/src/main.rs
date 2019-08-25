@@ -5,7 +5,7 @@ extern crate serde;
 extern crate serde_json;
 extern crate operations_kernel;
 extern crate data_model;
-extern crate flexi_logger;
+extern crate fern;
 extern crate crossbeam_channel;
 #[macro_use] extern crate log;
 extern crate structopt;
@@ -14,7 +14,6 @@ extern crate ccl;
 
 use actix_web::{web, App, HttpServer};
 use structopt::StructOpt;
-use flexi_logger::{Logger, LogSpecBuilder, opt_format};
 use log::LevelFilter;
 
 mod ws_actor;
@@ -50,7 +49,6 @@ struct Opt {
 
 fn main() {
     let opt = Opt::from_args();
-    let mut builder = LogSpecBuilder::new();
     let log_level = match opt.log {
         0 => LevelFilter::Off,
         1 => LevelFilter::Error,
@@ -60,15 +58,22 @@ fn main() {
         5 => LevelFilter::Trace,
         _ => LevelFilter::Off,
     };
-    builder.default(log_level);
-    
-    Logger::with(builder.build())
-        .duplicate_to_stderr(flexi_logger::Duplicate::All)
-        .log_to_file()
-        .directory("log")
-        .format(opt_format)
-        .start()
-        .unwrap();
+
+    fern::Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "{}[{}][{}] {}",
+                chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
+                record.target(),
+                record.level(),
+                message
+            ))
+        })
+        .level_for("tokio_reactor", LevelFilter::Error)
+        .level_for("mio", LevelFilter::Error)
+        .level(log_level)
+        .chain(std::io::stdout())
+        .apply().unwrap();    
 
     start(&opt.url, opt.ws_port);
 }

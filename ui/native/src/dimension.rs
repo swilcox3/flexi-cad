@@ -3,6 +3,17 @@ use neon::prelude::*;
 use std::path::PathBuf;
 use std::str::FromStr;
 
+
+pub fn handle_conn(cx: &mut CallContext<JsDimension>, index: i32) -> Option<String> {
+    if let Some(conn_arg) = cx.argument_opt(index) {
+        if conn_arg.is_a::<JsString>() {
+            let connection = conn_arg.downcast::<JsString>().unwrap().value();
+            return Some(connection);
+        }
+    }
+    return None;
+}
+
 declare_types! {
     pub class JsDimension for Dimension {
         init(mut cx) {
@@ -117,6 +128,7 @@ declare_types! {
             Ok(val.upcast())
         }
 
+
         method addObject(mut cx) {
             let this = cx.this();
             let path = cx.argument::<JsString>(0)?.value();
@@ -124,7 +136,13 @@ declare_types! {
             {
                 let guard = cx.lock();
                 let dim = this.borrow(&guard).clone();
-                operations_kernel::add_obj(&PathBuf::from(path), &RefID::from_str(&event).unwrap(), Box::new(dim)).unwrap();
+                match handle_conn(&mut cx, 2) {
+                    Some(connection) => crate::send_msg(connection, "add_dimension", vec![json!(path), json!(event), json!(dim)]),
+                    #[cfg(feature = "kernel")]
+                    None => operations_kernel::add_obj(&PathBuf::from(path), &RefID::from_str(&event).unwrap(), Box::new(dim)).unwrap(),
+                    #[cfg(not(feature = "kernel"))]
+                    None => panic("No connection"),
+                }
             }
             Ok(cx.undefined().upcast())
         }

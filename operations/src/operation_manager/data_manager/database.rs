@@ -69,7 +69,7 @@ impl FileDatabase {
         let try_get = || {
             match self.db.try_get(key) {
                 Ok(obj) => {
-                    trace!("Getting object {:?} for read from database ", obj);
+                    trace!("Getting object {:?} for read from database ", *obj);
                     callback(&(*obj))
                 }
                 Err(TryGetError::WouldBlock) => Err(DBError::TimedOut),
@@ -105,7 +105,7 @@ impl FileDatabase {
         let try_get = || {
             match self.db.try_get_mut(key) {
                 Ok(mut obj) => {
-                    trace!("Getting obj {:?} for write from database", obj);
+                    trace!("Getting obj {:?} for write from database", *obj);
                     callback(&mut (*obj))
                 }
                 Err(TryGetError::WouldBlock) => Err(DBError::TimedOut),
@@ -121,7 +121,7 @@ impl FileDatabase {
         }
         match self.db.get(key) {
             Some(obj) => {
-                trace!("Duplicating obj {:?}", obj);
+                trace!("Duplicating obj {:?}", *obj);
                 let mut copy = obj.clone();
                 let id = RefID::new_v4();
                 copy.set_id(id);

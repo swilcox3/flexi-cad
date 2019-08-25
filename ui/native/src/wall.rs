@@ -3,6 +3,16 @@ use neon::prelude::*;
 use std::path::PathBuf;
 use std::str::FromStr;
 
+pub fn handle_conn(cx: &mut CallContext<JsWall>, index: i32) -> Option<String> {
+    if let Some(conn_arg) = cx.argument_opt(index) {
+        if conn_arg.is_a::<JsString>() {
+            let connection = conn_arg.downcast::<JsString>().unwrap().value();
+            return Some(connection);
+        }
+    }
+    return None;
+}
+
 declare_types! {
     pub class JsWall for Wall {
         init(mut cx) {
@@ -141,7 +151,13 @@ declare_types! {
             {
                 let guard = cx.lock();
                 let wall = this.borrow(&guard).clone();
-                operations_kernel::add_obj(&PathBuf::from(path), &RefID::from_str(&event).unwrap(), Box::new(wall)).unwrap();
+                match handle_conn(&mut cx, 2) {
+                    Some(connection) => crate::send_msg(connection, "add_wall", vec![json!(path), json!(event), json!(wall)]),
+                    #[cfg(feature = "kernel")]
+                    None => operations_kernel::add_obj(&PathBuf::from(path), &RefID::from_str(&event).unwrap(), Box::new(wall)).unwrap(),
+                    #[cfg(not(feature = "kernel"))]
+                    None => panic("No connection"),
+                }
             }
             Ok(cx.undefined().upcast())
         }

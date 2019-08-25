@@ -13,7 +13,7 @@ interface DataObject {
     get(prop: string): string,
     set(prop: string, val: any): string,
     getUpdateMsg(): any,
-    addObject(filename: string, event: string):undefined
+    addObject(filename: string, event: string, connection?: string):undefined
 }
 
 function initRenderer(canvas: HTMLCanvasElement)
@@ -215,7 +215,7 @@ function waitForAllReads(ids: Array<string>)
 
 export function createObj(event: string, obj: DataObject)
 {
-    obj.addObject(filename, event)
+    obj.addObject(filename, event, connection)
     return waitForChange(obj.get("id"));
 }
 

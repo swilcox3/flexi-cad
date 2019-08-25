@@ -71,7 +71,7 @@ fn get_updates(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
-fn send_msg(connection: String, func_name: &str, params: Vec<serde_json::Value>) {
+pub fn send_msg(connection: String, func_name: &str, params: Vec<serde_json::Value>) {
     let msg = CmdMsg {
         func_name: String::from(func_name),
         params: params 
@@ -79,13 +79,10 @@ fn send_msg(connection: String, func_name: &str, params: Vec<serde_json::Value>)
     SERVERS.get_mut(&connection).unwrap().try_send(msg).unwrap();
 }
 
-fn handle_conn(cx: &mut FunctionContext, index: i32) -> Option<String> {
+pub fn handle_conn(cx: &mut FunctionContext, index: i32) -> Option<String> {
     if let Some(conn_arg) = cx.argument_opt(index) {
         if conn_arg.is_a::<JsString>() {
-            println!("made it");
-            let mut connection = conn_arg.downcast::<JsString>().unwrap().value();
-            connection += &format!("?user_id={}", USER.to_string());
-            println!("{:?}", connection);
+            let connection = conn_arg.downcast::<JsString>().unwrap().value();
             return Some(connection);
         }
     }
@@ -100,7 +97,8 @@ fn init_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         Some(connection) => {
             let (input, output) = futures::sync::mpsc::channel(5);
             SERVERS.insert(connection.clone(), input);
-            ws_client::connect(connection.clone(), output, s);
+            let connection_user = connection.clone() + &format!("?user_id={}", USER.to_string());
+            ws_client::connect(connection_user, output, s);
             send_msg(connection, "init_file", vec![json!(pathbuf)]);
         }
         #[cfg(feature = "kernel")]
@@ -120,7 +118,8 @@ fn open_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         Some(connection) => {
             let (input, output) = futures::sync::mpsc::channel(5);
             SERVERS.insert(connection.clone(), input);
-            ws_client::connect(connection, output, s);
+            let connection_user = connection + &format!("?user_id={}", USER.to_string());
+            ws_client::connect(connection_user, output, s);
         }
         #[cfg(feature = "kernel")]
         None => operations_kernel::open_file(pathbuf.clone(), s).unwrap(),
