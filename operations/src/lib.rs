@@ -36,12 +36,12 @@ pub use app_state::{open_file, init_file, save_file, save_as_file, end_undo_even
 
 pub fn begin_undo_event(file: &PathBuf, user_id: &UserID, desc: String, query_id: QueryID) -> LibResult {
     let undo_id = app_state::begin_undo_event(file, user_id, desc)?;
-    app_state::send_read_result(file, query_id, json!(undo_id))
+    app_state::send_read_result(file, query_id, user_id, json!(undo_id))
 } 
 
-pub fn get_obj(file: &PathBuf, obj_id: &RefID, query_id: QueryID) -> LibResult {
+pub fn get_obj(file: &PathBuf, obj_id: &RefID, query_id: QueryID, user_id: &UserID) -> LibResult {
     app_state::get_obj(file, obj_id, |obj| {
-        app_state::send_read_result(file, query_id, json!(obj))
+        app_state::send_read_result(file, query_id, user_id, json!(obj))
     })
 }
 
@@ -64,9 +64,9 @@ pub fn move_objs(file: PathBuf, event: &UndoEventID, ids: HashSet<RefID>, delta:
     Ok(())
 }
 
-pub fn get_obj_data(file: &PathBuf, obj_id: &RefID, prop_name: &str, query_id: QueryID) -> LibResult {
+pub fn get_obj_data(file: &PathBuf, obj_id: &RefID, prop_name: &str, query_id: QueryID, user_id: &UserID) -> LibResult {
     let data = entity_ops::get_obj_data(file, obj_id, prop_name)?;
-    app_state::send_read_result(file, query_id, data)
+    app_state::send_read_result(file, query_id, user_id, data)
 }
 
 pub fn set_obj_data(file: PathBuf, event: &UndoEventID, obj_id: RefID, data: &serde_json::Value) -> LibResult {
@@ -85,9 +85,9 @@ pub fn set_objs_data(file: PathBuf, event: &UndoEventID, data: Vec<(RefID, serde
     Ok(())
 }
 
-pub fn copy_objs(file: PathBuf, event: &UndoEventID, ids: HashSet<RefID>, query_id: QueryID) -> LibResult {
+pub fn copy_objs(file: PathBuf, event: &UndoEventID, ids: HashSet<RefID>, query_id: QueryID, user_id: &UserID) -> LibResult {
     let (to_update, copied) = entity_ops::copy_objs(&file, event, ids)?;
-    app_state::send_read_result(&file, query_id, json!(copied))?;
+    app_state::send_read_result(&file, query_id, user_id, json!(copied))?;
     app_state::update_all_deps(file, to_update);
     Ok(())
 }
@@ -104,14 +104,14 @@ pub fn join_objs(file: PathBuf, event: &UndoEventID, first: RefID, second: RefID
     Ok(())
 }
 
-pub fn can_refer_to(file: &PathBuf, obj_id: &RefID, query_id: QueryID) -> LibResult {
+pub fn can_refer_to(file: &PathBuf, obj_id: &RefID, query_id: QueryID, user_id: &UserID) -> LibResult {
     let can_refer = entity_ops::can_refer_to(file, obj_id)?;
-    app_state::send_read_result(file, query_id, json!(can_refer))
+    app_state::send_read_result(file, query_id, user_id, json!(can_refer))
 }
 
-pub fn get_closest_result(file: &PathBuf, obj_id: &RefID, only_match: &RefType, guess: &Point3f, query_id: QueryID) -> LibResult {
+pub fn get_closest_result(file: &PathBuf, obj_id: &RefID, only_match: &RefType, guess: &Point3f, query_id: QueryID, user_id: &UserID) -> LibResult {
     let res = entity_ops::get_closest_result(file, obj_id, only_match, guess)?;
-    app_state::send_read_result(file, query_id, json!(res))
+    app_state::send_read_result(file, query_id, user_id, json!(res))
 }
 
 pub fn demo(file: &PathBuf, user: &UserID, position: &Point3f) -> Result<(), DBError> {

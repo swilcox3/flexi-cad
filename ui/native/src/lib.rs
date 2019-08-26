@@ -102,7 +102,7 @@ fn init_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
             send_msg(connection, "init_file", vec![json!(pathbuf)]);
         }
         #[cfg(feature = "kernel")]
-        None => operations_kernel::init_file(pathbuf.clone(), s.clone()),
+        None => operations_kernel::init_file(pathbuf.clone(), USER.clone(), s.clone()),
         #[cfg(not(feature = "kernel"))]
         None => panic("No connection"),
     }
@@ -122,7 +122,7 @@ fn open_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
             ws_client::connect(connection_user, output, s);
         }
         #[cfg(feature = "kernel")]
-        None => operations_kernel::open_file(pathbuf.clone(), s).unwrap(),
+        None => operations_kernel::open_file(pathbuf.clone(), USER.clone(), s).unwrap(),
         #[cfg(not(feature = "kernel"))]
         None => panic("No connection"),
     }
@@ -320,7 +320,7 @@ fn can_refer_to(mut cx: FunctionContext) -> JsResult<JsString> {
     match handle_conn(&mut cx, 2) {
         Some(connection) => send_msg(connection, "can_refer_to", vec![json!(path), json!(id_1), json!(query_id)]),
         #[cfg(feature = "kernel")]
-        None => operations_kernel::can_refer_to(&PathBuf::from(path), &id_1, query_id.clone()).unwrap(),
+        None => operations_kernel::can_refer_to(&PathBuf::from(path), &id_1, query_id.clone(), &USER).unwrap(),
         #[cfg(not(feature = "kernel"))]
         None => panic("No connection"),
     }
@@ -336,7 +336,7 @@ fn get_closest_point(mut cx: FunctionContext) -> JsResult<JsString> {
     match handle_conn(&mut cx, 3) {
         Some(connection) => send_msg(connection, "get_closest_result", vec![json!(path), json!(id_1), json!(RefType::Point), json!(point), json!(query_id)]),
         #[cfg(feature = "kernel")]
-        None => operations_kernel::get_closest_result(&PathBuf::from(&path), &id_1, &RefType::Point, &point, query_id.clone()).unwrap(),
+        None => operations_kernel::get_closest_result(&PathBuf::from(&path), &id_1, &RefType::Point, &point, query_id.clone(), &USER).unwrap(),
         #[cfg(not(feature = "kernel"))]
         None => panic("No connection"),
     }
@@ -381,7 +381,7 @@ fn get_object_data(mut cx: FunctionContext) -> JsResult<JsString> {
     match handle_conn(&mut cx, 3) {
         Some(connection) => send_msg(connection, "get_obj_data", vec![json!(path), json!(id), json!(prop_name), json!(query_id)]),
         #[cfg(feature = "kernel")]
-        None => operations_kernel::get_obj_data(&PathBuf::from(path), &id, &prop_name, query_id.clone()).unwrap(),
+        None => operations_kernel::get_obj_data(&PathBuf::from(path), &id, &prop_name, query_id.clone(), &USER).unwrap(),
         #[cfg(not(feature = "kernel"))]
         None => panic("No connection"),
     }
@@ -460,7 +460,7 @@ fn copy_objects(mut cx: FunctionContext) -> JsResult<JsString> {
     match handle_conn(&mut cx, 3) {
         Some(connection) => send_msg(connection, "copy_objs", vec![json!(path), json!(event), json!(data), json!(query_id)]),
         #[cfg(feature = "kernel")]
-        None => operations_kernel::copy_objs(PathBuf::from(path), &event, data, query_id.clone()).unwrap(),
+        None => operations_kernel::copy_objs(PathBuf::from(path), &event, data, query_id.clone(), &USER).unwrap(),
         #[cfg(not(feature = "kernel"))]
         None => panic("No connection"),
     }

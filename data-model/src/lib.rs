@@ -27,6 +27,7 @@ pub enum DBError
     ObjNotFound,
     FileNotFound,
     PropertyNotFound,
+    UserNotFound,
     ObjLacksTrait,
     TimedOut,
     Other(String)
@@ -41,7 +42,7 @@ pub enum UpdateMsg {
     Empty,
     Delete{key: RefID},
     Mesh{data: MeshData},
-    Read{query_id: QueryID, data: serde_json::Value},
+    Read{query_id: QueryID, user: UserID, data: serde_json::Value},
     Other{data: serde_json::Value}
 }
 

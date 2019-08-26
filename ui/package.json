@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest",
     "build": "electron-build-env neon build --release && tsc",
-    "start": "npm run build && electron ./app/main.js"
+    "start": "npm run build && electron ./app/main.js",
+    "start_nb": "electron ./app/main.js"
   },
   "author": "",
   "license": "ISC",

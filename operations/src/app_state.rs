@@ -21,25 +21,25 @@ impl AppState {
 
 }
 
-pub fn init_file(file: PathBuf, updates: Sender<UpdateMsg>) {
-    if let Some(mut ops) = APP_STATE.files.get_mut(&file) {
-        ops.updates.push(updates);
+pub fn init_file(file: PathBuf, user: UserID, updates: Sender<UpdateMsg>) {
+    if let Some(ops) = APP_STATE.files.get(&file) {
+        ops.updates.insert(user, updates);
     }
     else {
-        APP_STATE.files.insert(file, OperationManager::new(updates));
+        APP_STATE.files.insert(file, OperationManager::new(user, updates));
     }
 }
 
-pub fn open_file(file: PathBuf, updates: Sender<UpdateMsg>) -> Result<(), DBError> {
-    if let Some(mut ops) = APP_STATE.files.get_mut(&file) {
-        ops.updates.push(updates);
+pub fn open_file(file: PathBuf, user: UserID, updates: Sender<UpdateMsg>) -> Result<(), DBError> {
+    if let Some(ops) = APP_STATE.files.get(&file) {
+        ops.updates.insert(user, updates);
     }
     else {
-        let ops = OperationManager::open(&file, updates)?;
+        let ops = OperationManager::open(&file, user, updates)?;
         APP_STATE.files.insert(file.clone(), ops);
         rayon::spawn(move || {
             if let Some(ops) = APP_STATE.files.get(&file) {
-                ops.update_all().unwrap();
+                ops.update_all(Some(&user)).unwrap();
             }
         });
     }
@@ -56,8 +56,7 @@ pub fn save_file(file: &PathBuf) -> Result<(), DBError> {
 pub fn save_as_file(orig_file: &PathBuf, file_new: PathBuf) -> Result<(), DBError> {
     match APP_STATE.files.remove(orig_file) {
         Some((_, ops)) => {
-            match ops.save(&file_new) {
-                Ok(()) => {
+            match ops.save(&file_new) { Ok(()) => {
                     APP_STATE.files.insert(file_new, ops);
                     Ok(())
                 }
@@ -71,11 +70,10 @@ pub fn save_as_file(orig_file: &PathBuf, file_new: PathBuf) -> Result<(), DBErro
     }
 }
 
-pub fn send_read_result(file: &PathBuf, query_id: QueryID, data: serde_json::Value) -> Result<(), DBError> {
+pub fn send_read_result(file: &PathBuf, query_id: QueryID, user: &UserID, data: serde_json::Value) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => {
-            ops.send(UpdateMsg::Read{query_id, data});
-            Ok(())
+            ops.send(UpdateMsg::Read{query_id, user: user.clone(), data}, Some(user))
         }
         None => Err(DBError::FileNotFound)
     }

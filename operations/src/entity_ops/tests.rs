@@ -4,11 +4,12 @@ use crate::tests::*;
 use crate::{join_objs};
 use crossbeam_channel::{Receiver};
 
-fn test_setup(desc: &str, callback: impl Fn(PathBuf, Receiver<UpdateMsg>)) {
+fn test_setup(desc: &str, callback: impl Fn(PathBuf, UserID, Receiver<UpdateMsg>)) {
     let file = PathBuf::from(desc);
     let (s, r) = crossbeam_channel::unbounded();
-    app_state::init_file(file.clone(), s);
-    callback(file, r);
+    let user = UserID::new_v4();
+    app_state::init_file(file.clone(), user, s);
+    callback(file, user, r);
 }
 
 //This makes sure that all the background updates have completed
@@ -20,8 +21,7 @@ fn empty_receiver(rcv: &Receiver<UpdateMsg>) {
 
 #[test]
 fn test_copy_objs() {
-    test_setup("copy_objs", |file, rcv| {
-        let user = UserID::new_v4();
+    test_setup("copy_objs", |file, user, rcv| {
         let mut first = Box::new(TestObj::new("first"));
         let id_1 = first.get_id().clone();
         first.move_obj(&Vector3f::new(1.0, 2.0, 3.0));
@@ -63,8 +63,7 @@ fn test_copy_objs() {
 
 #[test]
 fn test_join_walls() {
-    test_setup("join walls", |file, rcv| {
-        let user = UserID::new_v4();
+    test_setup("join walls", |file, user, rcv| {
         let id_1 = RefID::new_v4();
         let first = Box::new(Wall::new(id_1.clone(), Point3f::new(1.0, 2.0, 3.0), Point3f::new(2.0, 2.0, 3.0), 1.0, 1.0));
         let id_2 = RefID::new_v4();
@@ -100,8 +99,7 @@ fn test_join_walls() {
 
 #[test]
 fn test_join_door_and_wall() {
-    test_setup("snap door to wall", |file, rcv| {
-        let user = UserID::new_v4();
+    test_setup("snap door to wall", |file, user, rcv| {
         let id_1 = RefID::new_v4();
         let first = Box::new(Wall::new(id_1.clone(), Point3f::new(0.0, 0.0, 0.0), Point3f::new(1.0, 0.0, 0.0), 1.0, 1.0));
         let id_2 = RefID::new_v4();

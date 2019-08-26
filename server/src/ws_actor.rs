@@ -93,7 +93,7 @@ impl MyWebSocket {
             "init_file" => {
                 let (s, r) = crossbeam_channel::unbounded();
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::init_file(path.clone(), s);
+                operations_kernel::init_file(path.clone(), self.id.clone(), s);
                 if let Some(mut rcvs) = UPDATES.get_mut(&path) {
                     rcvs.push(r);
                 }
@@ -165,7 +165,7 @@ impl MyWebSocket {
                 let query: QueryID = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
                 let id: RefID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::can_refer_to(&path, &id, query).map_err(error)
+                operations_kernel::can_refer_to(&path, &id, query, &self.id).map_err(error)
             }
             "get_closest_result" => {
                 let query: QueryID = serde_json::from_value(msg.params.remove(4)).map_err(error)?;
@@ -173,7 +173,7 @@ impl MyWebSocket {
                 let type_1: RefType = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
                 let id: RefID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::get_closest_result(&path, &id, &type_1, &point, query).map_err(error)
+                operations_kernel::get_closest_result(&path, &id, &type_1, &point, query, &self.id).map_err(error)
             }
             "add_wall" => {
                 let wall: Wall = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
@@ -211,7 +211,7 @@ impl MyWebSocket {
                 let prop_name: String = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
                 let id: RefID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::get_obj_data(&path, &id, &prop_name, query).map_err(error)
+                operations_kernel::get_obj_data(&path, &id, &prop_name, query, &self.id).map_err(error)
             }
             "set_obj_data" => {
                 let data = msg.params.remove(3);
@@ -238,7 +238,7 @@ impl MyWebSocket {
                 let data: std::collections::HashSet<RefID> = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
                 let event: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::copy_objs(path, &event, data, query).map_err(error)
+                operations_kernel::copy_objs(path, &event, data, query, &self.id).map_err(error)
             }
             "demo" => {
                 let position: Point3f = serde_json::from_value(msg.params.remove(1)).map_err(error)?;

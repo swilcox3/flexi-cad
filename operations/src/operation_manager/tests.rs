@@ -9,7 +9,7 @@ lazy_static!{
 
 fn test_setup(cb: impl Fn(&OperationManager, Receiver<UpdateMsg>)) {
     let (s, r) = crossbeam_channel::unbounded();
-    let ops = OperationManager::new(s);
+    let ops = OperationManager::new(USER.clone(), s);
     cb(&ops, r);
 }
 

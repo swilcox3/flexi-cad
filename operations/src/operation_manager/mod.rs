@@ -7,29 +7,33 @@ use crate::prelude::*;
 use data_manager::*;
 use dep_manager::*;
 use crossbeam_channel::Sender;
+use ccl::dhashmap::DHashMap;
 
 pub struct OperationManager {
     data: DataManager,
     deps: DependencyManager,
-    pub updates: Vec<Sender<UpdateMsg>>,
+    pub updates: DHashMap<UserID, Sender<UpdateMsg>>,
 }
 
 impl OperationManager {
-    pub fn new(sender: Sender<UpdateMsg>) -> OperationManager {
-        OperationManager {
+    pub fn new(user: UserID, sender: Sender<UpdateMsg>) -> OperationManager {
+        let ops = OperationManager {
             data: DataManager::new(),
             deps: DependencyManager::new(),
-            updates: vec![sender],
-        }
+            updates: DHashMap::default(),
+        };
+        ops.updates.insert(user, sender);
+        ops
     }
 
-    pub fn open(path: &PathBuf, sender: Sender<UpdateMsg>) -> Result<OperationManager, DBError> {
+    pub fn open(path: &PathBuf, user: UserID, sender: Sender<UpdateMsg>) -> Result<OperationManager, DBError> {
         let data = DataManager::open(path)?;
         let ops = OperationManager {
             data: data,
             deps: DependencyManager::new(),
-            updates: vec![sender],
+            updates: DHashMap::default(),
         };
+        ops.updates.insert(user.clone(), sender);
         ops.data.iterate_all(&mut |obj: &DataObject| {
             if let Some(dep_obj) = obj.query_ref::<UpdateFromRefs>() {
                 let refs = dep_obj.get_refs();
@@ -40,15 +44,27 @@ impl OperationManager {
                 }
             }
             let msg = obj.update()?;
-            ops.send(msg);
-            Ok(())
+            ops.send(msg, Some(&user))
         })?;
         Ok(ops)
     }
 
-    pub fn send(&self, msg: UpdateMsg) {
-        for upd in &self.updates {
-            upd.send(msg.clone()).unwrap();
+    pub fn send(&self, msg: UpdateMsg, only_to: Option<&UserID>) -> Result<(), DBError> {
+        if let Some(user) = only_to {
+            if let Some(upd) = self.updates.get(user) {
+                upd.send(msg).map_err(error_other)
+            }
+            else {
+                Err(DBError::UserNotFound)
+            }
+        }
+        else {
+            for chunk in self.updates.chunks() {
+                for (_, upd) in chunk.iter() {
+                    upd.send(msg.clone()).map_err(error_other)?;
+                }
+            }
+            Ok(())
         }
     }
 
@@ -74,7 +90,7 @@ impl OperationManager {
 
     pub fn cancel_event(&self, event_id: &UndoEventID) -> Result<(), DBError> {
         let set = self.data.cancel_event(event_id)?;
-        self.update_set(&set)?;
+        self.update_set(&set, None)?;
         let deps: Vec<RefID> = set.into_iter().collect();
         self.update_all_deps(&deps)
     }
@@ -85,36 +101,35 @@ impl OperationManager {
 
     pub fn undo_latest(&self, user: &UserID) -> Result<(), DBError> {
         let set = self.data.undo_latest(user)?;
-        self.update_set(&set)?;
+        self.update_set(&set, None)?;
         let deps: Vec<RefID> = set.into_iter().collect();
         self.update_all_deps(&deps)
     }
 
     pub fn redo_latest(&self, user: &UserID) -> Result<(), DBError> {
         let set = self.data.redo_latest(user)?;
-        self.update_set(&set)?;
+        self.update_set(&set, None)?;
         let deps: Vec<RefID> = set.into_iter().collect();
         self.update_all_deps(&deps)
     }
 
-    pub fn update_all(&self) -> Result<(), DBError> {
+    pub fn update_all(&self, only_to: Option<&UserID>) -> Result<(), DBError> {
         let mut set = HashSet::new();
         self.data.iterate_all(&mut |obj: &DataObject| {
             set.insert(obj.get_id().clone());
             Ok(())
         })?;
-        self.update_set(&set)
+        self.update_set(&set, only_to)
     }
 
-    fn update_set(&self, set: &HashSet<RefID>) -> Result<(), DBError> {
+    fn update_set(&self, set: &HashSet<RefID>, only_to: Option<&UserID>) -> Result<(), DBError> {
         for obj_id in set {
             if let Err(e) = self.data.get_mut_obj_no_undo(&obj_id, &mut |obj: &mut DataObject| {
                 let msg = obj.update()?;
-                self.send(msg);
-                Ok(())
+                self.send(msg, only_to)
             }) {
                 match e {
-                    DBError::ObjNotFound => self.send(UpdateMsg::Delete{key: *obj_id}),
+                    DBError::ObjNotFound => self.send(UpdateMsg::Delete{key: *obj_id}, None)?,
                     _ => return Err(e)
                 }
             }
@@ -173,13 +188,10 @@ impl OperationManager {
         for dep_id in deps {
             match self.update_from_refs(&dep_id) {
                 Ok(msg) => {
-                    self.send(msg);
+                    self.send(msg, None)?;
                 }
                 Err(DBError::ObjNotFound) => {
-                    self.send(UpdateMsg::Delete{key: dep_id.clone()});
-                }
-                Err(DBError::ObjLacksTrait) => {
-                    //Check other update traits
+                    self.send(UpdateMsg::Delete{key: dep_id.clone()}, None)?;
                 }
                 Err(e) => {
                     return Err(e);
@@ -235,13 +247,12 @@ impl OperationManager {
         }
         let msg = obj.update()?;
         self.data.add_obj(event, obj)?;
-        self.send(msg);
-        Ok(())
+        self.send(msg, None)
     }
 
     pub fn delete_obj(&self, event: &UndoEventID, id: &RefID) -> Result<DataObject, DBError> {
         let obj = self.data.delete_obj(event, id)?;
-        self.send(UpdateMsg::Delete{key: *id});
+        self.send(UpdateMsg::Delete{key: *id}, None)?;
         self.update_deps(id)?;
         self.deps.delete_obj(id);
         Ok(obj)
@@ -250,7 +261,7 @@ impl OperationManager {
     pub fn modify_obj(&self, event: &UndoEventID, id: &RefID, mut callback: impl FnMut(&mut DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
         self.data.get_mut_obj(event, id, |mut obj| {
             callback(&mut obj)?;
-            self.send(obj.update()?);
+            self.send(obj.update()?, None)?;
             Ok(())
         })
     }
