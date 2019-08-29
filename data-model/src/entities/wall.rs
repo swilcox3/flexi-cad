@@ -17,17 +17,13 @@ interfaces!(Wall: query_interface::ObjectClone, std::fmt::Debug, Data, ReferTo, 
 
 impl Wall {
     pub fn new(id: RefID, first: Point3f, second: Point3f, width: WorldCoord, height: WorldCoord) -> Wall {
-        let mut data = String::new();
-        for i in 0..100000 {
-            data += &i.to_string();
-        }
         Wall {
             first_pt: UpdatableGeometry::new(RefPoint{pt: first}),
             second_pt: UpdatableGeometry::new(RefPoint{pt: second}),
             width: width,
             height: height,
             openings: Vec::new(),
-            data: data,
+            data: String::new(),
             id: id
         }
     }
@@ -43,7 +39,35 @@ impl Data for Wall {
         self.id = id;
     }
 
-    fn update(&self) -> Result<UpdateMsg, DBError> {
+    fn update(&mut self) -> Result<UpdateMsg, DBError> {
+        for i in 0..10000 {
+            self.data += &i.to_string();
+        }
+        let mut data = MeshData {
+            id: self.get_id().clone(),
+            positions: Vec::with_capacity(24),
+            indices: Vec::with_capacity(36),
+            metadata: Some(json!({
+                "type": "Wall",
+                "Width": self.width,
+                "Height": self.height,
+            }))
+        };
+        let self_length = (self.second_pt.geom.pt - self.first_pt.geom.pt).magnitude();
+        let mut sorted: Vec<PrismOpening> = self.openings.iter().map(|val| {
+            let position = (val.geom.pt_1 - self.first_pt.geom.pt).magnitude();
+            let interp = Interp::new(position / self_length);
+            let length = (val.geom.pt_2 - val.geom.pt_1).magnitude();
+            let height = val.geom.pt_3.z - val.geom.pt_2.z;
+            PrismOpening{interp: interp, height: height, length: length}
+        }).collect();
+        sorted.sort_by(|first, second| first.interp.partial_cmp(&second.interp).unwrap());
+
+        primitives::prism_with_openings(&self.first_pt.geom.pt, &self.second_pt.geom.pt, self.width, self.height, sorted, &mut data);
+        Ok(UpdateMsg::Mesh{data: data})
+    }
+
+    fn get_temp_repr(&self) -> Result<UpdateMsg, DBError> {
         let mut data = MeshData {
             id: self.get_id().clone(),
             positions: Vec::with_capacity(24),

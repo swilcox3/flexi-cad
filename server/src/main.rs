@@ -9,7 +9,6 @@ extern crate fern;
 extern crate crossbeam_channel;
 #[macro_use] extern crate log;
 extern crate structopt;
-#[macro_use] extern crate lazy_static;
 extern crate ccl;
 
 use actix_web::{web, App, HttpServer};

@@ -12,7 +12,7 @@ var pendingReads: Map<String, (val: any) => void> = new Map();
 interface DataObject {
     get(prop: string): string,
     set(prop: string, val: any): string,
-    getUpdateMsg(): any,
+    getTempRepr(): any,
     addObject(filename: string, event: string, connection?: string):undefined
 }
 
@@ -96,7 +96,7 @@ export function takeUndoSnapshot(event: string, id: string)
 
 export function renderTempObject(obj: DataObject) 
 {
-    var msg = obj.getUpdateMsg();
+    var msg = obj.getTempRepr();
     if(msg.Mesh) {
         renderer.renderMesh(msg.Mesh.data, msg.Mesh.data.id)
         return msg.Mesh.data.id
@@ -215,6 +215,7 @@ function waitForAllReads(ids: Array<string>)
 
 export function createObj(event: string, obj: DataObject)
 {
+    console.log(connection)
     obj.addObject(filename, event, connection)
     return waitForChange(obj.get("id"));
 }

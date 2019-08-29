@@ -9,9 +9,6 @@ use ccl::dhashmap::DHashMap;
 use crossbeam_channel::{Receiver};
 use serde::Deserialize;
 
-lazy_static! {
-    static ref UPDATES: DHashMap<PathBuf, Vec<Receiver<UpdateMsg>>> = DHashMap::default();
-}
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 /// How long before lack of client response causes a timeout
@@ -39,7 +36,8 @@ struct MyWebSocket {
     /// Client must send ping at least once per 10 seconds (CLIENT_TIMEOUT),
     /// otherwise we drop connection.
     hb: Instant,
-    id: UserID
+    id: UserID,
+    updates: DHashMap<PathBuf, Receiver<UpdateMsg>>
 }
 
 impl Actor for MyWebSocket {
@@ -84,7 +82,8 @@ impl MyWebSocket {
     fn new(id: UserID) -> Self {
         Self { 
             hb: Instant::now(),
-            id: id
+            id: id,
+            updates: DHashMap::default()
         }
     }
 
@@ -94,12 +93,7 @@ impl MyWebSocket {
                 let (s, r) = crossbeam_channel::unbounded();
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::init_file(path.clone(), self.id.clone(), s);
-                if let Some(mut rcvs) = UPDATES.get_mut(&path) {
-                    rcvs.push(r);
-                }
-                else {
-                    UPDATES.insert(path, vec![r]);
-                }
+                self.updates.insert(path, r);
                 Ok(())
             }
             "begin_undo_event" => {
@@ -272,10 +266,10 @@ impl MyWebSocket {
                 // don't try to send a ping
                 return;
             }
-            if let Some(rcvs) = UPDATES.get(&PathBuf::from("defaultNew.flx")) {
-                for r in &(*rcvs) {
+            for chunk in act.updates.chunks() {
+                for (path, r) in chunk.iter() {
                     for msg in r.try_iter() {
-                        info!("Sending msg: {:?}", msg);
+                        info!("Sending msg: {:?} for file {:?}", msg, path);
                         ctx.text(serde_json::to_string(&msg).unwrap());
                     }
                 }

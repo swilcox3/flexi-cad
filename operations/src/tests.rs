@@ -37,7 +37,11 @@ impl Data for TestObj {
         self.id = id;
     }
 
-    fn update(&self) -> Result<UpdateMsg, DBError> {
+    fn update(&mut self) -> Result<UpdateMsg, DBError> {
+        Ok(UpdateMsg::Other{data: serde_json::to_value(&self).unwrap()})
+    }
+
+    fn get_temp_repr(&self) -> Result<UpdateMsg, DBError> {
         Ok(UpdateMsg::Other{data: serde_json::to_value(&self).unwrap()})
     }
 

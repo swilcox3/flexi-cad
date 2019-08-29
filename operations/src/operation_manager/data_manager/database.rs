@@ -88,6 +88,15 @@ impl FileDatabase {
         Ok(())
     }
 
+    pub fn iterate_all_mut(&self, mut callback: impl FnMut(&mut DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
+        for mut chunk in self.db.chunks_write() {
+            for (_, mut val) in chunk.iter_mut() {
+                callback(&mut val)?;
+            }
+        }
+        Ok(())
+    }
+
     pub fn remove(&self, key: &RefID) -> Result<DataObject, DBError> {
         match self.db.remove(key) {
             Some(val) => {

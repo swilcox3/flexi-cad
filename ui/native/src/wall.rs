@@ -6,6 +6,7 @@ use std::str::FromStr;
 pub fn handle_conn(cx: &mut CallContext<JsWall>, index: i32) -> Option<String> {
     if let Some(conn_arg) = cx.argument_opt(index) {
         if conn_arg.is_a::<JsString>() {
+            println!("made it");
             let connection = conn_arg.downcast::<JsString>().unwrap().value();
             return Some(connection);
         }
@@ -133,11 +134,11 @@ declare_types! {
             }
         }
 
-        method getUpdateMsg(mut cx) {
+        method getTempRepr(mut cx) {
             let this = cx.this();
             let msg = {
                 let guard = cx.lock();
-                let this_msg = this.borrow(&guard).update().unwrap();
+                let this_msg = this.borrow(&guard).get_temp_repr().unwrap();
                 this_msg
             };
             let val = neon_serde::to_value(&mut cx, &msg)?;
@@ -145,6 +146,7 @@ declare_types! {
         }
 
         method addObject(mut cx) {
+            println!("Creating wall");
             let this = cx.this();
             let path = cx.argument::<JsString>(0)?.value();
             let event = cx.argument::<JsString>(1)?.value();

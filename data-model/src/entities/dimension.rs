@@ -32,7 +32,32 @@ impl Data for Dimension{
         self.id = id;
     }
 
-    fn update(&self) -> Result<UpdateMsg, DBError> {
+    fn update(&mut self) -> Result<UpdateMsg, DBError> {
+        let perp = get_perp_2d(&self.first.geom.pt, &self.second.geom.pt);
+        let line_1 = self.first.geom.pt + perp * self.offset; 
+        let line_2 = self.second.geom.pt + perp * self.offset;
+        let text_pos = line_1 + (line_2 - line_1)*0.5;
+        let distance = (line_2 - line_1).magnitude();
+        let text = format!("{:.3}", distance);
+
+        let data = json!({
+            "id": self.get_id().clone(),
+            "first": graphic_space(&self.first.geom.pt),
+            "first_off": graphic_space(&line_1),
+            "second": graphic_space(&self.second.geom.pt),
+            "second_off": graphic_space(&line_2),
+            "text_pos": graphic_space(&text_pos),
+            "text": text,
+            "offset": self.offset,
+            "metadata": {
+                "type": "Dimension",
+                "Offset": self.offset
+            }
+        });
+        Ok(UpdateMsg::Other{data: data})
+    }
+
+    fn get_temp_repr(&self) -> Result<UpdateMsg, DBError> {
         let perp = get_perp_2d(&self.first.geom.pt, &self.second.geom.pt);
         let line_1 = self.first.geom.pt + perp * self.offset; 
         let line_2 = self.second.geom.pt + perp * self.offset;

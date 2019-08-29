@@ -22,6 +22,7 @@ impl OperationManager {
             deps: DependencyManager::new(),
             updates: DHashMap::default(),
         };
+        println!("Adding user {:?}", user);
         ops.updates.insert(user, sender);
         ops
     }
@@ -34,7 +35,7 @@ impl OperationManager {
             updates: DHashMap::default(),
         };
         ops.updates.insert(user.clone(), sender);
-        ops.data.iterate_all(&mut |obj: &DataObject| {
+        ops.data.iterate_all_mut(&mut |obj: &mut DataObject| {
             if let Some(dep_obj) = obj.query_ref::<UpdateFromRefs>() {
                 let refs = dep_obj.get_refs();
                 for ref_opt in refs {
@@ -236,7 +237,7 @@ impl OperationManager {
         output.push_str(&"\n");
     }
 
-    pub fn add_object(&self, event: &UndoEventID, obj: DataObject) -> Result<(), DBError> {
+    pub fn add_object(&self, event: &UndoEventID, mut obj: DataObject) -> Result<(), DBError> {
         if let Some(dep_obj) = obj.query_ref::<UpdateFromRefs>() {
             let refs = dep_obj.get_refs();
             for ref_opt in refs {

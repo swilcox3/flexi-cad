@@ -73,6 +73,10 @@ impl DataManager {
         self.db.iterate_all(callback)
     }
 
+    pub fn iterate_all_mut(&self, callback: impl FnMut(&mut DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
+        self.db.iterate_all_mut(callback)
+    }
+
     pub fn get_mut_obj(&self, event_id: &UndoEventID, key: &RefID, callback: impl FnMut(&mut DataObject)->Result<(), DBError>) -> Result<(), DBError> {
         self.pending.get_mut_obj(&self.db, event_id, key, callback)
     }

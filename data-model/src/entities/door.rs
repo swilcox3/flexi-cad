@@ -32,7 +32,25 @@ impl Data for Door {
         self.id = id;
     }
 
-    fn update(&self) -> Result<UpdateMsg, DBError> {
+    fn update(&mut self) -> Result<UpdateMsg, DBError> {
+        let mut data = MeshData {
+            id: self.get_id().clone(),
+            positions: Vec::with_capacity(24),
+            indices: Vec::with_capacity(36),
+            metadata: Some(json!({
+                "type": "Door",
+                "Width": self.width,
+                "Height": self.height,
+                "Length": self.dir.geom.length
+            }))
+        };
+        let rotated = rotate_point_through_angle_2d(&self.dir.geom.pt_1, &self.dir.geom.pt_2, cgmath::Rad(std::f64::consts::FRAC_PI_4));
+        primitives::rectangular_prism(&self.dir.geom.pt_1, &rotated, self.width, self.height, &mut data);
+        Ok(UpdateMsg::Mesh{data: data})
+    }
+
+
+    fn get_temp_repr(&self) -> Result<UpdateMsg, DBError> {
         let mut data = MeshData {
             id: self.get_id().clone(),
             positions: Vec::with_capacity(24),

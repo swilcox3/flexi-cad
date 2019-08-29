@@ -23,6 +23,7 @@ impl AppState {
 
 pub fn init_file(file: PathBuf, user: UserID, updates: Sender<UpdateMsg>) {
     if let Some(ops) = APP_STATE.files.get(&file) {
+        println!("adding user {:?}", user);
         ops.updates.insert(user, updates);
     }
     else {
@@ -73,6 +74,7 @@ pub fn save_as_file(orig_file: &PathBuf, file_new: PathBuf) -> Result<(), DBErro
 pub fn send_read_result(file: &PathBuf, query_id: QueryID, user: &UserID, data: serde_json::Value) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => {
+            info!("Sending data {:?} to user {:?}", data, user);
             ops.send(UpdateMsg::Read{query_id, user: user.clone(), data}, Some(user))
         }
         None => Err(DBError::FileNotFound)

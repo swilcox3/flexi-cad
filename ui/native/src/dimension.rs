@@ -117,11 +117,11 @@ declare_types! {
             }
         }
 
-        method getUpdateMsg(mut cx) {
+        method getTempRepr(mut cx) {
             let this = cx.this();
             let msg = {
                 let guard = cx.lock();
-                let this_msg = this.borrow(&guard).update().unwrap();
+                let this_msg = this.borrow(&guard).get_temp_repr().unwrap();
                 this_msg
             };
             let val = neon_serde::to_value(&mut cx, &msg)?;
