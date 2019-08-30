@@ -81,9 +81,9 @@ pub fn send_read_result(file: &PathBuf, query_id: QueryID, user: &UserID, data: 
     }
 }
 
-pub fn begin_undo_event(file: &PathBuf, id: &UserID, desc: String) -> Result<UndoEventID, DBError> {
+pub fn begin_undo_event(file: &PathBuf, user_id: &UserID, event_id: UndoEventID, desc: String) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
-        Some(ops) => ops.begin_undo_event(&id, desc),
+        Some(ops) => ops.begin_undo_event(user_id, event_id, desc),
         None => Err(DBError::FileNotFound)
     }
 }

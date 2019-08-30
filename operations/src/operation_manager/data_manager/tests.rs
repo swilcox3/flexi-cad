@@ -10,7 +10,8 @@ lazy_static!{
 #[test]
 fn test_add() {
     let user = RefID::new_v4();
-    let event = DB.begin_undo_event(&user, String::from("add obj")).unwrap();
+    let event = UndoEventID::new_v4();
+    DB.begin_undo_event(&user, event.clone(), String::from("add obj")).unwrap();
     let obj = Box::new(TestObj::new("some data"));
     let id = obj.get_id().clone();
     DB.add_obj(&event, obj).unwrap();
@@ -25,7 +26,8 @@ fn test_add() {
 #[test]
 fn test_delete() {
     let user = RefID::new_v4();
-    let event = DB.begin_undo_event(&user, String::from("add obj")).unwrap();
+    let event = UndoEventID::new_v4();
+    DB.begin_undo_event(&user, event.clone(), String::from("add obj")).unwrap();
     let obj = Box::new(TestObj::new("some data"));
     let id = obj.get_id().clone();
     DB.add_obj(&event, obj).unwrap();
@@ -37,7 +39,8 @@ fn test_delete() {
 #[test]
 fn test_modify() {
     let user = RefID::new_v4();
-    let event = DB.begin_undo_event(&user, String::from("add obj")).unwrap();
+    let event = UndoEventID::new_v4();
+    DB.begin_undo_event(&user, event.clone(), String::from("add obj")).unwrap();
     let obj = Box::new(TestObj::new("some data"));
     let id = obj.get_id().clone();
     DB.add_obj(&event, obj).unwrap();
@@ -56,7 +59,8 @@ fn test_modify() {
 #[test]
 fn test_add_undo() {
     let user = RefID::new_v4();
-    let event = DB.begin_undo_event(&user, String::from("add obj")).unwrap();
+    let event = UndoEventID::new_v4();
+    DB.begin_undo_event(&user, event.clone(), String::from("add obj")).unwrap();
     let obj = Box::new(TestObj::new("some data"));
     let id = obj.get_id().clone();
     DB.add_obj(&event, obj).unwrap();
@@ -68,12 +72,14 @@ fn test_add_undo() {
 #[test]
 fn test_delete_undo() {
     let user = RefID::new_v4();
-    let event = DB.begin_undo_event(&user, String::from("add obj")).unwrap();
+    let event = UndoEventID::new_v4();
+    DB.begin_undo_event(&user, event.clone(), String::from("add obj")).unwrap();
     let obj = Box::new(TestObj::new("some data"));
     let id = obj.get_id().clone();
     DB.add_obj(&event, obj).unwrap();
     DB.end_undo_event(event).unwrap();
-    let event2 = DB.begin_undo_event(&user, String::from("delete obj")).unwrap();
+    let event2 = UndoEventID::new_v4();
+    DB.begin_undo_event(&user, event2.clone(), String::from("delete obj")).unwrap();
     DB.delete_obj(&event2, &id).unwrap();
     DB.end_undo_event(event2).unwrap();
     DB.undo_latest(&user).unwrap();
@@ -87,12 +93,14 @@ fn test_delete_undo() {
 #[test]
 fn test_modify_undo() {
     let user = RefID::new_v4();
-    let event = DB.begin_undo_event(&user, String::from("add obj")).unwrap();
+    let event = UndoEventID::new_v4();
+    DB.begin_undo_event(&user, event.clone(), String::from("add obj")).unwrap();
     let obj = Box::new(TestObj::new("some data"));
     let id = obj.get_id().clone();
     DB.add_obj(&event, obj).unwrap();
     DB.end_undo_event(event).unwrap();
-    let event_2 = DB.begin_undo_event(&user, String::from("modify obj")).unwrap();
+    let event_2 = UndoEventID::new_v4();
+    DB.begin_undo_event(&user, event_2.clone(), String::from("modify obj")).unwrap();
     DB.get_mut_obj(&event_2, &id, |write| {
         write.query_mut::<Store>().unwrap().set_store_data(String::from("new data"));
         Ok(())
@@ -109,12 +117,14 @@ fn test_modify_undo() {
 #[test]
 fn test_modify_redo() {
     let user = RefID::new_v4();
-    let event = DB.begin_undo_event(&user, String::from("add obj")).unwrap();
+    let event = UndoEventID::new_v4();
+    DB.begin_undo_event(&user, event.clone(), String::from("add obj")).unwrap();
     let obj = Box::new(TestObj::new("some data"));
     let id = obj.get_id().clone();
     DB.add_obj(&event, obj).unwrap();
     DB.end_undo_event(event).unwrap();
-    let event_2 = DB.begin_undo_event(&user, String::from("modify obj")).unwrap();
+    let event_2 = UndoEventID::new_v4();
+    DB.begin_undo_event(&user, event_2.clone(), String::from("modify obj")).unwrap();
     DB.get_mut_obj(&event_2, &id, |write| {
         write.query_mut::<Store>().unwrap().set_store_data(String::from("new data"));
         Ok(())
@@ -132,7 +142,8 @@ fn test_modify_redo() {
 #[test]
 fn test_contest() {
     let setup_user = RefID::new_v4();
-    let setup_event = DB.begin_undo_event(&setup_user, String::from("setup")).unwrap();
+    let setup_event = UndoEventID::new_v4();
+    DB.begin_undo_event(&setup_user, setup_event.clone(), String::from("setup")).unwrap();
     let a = Box::new(TestObj::new("A"));
     let a_id = a.get_id().clone();
     DB.add_obj(&setup_event, a).unwrap();
@@ -148,7 +159,8 @@ fn test_contest() {
     });
     let t_2 = std::thread::spawn(move || {
         let user_2 = RefID::new_v4();
-        let event_2 = DB.begin_undo_event(&user_2, String::from("Op 2")).unwrap();
+        let event_2 = UndoEventID::new_v4();
+        DB.begin_undo_event(&user_2, event_2.clone(), String::from("Op 2")).unwrap();
         DB.get_mut_obj(&event_2, &a_clone, |_| {
             std::thread::sleep(std::time::Duration::from_millis(1000));
             Ok(())
@@ -157,7 +169,8 @@ fn test_contest() {
     });
     let t_3 = std::thread::spawn(move || {
         let user_3 = RefID::new_v4();
-        let event_3 = DB.begin_undo_event(&user_3, String::from("Op 3")).unwrap();
+        let event_3 = UndoEventID::new_v4();
+        DB.begin_undo_event(&user_3, event_3.clone(), String::from("Op 3")).unwrap();
         DB.get_mut_obj(&event_3, &a_clone_2, |_| {
             std::thread::sleep(std::time::Duration::from_millis(1000));
             Ok(())

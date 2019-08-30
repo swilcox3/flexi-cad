@@ -34,14 +34,16 @@ fn test_copy_objs() {
             &None
         );
 
-        let event = app_state::begin_undo_event(&file, &user, String::from("add objs")).unwrap();
+        let event = UndoEventID::new_v4();
+        app_state::begin_undo_event(&file, &user, event.clone(), String::from("add objs")).unwrap();
         app_state::add_obj(&file, &event, first).unwrap();
         app_state::add_obj(&file, &event, second).unwrap();
         app_state::end_undo_event(&file, event).unwrap();
         let mut copy_set = HashSet::new();
         copy_set.insert(id_1);
         copy_set.insert(id_2);
-        let event = app_state::begin_undo_event(&file, &user, String::from("copy objs")).unwrap();
+        let event = UndoEventID::new_v4();
+        app_state::begin_undo_event(&file, &user, event.clone(), String::from("copy objs")).unwrap();
         let (_, orig_to_dups) = copy_objs(&file, &event, copy_set).unwrap();
         assert_eq!(orig_to_dups.len(), 2);
         let copy_id_1 = orig_to_dups.get(&id_1).unwrap();
@@ -68,13 +70,14 @@ fn test_join_walls() {
         let first = Box::new(Wall::new(id_1.clone(), Point3f::new(1.0, 2.0, 3.0), Point3f::new(2.0, 2.0, 3.0), 1.0, 1.0));
         let id_2 = RefID::new_v4();
         let second = Box::new(Wall::new(id_2.clone(), Point3f::new(2.0, 3.0, 4.0,), Point3f::new(4.0, 5.0, 6.0), 1.0, 1.0));
-
-        let event = app_state::begin_undo_event(&file, &user, String::from("add objs")).unwrap();
+        let event = UndoEventID::new_v4();
+        app_state::begin_undo_event(&file, &user, event.clone(), String::from("add objs")).unwrap();
         app_state::add_obj(&file, &event, first).unwrap();
         app_state::add_obj(&file, &event, second).unwrap();
         app_state::end_undo_event(&file, event).unwrap();
 
-        let event = app_state::begin_undo_event(&file, &user, String::from("snap objs")).unwrap();
+        let event = UndoEventID::new_v4();
+        app_state::begin_undo_event(&file, &user, event.clone(), String::from("snap objs")).unwrap();
         join_objs(file.clone(), &event, id_1.clone(), id_2.clone(), &RefType::Point, &RefType::Point, &Point3f::new(2.0, 4.0, 3.0)).unwrap();
         empty_receiver(&rcv);
         crate::move_obj(file.clone(), &event, id_1.clone(), &Vector3f::new(0.0, 1.0, 0.0)).unwrap();
@@ -105,12 +108,14 @@ fn test_join_door_and_wall() {
         let id_2 = RefID::new_v4();
         let second = Box::new(Door::new(id_2.clone(), Point3f::new(1.0, 2.0, 3.0), Point3f::new(1.0, 2.5, 3.0), 1.0, 1.0));
 
-        let event = app_state::begin_undo_event(&file, &user, String::from("add objs")).unwrap();
+        let event = UndoEventID::new_v4();
+        app_state::begin_undo_event(&file, &user, event.clone(), String::from("add objs")).unwrap();
         app_state::add_obj(&file, &event, first).unwrap();
         app_state::add_obj(&file, &event, second).unwrap();
         app_state::end_undo_event(&file, event).unwrap();
 
-        let event = app_state::begin_undo_event(&file, &user, String::from("snap objs")).unwrap();
+        let event = UndoEventID::new_v4();
+        app_state::begin_undo_event(&file, &user, event.clone(), String::from("snap objs")).unwrap();
         join_objs(file.clone(), &event, id_1.clone(), id_2.clone(), &RefType::Rect, &RefType::Line, &Point3f::new(0.25, 1.0, 0.0)).unwrap();
         app_state::end_undo_event(&file, event).unwrap();
         empty_receiver(&rcv);
@@ -121,7 +126,8 @@ fn test_join_door_and_wall() {
             assert_eq!(pts[1], RefGeometry::Point{pt: Point3f::new(0.75, 0.0, 0.0)});
             Ok(())
         }).unwrap();
-        let event = app_state::begin_undo_event(&file, &user, String::from("move obj")).unwrap();
+        let event = UndoEventID::new_v4();
+        app_state::begin_undo_event(&file, &user, event.clone(), String::from("move obj")).unwrap();
         crate::move_obj(file.clone(), &event, id_1.clone(), &Vector3f::new(0.0, 1.0, 0.0)).unwrap();
         app_state::end_undo_event(&file, event).unwrap();
         empty_receiver(&rcv);

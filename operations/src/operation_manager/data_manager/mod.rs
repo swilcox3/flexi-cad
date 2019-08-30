@@ -36,8 +36,8 @@ impl DataManager {
         self.db.save(path)
     }
 
-    pub fn begin_undo_event(&self, user: &UserID, desc: String) -> Result<UndoEventID, DBError> {
-        self.pending.begin_event(user, desc)
+    pub fn begin_undo_event(&self, user: &UserID, event_id: UndoEventID, desc: String) -> Result<(), DBError> {
+        self.pending.begin_event(user, event_id, desc)
     }
 
     pub fn end_undo_event(&self, event_id: UndoEventID) -> Result<(), DBError> {

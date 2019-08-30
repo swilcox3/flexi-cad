@@ -161,15 +161,15 @@ fn save_as_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 fn begin_undo_event(mut cx: FunctionContext) -> JsResult<JsString> {
     let path = cx.argument::<JsString>(0)?.value();
     let desc = cx.argument::<JsString>(1)?.value();
-    let query_id = QueryID::new_v4();
+    let event_id = UndoEventID::new_v4();
     match handle_conn(&mut cx, 2) {
-        Some(connection) => send_msg(connection, "begin_undo_event", vec![json!(path), json!(desc), json!(query_id)]),
+        Some(connection) => send_msg(connection, "begin_undo_event", vec![json!(path), json!(event_id), json!(desc)]),
         #[cfg(feature = "kernel")]
-        None => operations_kernel::begin_undo_event(&PathBuf::from(path), &USER, desc, query_id.clone()).unwrap(),
+        None => operations_kernel::begin_undo_event(&PathBuf::from(path), &USER, event_id.clone(), desc).unwrap(),
         #[cfg(not(feature = "kernel"))]
         None => panic("No connection"),
     }
-    Ok(cx.string(format!("{:?}", query_id)))
+    Ok(cx.string(format!("{:?}", event_id)))
 }
 
 fn end_undo_event(mut cx: FunctionContext) -> JsResult<JsUndefined> {

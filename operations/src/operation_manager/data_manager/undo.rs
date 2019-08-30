@@ -26,9 +26,9 @@ pub struct UndoEvent {
 }
 
 impl UndoEvent {
-    fn new(user: UserID, desc: String) -> UndoEvent {
+    fn new(user: UserID, event_id: UndoEventID, desc: String) -> UndoEvent {
         UndoEvent {
-            event_id: RefID::new_v4(),
+            event_id,
             user_id: user,
             changes: Vec::new(),
             timestamp: get_time(),
@@ -113,17 +113,16 @@ impl PendingEvents {
         PendingEvents{ events: DHashMap::default() }
     }
 
-    pub fn begin_event(&self, user: &UserID, desc: String) -> Result<UndoEventID, DBError> {
-        match self.events.get_mut(user) {
+    pub fn begin_event(&self, user: &UserID, event_id: UndoEventID, desc: String) -> Result<(), DBError> {
+        match self.events.get_mut(&event_id) {
             Some(mut event) => {
                 event.nested = event.nested + 1;
-                Ok(event.event_id)
+                Ok(())
             }
             None => {
-                let event = UndoEvent::new(user.clone(), desc);
-                let id = event.event_id.clone();
-                self.events.insert(event.event_id, event);
-                Ok(id)
+                let event = UndoEvent::new(user.clone(), event_id, desc);
+                self.events.insert(event.event_id.clone(), event);
+                Ok(())
             }
         }
     }

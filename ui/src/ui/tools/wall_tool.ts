@@ -22,10 +22,10 @@ export class WallTool {
         return hovered && hovered.metadata.type == "Wall" && hovered.name != this.lastId && hovered.name != this.curTemp.get("id");
     }
 
-    async createWall(picked: BABYLON.Mesh)
+    createWall(picked: BABYLON.Mesh)
     {
         if(!this.undoEventId) {
-            this.undoEventId = await ops.beginUndoEvent("Create Wall")
+            this.undoEventId = ops.beginUndoEvent("Create Wall")
         }
         ops.createObj(this.undoEventId, this.curTemp)
         if(this.lastId) {

@@ -97,10 +97,10 @@ impl MyWebSocket {
                 Ok(())
             }
             "begin_undo_event" => {
-                let query: QueryID = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
-                let desc: String = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let desc: String = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
+                let id: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::begin_undo_event(&path, &self.id, desc, query).map_err(error)
+                operations_kernel::begin_undo_event(&path, &self.id, id, desc).map_err(error)
             }
             "end_undo_event" => {
                 let id: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;

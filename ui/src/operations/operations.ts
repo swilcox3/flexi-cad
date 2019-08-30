@@ -54,8 +54,7 @@ export function saveAsFile(in_file:string)
 
 export function beginUndoEvent(desc: string)
 {
-    const query = kernel.begin_undo_event(filename, desc, connection)
-    return waitForRead(query)
+    return kernel.begin_undo_event(filename, desc, connection)
 }
 
 export function endUndoEvent(event: string)

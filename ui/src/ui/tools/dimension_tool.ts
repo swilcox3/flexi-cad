@@ -20,10 +20,10 @@ export class DimensionTool {
         return hovered && await ops.canReferTo(hovered.name);
     }
 
-    async createDimension(pt: math.Point3d, picked: BABYLON.Mesh)
+    createDimension(pt: math.Point3d, picked: BABYLON.Mesh)
     {
         if(!this.undoEventId) {
-            this.undoEventId = await ops.beginUndoEvent("Create Dimension")
+            this.undoEventId = ops.beginUndoEvent("Create Dimension")
         }
         ops.createObj(this.undoEventId, this.curTemp)
         if(this.canAttach(picked)) {

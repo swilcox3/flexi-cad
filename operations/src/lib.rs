@@ -31,13 +31,8 @@ use prelude::*;
 ///This is the only value that can be returned from a library interface.
 type LibResult = Result<(), DBError>;
 
-pub use app_state::{open_file, init_file, save_file, save_as_file, end_undo_event, undo_latest, redo_latest, suspend_event, resume_event,
+pub use app_state::{open_file, init_file, save_file, save_as_file, begin_undo_event, end_undo_event, undo_latest, redo_latest, suspend_event, resume_event,
     cancel_event, take_undo_snapshot, add_obj, copy_obj};
-
-pub fn begin_undo_event(file: &PathBuf, user_id: &UserID, desc: String, query_id: QueryID) -> LibResult {
-    let undo_id = app_state::begin_undo_event(file, user_id, desc)?;
-    app_state::send_read_result(file, query_id, user_id, json!(undo_id))
-} 
 
 pub fn get_obj(file: &PathBuf, obj_id: &RefID, query_id: QueryID, user_id: &UserID) -> LibResult {
     app_state::get_obj(file, obj_id, |obj| {
@@ -129,7 +124,8 @@ pub fn demo(file: &PathBuf, user: &UserID, position: &Point3f) -> Result<(), DBE
     let id_3 = wall_3.get_id().clone();
     let wall_4 = Wall::new(RefID::new_v4(), position_4.clone(), position.clone(), width, height);
     let id_4 = wall_4.get_id().clone();
-    let event = app_state::begin_undo_event(file, &user, String::from("Demo"))?;
+    let event = UndoEventID::new_v4();
+    app_state::begin_undo_event(file, &user, event.clone(), String::from("Demo"))?;
     app_state::add_obj(file, &event, Box::new(wall_1))?;
     app_state::add_obj(file, &event, Box::new(wall_2))?;
     app_state::add_obj(file, &event, Box::new(wall_3))?;

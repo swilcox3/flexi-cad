@@ -16,7 +16,8 @@ fn test_setup(cb: impl Fn(&OperationManager, Receiver<UpdateMsg>)) {
 #[test]
 fn test_dep_update() {
     test_setup( |ops, _| {
-        let event = ops.begin_undo_event(&USER, String::from("dep_update")).unwrap();
+        let event = UndoEventID::new_v4();
+        ops.begin_undo_event(&USER, event.clone(), String::from("dep_update")).unwrap();
         let mut obj_1 = TestObj::new("some stuff");
         let mut obj_2 = TestObj::new("other stuff");
         let id_1 = obj_1.get_id().clone();
@@ -55,7 +56,8 @@ fn test_dep_update() {
 #[test]
 fn test_dep_undo() {
     test_setup(|ops, _| {
-        let event = ops.begin_undo_event(&USER, String::from("dep_undo")).unwrap();
+        let event = UndoEventID::new_v4();
+        ops.begin_undo_event(&USER, event.clone(), String::from("dep_undo")).unwrap();
         let mut obj_1 = TestObj::new("some stuff");
         let mut obj_2 = TestObj::new("other stuff");
         let id_1 = obj_1.get_id().clone();
@@ -67,7 +69,8 @@ fn test_dep_undo() {
         ops.add_object(&event, Box::new(obj_1)).unwrap();
         ops.add_object(&event, Box::new(obj_2)).unwrap();
         ops.end_undo_event(event).unwrap();
-        let event = ops.begin_undo_event(&USER, String::from("dep_undo")).unwrap();
+        let event = UndoEventID::new_v4();
+        ops.begin_undo_event(&USER, event.clone(), String::from("dep_undo")).unwrap();
         ops.modify_obj(&event, &id_1, &mut |write_1: &mut DataObject| {
             let point_ref = write_1.query_mut::<Position>().unwrap();
             point_ref.move_obj(&Vector3f::new(3.0, 2.0, 1.0));
@@ -92,7 +95,8 @@ fn test_dep_undo() {
 #[test]
 fn test_dep_redo() {
     test_setup(|ops, _| {
-        let event = ops.begin_undo_event(&USER, String::from("dep_undo")).unwrap();
+        let event = UndoEventID::new_v4();
+        ops.begin_undo_event(&USER, event.clone(), String::from("dep_undo")).unwrap();
         let mut obj_1 = TestObj::new("some stuff");
         let mut obj_2 = TestObj::new("other stuff");
         let id_1 = obj_1.get_id().clone();
@@ -125,7 +129,8 @@ fn test_dep_redo() {
 #[test]
 fn test_copy() {
     test_setup(|ops, _| {
-        let event = ops.begin_undo_event(&USER, String::from("copy")).unwrap();
+        let event = UndoEventID::new_v4();
+        ops.begin_undo_event(&USER, event.clone(), String::from("copy")).unwrap();
         let mut obj_1 = Box::new(TestObj::new("some stuff"));
         let id_1 = obj_1.get_id().clone();
         obj_1.move_obj(&Vector3f::new(1.0, 2.0, 3.0));

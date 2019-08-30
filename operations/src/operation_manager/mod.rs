@@ -73,8 +73,8 @@ impl OperationManager {
         self.data.save(path)
     }
 
-    pub fn begin_undo_event(&self, user_id: &UserID, desc: String) -> Result<UndoEventID, DBError> {
-        self.data.begin_undo_event(user_id, desc)
+    pub fn begin_undo_event(&self, user_id: &UserID, event_id: UndoEventID, desc: String) -> Result<(), DBError> {
+        self.data.begin_undo_event(user_id, event_id, desc)
     }
 
     pub fn end_undo_event(&self, event: UndoEventID) -> Result<(), DBError> {
