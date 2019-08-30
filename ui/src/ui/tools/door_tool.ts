@@ -27,9 +27,11 @@ export class DoorTool {
         if(!this.undoEventId) {
             this.undoEventId = ops.beginUndoEvent("Create Door")
         }
-        ops.createObj(this.undoEventId, this.curTemp)
+        var door = new kernel.Door(this.curTemp.get("first"), this.curTemp.get("second"), this.width, this.height)
+        ops.deleteTempObject(this.curTemp.get("id"))
+        ops.createObj(this.undoEventId, door)
         if(this.canJoinToWall(picked)) {
-            ops.snapToLine(this.undoEventId, picked.name, this.curTemp.get("id"), pt)
+            ops.snapToLine(this.undoEventId, picked.name, door.get("id"), pt)
         }
     }
 
@@ -85,10 +87,10 @@ export class DoorTool {
         }
     }
 
-    async finish(pt: math.Point3d, picked: BABYLON.Mesh)
+    finish(pt: math.Point3d, picked: BABYLON.Mesh)
     {
         if(this.curTemp) {
-            await this.createDoor(new math.Point3d(pt.x, pt.y, 0), picked);
+            this.createDoor(new math.Point3d(pt.x, pt.y, 0), picked);
         }
         if(this.undoEventId) {
             ops.endUndoEvent(this.undoEventId)

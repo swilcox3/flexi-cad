@@ -97,12 +97,10 @@ export function renderTempObject(obj: DataObject)
 {
     var msg = obj.getTempRepr();
     if(msg.Mesh) {
-        renderer.renderMesh(msg.Mesh.data, msg.Mesh.data.id)
-        return msg.Mesh.data.id
+        renderer.renderMesh(msg.Mesh.data, msg.Mesh.data.id, true)
     }
     if(msg.Other) {
-        renderer.renderObject(msg.Other.data, msg.Other.data.id)
-        return msg.Other.data.id
+        renderer.renderObject(msg.Other.data, msg.Other.data.id, true)
     }
 }
 

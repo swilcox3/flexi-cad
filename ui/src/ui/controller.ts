@@ -88,35 +88,39 @@ class SelectionController
 
 class MoveObjectsController
 {
-    private moveEvent: string;
+    private delta: math.Point3d;
+    private objs: Array<string>;
     constructor() {
-        this.moveEvent = '';
+        this.delta = null;
+        this.objs = null;
     }
 
     move(ev: any, objs: Set<BABYLON.Mesh>)
     {
-        if(!this.moveEvent) {
-            this.moveEvent = ops.beginUndoEvent("Move objects");
+        if(this.delta == null) {
+            this.objs = []
             objs.forEach((mesh) => {
-                ops.takeUndoSnapshot(this.moveEvent, mesh.name)
+                this.objs.push(mesh.name)
             })
-            ops.suspendEvent(this.moveEvent)
+            this.delta = math.transformGraphicToModelCoords(ev.delta)
         }
-        var modelDelta = math.transformGraphicToModelCoords(ev.delta) 
-        let names: Array<string> = []
-        objs.forEach((mesh) => {
-            names.push(mesh.name)
-        })
-        ops.moveObjs(this.moveEvent, names, modelDelta)
+        else {
+            var delta = math.transformGraphicToModelCoords(ev.delta)
+            this.delta.x = this.delta.x + delta.x;
+            this.delta.y = this.delta.y + delta.y;
+            this.delta.z = this.delta.z + delta.z;
+        }
     }
 
     endMove(ev: any)
     {
-        if(this.moveEvent) {
-            ops.resumeEvent(this.moveEvent)
-            ops.endUndoEvent(this.moveEvent)
+        if(this.delta && this.objs) {
+            const event = ops.beginUndoEvent("Move objs");
+            ops.moveObjs(event, this.objs, this.delta);
+            ops.endUndoEvent(event)
+            this.delta = null;
+            this.objs = null;
         }
-        this.moveEvent = '';
     }
 }
 

@@ -102,11 +102,11 @@ export class Renderer {
     }
 
     applyNewMeshProps(mesh: BABYLON.Mesh, temp?:boolean) {
-        var objMaterial = new BABYLON.StandardMaterial("obj", this._scene);
-        objMaterial.diffuseColor = BABYLON.Color3.Gray();
-        objMaterial.backFaceCulling = false;
-        mesh.material = objMaterial;
         if(!temp) {
+            var objMaterial = new BABYLON.StandardMaterial("obj", this._scene);
+            objMaterial.diffuseColor = BABYLON.Color3.Gray();
+            objMaterial.backFaceCulling = false;
+            mesh.material = objMaterial;
             var pointerDragBehavior = new BABYLON.PointerDragBehavior({dragPlaneNormal: new BABYLON.Vector3(0,1,0)});
             pointerDragBehavior.useObjectOrienationForDragging = false;
             var uiSingleton = new uiController().getInstance();
@@ -115,11 +115,21 @@ export class Renderer {
             })
             pointerDragBehavior.onDragEndObservable.add((ev:any)=>{
                 uiSingleton.objDragEnd(ev)
+                if(mesh.metadata) {
+                    mesh.metadata.moved = true;
+                }
+                else {
+                    mesh.metadata = {"moved": true};
+                }
             })
-            pointerDragBehavior.moveAttached = false
             mesh.addBehavior(pointerDragBehavior)
         }
-
+        else {
+            var objMaterial = new BABYLON.StandardMaterial("temp", this._scene);
+            objMaterial.backFaceCulling = false;
+            objMaterial.wireframe = true;
+            mesh.material = objMaterial;
+        }
     }
 
     renderMesh(triangles: any, id: string, temp?:boolean) {
@@ -128,11 +138,13 @@ export class Renderer {
             mesh = new BABYLON.Mesh(id, this._scene);
             this.applyNewMeshProps(mesh, temp);
         }
+        if(!mesh.metadata || (mesh.metadata && !mesh.metadata.moved)) {
+            var vertexData = new BABYLON.VertexData();
+            vertexData.positions = triangles.positions;
+            vertexData.indices = triangles.indices;
+            vertexData.applyToMesh(mesh);
+        }
         mesh.metadata = triangles.metadata;
-        var vertexData = new BABYLON.VertexData();
-        vertexData.positions = triangles.positions;
-        vertexData.indices = triangles.indices;
-        vertexData.applyToMesh(mesh);
     }
 
     renderObject(json: any, id: string, temp?:boolean) {

@@ -27,13 +27,16 @@ export class WallTool {
         if(!this.undoEventId) {
             this.undoEventId = ops.beginUndoEvent("Create Wall")
         }
-        ops.createObj(this.undoEventId, this.curTemp)
+        var wall = new kernel.Wall(this.curTemp.get("first"), this.curTemp.get("second"), this.width, this.height);
+        ops.deleteTempObject(this.curTemp.get("id"));
+        ops.createObj(this.undoEventId, wall)
         if(this.lastId) {
-            ops.joinAtPoints(this.undoEventId, this.lastId, this.curTemp.get("id"), this.curTemp.get("first"))
+            ops.joinAtPoints(this.undoEventId, this.lastId, wall.get("id"), wall.get("first"))
         }
         if(this.canJoinToWall(picked)) {
-            ops.joinAtPoints(this.undoEventId, picked.name, this.curTemp.get("id"), this.curTemp.get("second"));
+            ops.joinAtPoints(this.undoEventId, picked.name, wall.get("id"), wall.get("second"));
         }
+        this.lastId = wall.get("id");
     }
 
     onMouseDown(pt: math.Point3d, picked: BABYLON.Mesh)
@@ -48,7 +51,6 @@ export class WallTool {
         else
         {
             this.createWall(picked);
-            this.lastId = this.curTemp.get("id");
             var first = new math.Point3d(pt.x, pt.y, 0)
             var second = new math.Point3d(pt.x + .1, pt.y + .1, 0)
             this.curTemp = new kernel.Wall(first, second, this.width, this.height);
@@ -81,9 +83,9 @@ export class WallTool {
         }
     }
 
-    async finish(pt: math.Point3d, picked: BABYLON.Mesh)
+    finish(pt: math.Point3d, picked: BABYLON.Mesh)
     {
-        await this.createWall(picked);
+        this.createWall(picked);
         if(this.undoEventId) {
             ops.endUndoEvent(this.undoEventId)
         }

@@ -20,15 +20,17 @@ export class DimensionTool {
         return hovered && await ops.canReferTo(hovered.name);
     }
 
-    createDimension(pt: math.Point3d, picked: BABYLON.Mesh)
+    async createDimension(pt: math.Point3d, picked: BABYLON.Mesh)
     {
         if(!this.undoEventId) {
             this.undoEventId = ops.beginUndoEvent("Create Dimension")
         }
-        ops.createObj(this.undoEventId, this.curTemp)
-        if(this.canAttach(picked)) {
-            ops.snapToPoint(this.undoEventId, this.curTemp.get("id"), picked.name, this.curTemp.get("first"))
-            ops.snapToPoint(this.undoEventId, this.curTemp.get("id"), picked.name, pt)
+        var dim = new kernel.Dimension(this.curTemp.get("first"), this.curTemp.get("second"), this.offset)
+        ops.deleteTempObject(this.curTemp.get("id"))
+        ops.createObj(this.undoEventId, dim)
+        if(await this.canAttach(picked)) {
+            ops.snapToPoint(this.undoEventId, dim.get("id"), picked.name, dim.get("first"))
+            ops.snapToPoint(this.undoEventId, dim.get("id"), picked.name, pt)
         }
     }
 
