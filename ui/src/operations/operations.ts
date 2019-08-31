@@ -9,11 +9,12 @@ var connection: string = null;
 var pendingChanges: Map<String, Array<(obj: BABYLON.Mesh) => void>> = new Map();
 var pendingReads: Map<String, (val: any) => void> = new Map();
 
-interface DataObject {
+export interface DataObject {
     get(prop: string): string,
     set(prop: string, val: any): string,
     getTempRepr(): any,
     addObject(filename: string, event: string, connection?: string):undefined
+    moveObj(delta: math.Point3d): undefined
 }
 
 function initRenderer(canvas: HTMLCanvasElement)
@@ -297,4 +298,15 @@ export async function demo_100(position: math.Point3d)
 {
     console.log(connection)
     await kernel.demo_100(filename, position, connection);
+}
+
+export function createDataObjectFromJSON(data: any) 
+{
+    switch (data.type)
+    {
+        case "Wall":
+            return new kernel.Wall(data.obj.first_pt.geom.pt, data.obj.second_pt.geom.pt, data.obj.width, data.obj.height)
+        case "Door":
+            return new kernel.Door(data.obj.first_pt.geom.pt_1, data.obj.geom.pt_2, data.obj.width, data.obj.height)
+    }
 }

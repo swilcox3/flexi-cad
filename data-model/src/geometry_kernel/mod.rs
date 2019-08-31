@@ -243,7 +243,7 @@ pub struct MeshData {
     pub id: RefID,
     pub positions: Vec<WorldCoord>,
     pub indices: Vec<u64>,
-    pub metadata: Option<serde_json::Value>,
+    pub metadata: Option<serde_json::Value>
 }
 
 impl MeshData {

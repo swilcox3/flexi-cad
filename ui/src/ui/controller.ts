@@ -89,18 +89,20 @@ class SelectionController
 class MoveObjectsController
 {
     private delta: math.Point3d;
-    private objs: Array<string>;
+    private real_to_temp_objs: Map<string, ops.DataObject>;
     constructor() {
         this.delta = null;
-        this.objs = null;
+        this.real_to_temp_objs = null;
     }
 
     move(ev: any, objs: Set<BABYLON.Mesh>)
     {
         if(this.delta == null) {
-            this.objs = []
+            this.real_to_temp_objs = new Map();
             objs.forEach((mesh) => {
-                this.objs.push(mesh.name)
+                var temp = ops.createDataObjectFromJSON(mesh.metadata);
+                ops.renderTempObject(temp);
+                this.real_to_temp_objs.set(mesh.name, temp);
             })
             this.delta = math.transformGraphicToModelCoords(ev.delta)
         }
@@ -109,17 +111,25 @@ class MoveObjectsController
             this.delta.x = this.delta.x + delta.x;
             this.delta.y = this.delta.y + delta.y;
             this.delta.z = this.delta.z + delta.z;
+            objs.forEach((mesh) => {
+                var temp = this.real_to_temp_objs.get(mesh.name);
+                temp.moveObj(delta)
+                ops.renderTempObject(temp)
+            })
         }
     }
 
     endMove(ev: any)
     {
-        if(this.delta && this.objs) {
+        if(this.delta && this.real_to_temp_objs) {
             const event = ops.beginUndoEvent("Move objs");
-            ops.moveObjs(event, this.objs, this.delta);
+            ops.moveObjs(event, Array.from(this.real_to_temp_objs.keys()), this.delta);
             ops.endUndoEvent(event)
             this.delta = null;
-            this.objs = null;
+            this.real_to_temp_objs.forEach((temp) => {
+                ops.deleteTempObject(temp.get("id"))
+            })
+            this.real_to_temp_objs = null;
         }
     }
 }

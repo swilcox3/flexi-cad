@@ -9,11 +9,12 @@ pub struct Wall {
     pub width: WorldCoord,
     pub height: WorldCoord,
     openings: Vec<UpdatableGeometry<RefRect>>,
+    #[serde(skip_serializing)]
     data: String,
     id: RefID
 }
 
-interfaces!(Wall: query_interface::ObjectClone, std::fmt::Debug, Data, ReferTo, Position, UpdateFromRefs);
+interfaces!(Wall: dyn query_interface::ObjectClone, dyn std::fmt::Debug, dyn Data, dyn ReferTo, dyn Position, dyn UpdateFromRefs);
 
 impl Wall {
     pub fn new(id: RefID, first: Point3f, second: Point3f, width: WorldCoord, height: WorldCoord) -> Wall {
@@ -40,18 +41,16 @@ impl Data for Wall {
     }
 
     fn update(&mut self) -> Result<UpdateMsg, DBError> {
-        for i in 0..10000 {
-            self.data += &i.to_string();
+        if self.data.len() == 0 {
+            for i in 0..10000 {
+                self.data += &i.to_string();
+            }
         }
         let mut data = MeshData {
             id: self.get_id().clone(),
             positions: Vec::with_capacity(24),
             indices: Vec::with_capacity(36),
-            metadata: Some(json!({
-                "type": "Wall",
-                "Width": self.width,
-                "Height": self.height,
-            }))
+            metadata: Some(to_json("Wall", &self))
         };
         let self_length = (self.second_pt.geom.pt - self.first_pt.geom.pt).magnitude();
         let mut sorted: Vec<PrismOpening> = self.openings.iter().map(|val| {
@@ -72,11 +71,7 @@ impl Data for Wall {
             id: self.get_id().clone(),
             positions: Vec::with_capacity(24),
             indices: Vec::with_capacity(36),
-            metadata: Some(json!({
-                "type": "Wall",
-                "Width": self.width,
-                "Height": self.height,
-            }))
+            metadata: None
         };
         let self_length = (self.second_pt.geom.pt - self.first_pt.geom.pt).magnitude();
         let mut sorted: Vec<PrismOpening> = self.openings.iter().map(|val| {

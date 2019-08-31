@@ -109,12 +109,12 @@ export default class GUI
         var props: any = {};
         objs.forEach((obj)=> {
             ids.push(obj.name)
-            for (var property in obj.metadata) {
-                if(obj.metadata.hasOwnProperty(property) && property !== "type") {
+            for (var property in obj.metadata.obj) {
+                if(obj.metadata.obj.hasOwnProperty(property)) {
                     if(props[property] === undefined) {
-                        props[property] = obj.metadata[property];
+                        props[property] = obj.metadata.obj[property];
                     }
-                    else if (props[property] !== null && props[property] !== obj.metadata[property]) {
+                    else if (props[property] !== null && props[property] !== obj.metadata.obj[property]) {
                         props[property] = null;
                     }
                 }

@@ -19,7 +19,7 @@ export class DoorTool {
     }
 
     canJoinToWall(hovered: BABYLON.Mesh) {
-        return hovered && hovered.metadata.type == "Wall";
+        return hovered && hovered.metadata && hovered.metadata.type == "Wall";
     }
 
     createDoor(pt: math.Point3d, picked: BABYLON.Mesh)

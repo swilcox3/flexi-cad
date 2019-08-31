@@ -146,7 +146,6 @@ declare_types! {
         }
 
         method addObject(mut cx) {
-            println!("Creating wall");
             let this = cx.this();
             let path = cx.argument::<JsString>(0)?.value();
             let event = cx.argument::<JsString>(1)?.value();
@@ -160,6 +159,18 @@ declare_types! {
                     #[cfg(not(feature = "kernel"))]
                     None => panic("No connection"),
                 }
+            }
+            Ok(cx.undefined().upcast())
+        }
+
+        method moveObj(mut cx) {
+            let mut this = cx.this();
+            let arg_0 = cx.argument::<JsValue>(0)?;
+            let delta = neon_serde::from_value(&mut cx, arg_0)?;
+            {
+                let guard = cx.lock();
+                let mut obj = this.borrow_mut(&guard).clone();
+                obj.move_obj(&delta);
             }
             Ok(cx.undefined().upcast())
         }

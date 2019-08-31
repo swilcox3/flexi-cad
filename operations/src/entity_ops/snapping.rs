@@ -3,7 +3,7 @@ use crate::prelude::*;
 fn get_result(file: &PathBuf, obj: &RefID, index: ResultInd) -> Result<Option<RefGeometry>, DBError> {
     let mut res_opt = None;
     app_state::get_obj(file, obj, |read| {
-        match read.query_ref::<ReferTo>() {
+        match read.query_ref::<dyn ReferTo>() {
             Some(refer) => {
                 res_opt = refer.get_result(index);
                 Ok(())
@@ -17,7 +17,7 @@ fn get_result(file: &PathBuf, obj: &RefID, index: ResultInd) -> Result<Option<Re
 pub fn can_refer_to(file: &PathBuf, obj: &RefID) -> Result<bool, DBError> {
     let mut result = false;
     app_state::get_obj(file, obj, |refer_obj| {
-        if let Some(_) = refer_obj.query_ref::<ReferTo>() {
+        if let Some(_) = refer_obj.query_ref::<dyn ReferTo>() {
             result = true;
         }
         Ok(())
@@ -28,7 +28,7 @@ pub fn can_refer_to(file: &PathBuf, obj: &RefID) -> Result<bool, DBError> {
 pub fn get_closest_result(file: &PathBuf, obj: &RefID, only_match: &RefType, guess: &Point3f) -> Result<Option<(Reference, RefGeometry)>, DBError> {
     let mut result = None;
     app_state::get_obj(file, obj, |refer_obj| {
-        match refer_obj.query_ref::<ReferTo>() {
+        match refer_obj.query_ref::<dyn ReferTo>() {
             Some(joinable) => {
                 let results = joinable.get_all_results();
                 let mut dist = std::f64::MAX;
@@ -55,7 +55,7 @@ pub fn get_closest_result(file: &PathBuf, obj: &RefID, only_match: &RefType, gue
 fn get_closest_ref(file: &PathBuf, obj: &RefID, ref_obj: &RefID, only_match: &RefType, guess: &Point3f) -> Result<(Option<ReferInd>), DBError> {
     let mut refer_ind = None;
     app_state::get_obj(file, obj, |refer_obj| {
-        match refer_obj.query_ref::<UpdateFromRefs>() {
+        match refer_obj.query_ref::<dyn UpdateFromRefs>() {
             Some(joinable) => {
                 let refs = joinable.get_refs();
                 let mut dist = std::f64::MAX;

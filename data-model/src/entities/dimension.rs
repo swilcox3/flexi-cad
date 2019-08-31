@@ -20,7 +20,7 @@ impl Dimension {
     }
 }
 
-interfaces!(Dimension: query_interface::ObjectClone, std::fmt::Debug, Data, Position, UpdateFromRefs);
+interfaces!(Dimension: dyn query_interface::ObjectClone, dyn std::fmt::Debug, dyn Data, dyn Position, dyn UpdateFromRefs);
 
 #[typetag::serde]
 impl Data for Dimension{

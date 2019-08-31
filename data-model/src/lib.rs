@@ -52,6 +52,13 @@ pub struct CmdMsg {
     pub params: Vec<serde_json::Value>
 }
 
+pub fn to_json<T : Serialize>(type_label: &str, obj: &T) -> serde_json::Value {
+    json!({
+        "type": type_label,
+        "obj": obj
+    })
+}
+
 #[typetag::serde]
 pub trait Data : Object + Send + Sync {
     fn get_id(&self) -> &RefID;
@@ -62,7 +69,7 @@ pub trait Data : Object + Send + Sync {
     //Only use this if you know exactly what you're doing.
     fn set_id(&mut self, id: RefID);
 }
-mopo!(Data);
+mopo!(dyn Data);
 
 pub type DataObject = Box<dyn Data>;
 pub type RefID = Uuid;

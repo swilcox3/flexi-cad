@@ -36,7 +36,7 @@ impl OperationManager {
         };
         ops.updates.insert(user.clone(), sender);
         ops.data.iterate_all_mut(&mut |obj: &mut DataObject| {
-            if let Some(dep_obj) = obj.query_ref::<UpdateFromRefs>() {
+            if let Some(dep_obj) = obj.query_ref::<dyn UpdateFromRefs>() {
                 let refs = dep_obj.get_refs();
                 for ref_opt in refs {
                     if let Some(refer) = ref_opt {
@@ -143,7 +143,7 @@ impl OperationManager {
             Some(refer) => {
                 let mut result = None;
                 match self.get_obj(&refer.id, |obj| {
-                    match obj.query_ref::<ReferTo>() {
+                    match obj.query_ref::<dyn ReferTo>() {
                         Some(update_from) => {
                             result = update_from.get_result(refer.index);
                             Ok(())
@@ -162,7 +162,7 @@ impl OperationManager {
     fn update_from_refs(&self, obj_id: &RefID) -> Result<UpdateMsg, DBError> {
         let mut refs = Vec::new();
         self.get_obj(obj_id, &mut |obj: &DataObject| {
-            if let Some(updatable) = obj.query_ref::<UpdateFromRefs>() {
+            if let Some(updatable) = obj.query_ref::<dyn UpdateFromRefs>() {
                 refs = updatable.get_refs();
             }
             Ok(())
@@ -173,7 +173,7 @@ impl OperationManager {
         }
         let mut msg = UpdateMsg::Empty;
         self.data.get_mut_obj_no_undo(obj_id, |obj| {
-            match obj.query_mut::<UpdateFromRefs>() {
+            match obj.query_mut::<dyn UpdateFromRefs>() {
                 Some(updatable) => {
                     updatable.update_from_refs(&results);
                     msg = obj.update()?;
@@ -222,7 +222,7 @@ impl OperationManager {
 
     pub fn copy_obj(&self, event: &UndoEventID, id: &RefID) -> Result<RefID, DBError> {
         let mut copy = self.data.duplicate_obj(id)?;
-        if let Some(updatable) = copy.query_mut::<UpdateFromRefs>() {
+        if let Some(updatable) = copy.query_mut::<dyn UpdateFromRefs>() {
             updatable.clear_refs();
         }
         let copy_id = copy.get_id().clone();
@@ -238,7 +238,7 @@ impl OperationManager {
     }
 
     pub fn add_object(&self, event: &UndoEventID, mut obj: DataObject) -> Result<(), DBError> {
-        if let Some(dep_obj) = obj.query_ref::<UpdateFromRefs>() {
+        if let Some(dep_obj) = obj.query_ref::<dyn UpdateFromRefs>() {
             let refs = dep_obj.get_refs();
             for ref_opt in refs {
                 if let Some(refer) = ref_opt {

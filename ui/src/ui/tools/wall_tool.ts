@@ -19,7 +19,7 @@ export class WallTool {
     }
 
     canJoinToWall(hovered: BABYLON.Mesh) {
-        return hovered && hovered.metadata.type == "Wall" && hovered.name != this.lastId && hovered.name != this.curTemp.get("id");
+        return hovered && hovered.metadata && hovered.metadata.type == "Wall" && hovered.name != this.lastId && hovered.name != this.curTemp.get("id");
     }
 
     createWall(picked: BABYLON.Mesh)

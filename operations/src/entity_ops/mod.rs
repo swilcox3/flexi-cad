@@ -7,7 +7,7 @@ use crate::prelude::*;
 
 pub fn move_obj(file: &PathBuf, event: &UndoEventID, id: &RefID, delta: &Vector3f) -> Result<(), DBError> {
     app_state::modify_obj(file, event, id, |obj| {
-        match obj.query_mut::<Position>() {
+        match obj.query_mut::<dyn Position>() {
             Some(movable) => {
                 movable.move_obj(delta);
                 Ok(())
@@ -47,12 +47,12 @@ pub fn copy_objs(file: &PathBuf, event: &UndoEventID, ids: HashSet<RefID>) -> Re
     for id in ids {
         let mut refs_to_set = Vec::new();
         app_state::get_obj(&file, &id, |obj| {
-            if let Some(has_ref) = obj.query_ref::<UpdateFromRefs>() {
+            if let Some(has_ref) = obj.query_ref::<dyn UpdateFromRefs>() {
                 let mut index = 0;
                 for ref_opt in has_ref.get_refs() {
                     if let Some(this_ref) = ref_opt {
                         if let Some(ref_copy_id) = orig_to_copy.get(&this_ref.id) {
-                            if let Some(has_ref_res) = obj.query_ref::<ReferTo>() {
+                            if let Some(has_ref_res) = obj.query_ref::<dyn ReferTo>() {
                                 if let Some(res) = has_ref_res.get_result(this_ref.index) {
                                     let ref_index = ReferInd{index: index};
                                     let copy_ref = Reference {
@@ -72,7 +72,7 @@ pub fn copy_objs(file: &PathBuf, event: &UndoEventID, ids: HashSet<RefID>) -> Re
         if refs_to_set.len() > 0 {
             if let Some(copy_id) = orig_to_copy.get(&id) {
                 app_state::modify_obj(&file, &event, copy_id, |obj| {
-                    if let Some(has_ref) = obj.query_mut::<UpdateFromRefs>() {
+                    if let Some(has_ref) = obj.query_mut::<dyn UpdateFromRefs>() {
                         for (index, res, ref_to_set) in &refs_to_set {
                             app_state::add_dep(&file, &ref_to_set.id, copy_id.clone())?;
                             has_ref.set_ref(*index, res, ref_to_set.clone(), &None);

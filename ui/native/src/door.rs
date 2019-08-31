@@ -173,5 +173,17 @@ declare_types! {
             }
             Ok(cx.undefined().upcast())
         }
+
+        method moveObj(mut cx) {
+            let mut this = cx.this();
+            let arg_0 = cx.argument::<JsValue>(0)?;
+            let delta = neon_serde::from_value(&mut cx, arg_0)?;
+            {
+                let guard = cx.lock();
+                let mut obj = this.borrow_mut(&guard).clone();
+                obj.move_obj(&delta);
+            }
+            Ok(cx.undefined().upcast())
+        }
     }
 }
