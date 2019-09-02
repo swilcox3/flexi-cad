@@ -114,6 +114,7 @@ class MoveObjectsController
             objs.forEach((mesh) => {
                 var temp = this.real_to_temp_objs.get(mesh.name);
                 temp.moveObj(delta)
+                //this.real_to_temp_objs.set(mesh.name, temp)
                 ops.renderTempObject(temp)
             })
         }

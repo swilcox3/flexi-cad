@@ -6,7 +6,6 @@ use std::str::FromStr;
 pub fn handle_conn(cx: &mut CallContext<JsWall>, index: i32) -> Option<String> {
     if let Some(conn_arg) = cx.argument_opt(index) {
         if conn_arg.is_a::<JsString>() {
-            println!("made it");
             let connection = conn_arg.downcast::<JsString>().unwrap().value();
             return Some(connection);
         }
@@ -169,8 +168,7 @@ declare_types! {
             let delta = neon_serde::from_value(&mut cx, arg_0)?;
             {
                 let guard = cx.lock();
-                let mut obj = this.borrow_mut(&guard).clone();
-                obj.move_obj(&delta);
+                this.borrow_mut(&guard).move_obj(&delta);
             }
             Ok(cx.undefined().upcast())
         }

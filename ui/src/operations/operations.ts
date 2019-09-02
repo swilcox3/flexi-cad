@@ -213,7 +213,14 @@ function waitForAllReads(ids: Array<string>)
 
 export function createObj(event: string, obj: DataObject)
 {
-    console.log(connection)
+    var msg = obj.getTempRepr();
+    if(msg.Mesh) {
+        renderer.renderMesh(msg.Mesh.data, msg.Mesh.data.id, false)
+    }
+    if(msg.Other) {
+        renderer.renderObject(msg.Other.data, msg.Mesh.data.id, false)
+    }
+
     obj.addObject(filename, event, connection)
     return waitForChange(obj.get("id"));
 }
@@ -307,6 +314,6 @@ export function createDataObjectFromJSON(data: any)
         case "Wall":
             return new kernel.Wall(data.obj.first_pt.geom.pt, data.obj.second_pt.geom.pt, data.obj.width, data.obj.height)
         case "Door":
-            return new kernel.Door(data.obj.first_pt.geom.pt_1, data.obj.geom.pt_2, data.obj.width, data.obj.height)
+            return new kernel.Door(data.obj.dir.geom.pt_1, data.obj.dir.geom.pt_2, data.obj.width, data.obj.height)
     }
 }
