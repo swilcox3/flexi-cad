@@ -46,7 +46,10 @@ impl Task for GetNextUpdate {
                 if r.len() > 0 {
                     let mut results = Vec::new();
                     for msg in r.try_iter() {
-                        results.push(msg)
+                        results.push(msg);
+                        if results.len() > 20 {
+                            break;
+                        }
                     }
                     Ok(results)
                 }

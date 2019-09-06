@@ -42,7 +42,7 @@ impl Data for Wall {
 
     fn update(&mut self) -> Result<UpdateMsg, DBError> {
         if self.data.len() == 0 {
-            for i in 0..10000 {
+            for i in 0..100000 {
                 self.data += &i.to_string();
             }
         }
