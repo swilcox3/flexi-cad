@@ -30,9 +30,7 @@ function onPointerClick(scene: BABYLON.Scene, evt: MouseEvent, ground: BABYLON.M
         }
         if (evt.button == 2) {
             if (currentPoint) {
-                uiSingleton.rightClick(currentPoint, currentMesh)
-                currentPoint = null;
-                currentMesh = null;
+                uiSingleton.rightClick(math.transformGraphicToModelCoords(currentPoint), currentMesh)
             }
         }
     }
