@@ -258,22 +258,14 @@ export function snapToLine(event: string, id: string, snap_to_id: string, pt: ma
     return waitForChange(id)
 }
 
-export function moveObj(event: string, id: string, delta: math.Point3d, temp?: DataObject)
+export function moveObj(event: string, id: string, delta: math.Point3d)
 {
-    if(temp) {
-        renderFromMsg(temp.getTempRepr());
-    }
     kernel.move_object(filename, event, id, delta, connection)
     return waitForChange(id)
 }
 
-export function moveObjs(event: string, ids: Array<string>, delta: math.Point3d, temps?: Array<DataObject>)
+export function moveObjs(event: string, ids: Array<string>, delta: math.Point3d)
 {
-    if(temps) {
-        temps.forEach((temp) => {
-            renderFromMsg(temp.getTempRepr());
-        })
-    }
     kernel.move_objects(filename, event, ids, delta, connection)
     return waitForAllChanges(ids)
 }

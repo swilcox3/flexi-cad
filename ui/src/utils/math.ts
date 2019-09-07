@@ -1,4 +1,5 @@
 var kernel = require('../../native/index.node')
+var BABYLON = require("babylonjs");
 
 export class Point2d
 {
@@ -69,6 +70,11 @@ export function transformModelToGraphicCoords(point: Point3d)
 export function transformGraphicToModelCoords(point: Point3d)
 {
     return new Point3d(point.x, -point.z, point.y)
+}
+
+export function toBabylonVector3(point: Point3d)
+{
+    return new BABYLON.Vector3(point.x, -point.z, point.y)
 }
 
 export function projectOnLine(first: Point3d, second: Point3d, project: Point3d)

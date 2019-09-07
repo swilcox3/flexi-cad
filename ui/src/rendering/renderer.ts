@@ -1,8 +1,6 @@
 var BABYLON = require('babylonjs')
-//import * as BABYLON from "babylonjs";
-import * as BABYLONGUI from "babylonjs-gui"
-var gui = require('../ui/gui')
 var mouse = require('../ui/mouse_events')
+var gui = require('../ui/gui')
 var uiController = require('../ui/controller')
 
 function getHoveredMesh(scene: BABYLON.Scene, ground: BABYLON.Mesh)
