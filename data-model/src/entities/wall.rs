@@ -9,7 +9,7 @@ pub struct Wall {
     pub width: WorldCoord,
     pub height: WorldCoord,
     openings: Vec<UpdatableGeometry<RefRect>>,
-    #[serde(skip_serializing)]
+    #[serde(skip_serializing, default = "String::new")]
     data: String,
     id: RefID
 }

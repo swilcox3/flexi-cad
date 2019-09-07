@@ -211,16 +211,19 @@ function waitForAllReads(ids: Array<string>)
     return Promise.all(promises)
 }
 
-export function createObj(event: string, obj: DataObject)
+function renderFromMsg(msg: any)
 {
-    var msg = obj.getTempRepr();
     if(msg.Mesh) {
         renderer.renderMesh(msg.Mesh.data, msg.Mesh.data.id, false)
     }
     if(msg.Other) {
         renderer.renderObject(msg.Other.data, msg.Mesh.data.id, false)
     }
+}
 
+export function createObj(event: string, obj: DataObject)
+{
+    renderFromMsg(obj.getTempRepr());
     obj.addObject(filename, event, connection)
     return waitForChange(obj.get("id"));
 }
@@ -255,14 +258,22 @@ export function snapToLine(event: string, id: string, snap_to_id: string, pt: ma
     return waitForChange(id)
 }
 
-export function moveObj(event: string, id: string, delta: math.Point3d)
+export function moveObj(event: string, id: string, delta: math.Point3d, temp?: DataObject)
 {
+    if(temp) {
+        renderFromMsg(temp.getTempRepr());
+    }
     kernel.move_object(filename, event, id, delta, connection)
     return waitForChange(id)
 }
 
-export function moveObjs(event: string, ids: Array<string>, delta: math.Point3d)
+export function moveObjs(event: string, ids: Array<string>, delta: math.Point3d, temps?: Array<DataObject>)
 {
+    if(temps) {
+        temps.forEach((temp) => {
+            renderFromMsg(temp.getTempRepr());
+        })
+    }
     kernel.move_objects(filename, event, ids, delta, connection)
     return waitForAllChanges(ids)
 }

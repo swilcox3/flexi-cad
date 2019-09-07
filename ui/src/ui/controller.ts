@@ -124,7 +124,7 @@ class MoveObjectsController
     {
         if(this.delta && this.real_to_temp_objs) {
             const event = ops.beginUndoEvent("Move objs");
-            ops.moveObjs(event, Array.from(this.real_to_temp_objs.keys()), this.delta);
+            ops.moveObjs(event, Array.from(this.real_to_temp_objs.keys()), this.delta, Array.from(this.real_to_temp_objs.values()));
             ops.endUndoEvent(event)
             this.delta = null;
             this.real_to_temp_objs.forEach((temp) => {
