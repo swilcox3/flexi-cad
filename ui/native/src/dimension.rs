@@ -22,7 +22,7 @@ declare_types! {
             let point_1 = neon_serde::from_value(&mut cx, arg_0)?;
             let point_2 = neon_serde::from_value(&mut cx, arg_1)?;
             let offset = cx.argument::<JsNumber>(2)?.value();
-            let id = match cx.argument_opt(5) {
+            let id = match cx.argument_opt(3) {
                 Some(arg) => {
                     let id_str = arg.downcast::<JsString>().or_throw(&mut cx)?.value();
                     RefID::from_str(&id_str).unwrap()

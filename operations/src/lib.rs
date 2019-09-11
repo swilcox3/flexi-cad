@@ -170,11 +170,9 @@ pub fn demo_100(file: PathBuf, user: UserID, position: Point3f) {
     rayon::spawn(move || {
         let i_s: Vec<u64> = (0..10).collect();
         let j_s: Vec<u64> = (0..10).collect();
-        let count = std::sync::atomic::AtomicUsize::new(0);
         i_s.par_iter().for_each(|i| {
             j_s.par_iter().for_each(|j| {
                 demo(&file, &user, &(position + Vector3f::new(75.0 * (*i as f64), 75.0 * (*j as f64), 0.0))).unwrap();
-                println!("Count: {:?}", count.fetch_add(1, std::sync::atomic::Ordering::SeqCst));
             });
         });
         println!("Done!");

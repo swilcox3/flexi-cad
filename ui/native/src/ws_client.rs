@@ -24,7 +24,7 @@ pub fn connect(address: String, input: mpsc::Receiver<CmdMsg>, output: crossbeam
                             OwnedMessage::Close(e) => Some(OwnedMessage::Close(e)),
                             OwnedMessage::Ping(d) => Some(OwnedMessage::Pong(d)),
                             OwnedMessage::Text(msg) => {
-                                println!("Received Message: {:?}", msg);
+                                //println!("Received Message: {:?}", msg);
                                 let update: UpdateMsg = serde_json::from_str(&msg).unwrap();
                                 output.send(update).unwrap();
                                 None
@@ -33,7 +33,7 @@ pub fn connect(address: String, input: mpsc::Receiver<CmdMsg>, output: crossbeam
                         }
                     })
                     .select(input.map(|msg| {
-                        println!("Sending message {:?}", msg);
+                        //println!("Sending message {:?}", msg);
                         OwnedMessage::Text(serde_json::to_string(&msg).unwrap())
                     }).map_err(|_| WebSocketError::NoDataAvailable))
                     .forward(sink)

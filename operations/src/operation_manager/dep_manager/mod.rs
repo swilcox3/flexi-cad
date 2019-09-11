@@ -42,6 +42,7 @@ impl DependencyManager {
         for id in ids {
             results.remove(id);
         }
+        println!("deps: {:?}", results);
         results
     }
 

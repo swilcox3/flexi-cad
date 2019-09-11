@@ -22,7 +22,6 @@ impl OperationManager {
             deps: DependencyManager::new(),
             updates: DHashMap::default(),
         };
-        println!("Adding user {:?}", user);
         ops.updates.insert(user, sender);
         ops
     }

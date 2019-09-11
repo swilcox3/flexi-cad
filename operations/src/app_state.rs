@@ -23,7 +23,6 @@ impl AppState {
 
 pub fn init_file(file: PathBuf, user: UserID, updates: Sender<UpdateMsg>) {
     if let Some(ops) = APP_STATE.files.get(&file) {
-        println!("adding user {:?}", user);
         ops.updates.insert(user, updates);
     }
     else {
