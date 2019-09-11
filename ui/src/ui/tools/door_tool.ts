@@ -1,9 +1,8 @@
 import * as ops from '../../operations/operations'
-import * as math from '../../utils/math'
-const kernel = require("../../../native/index.node")
+import {JsDoor, Point3d, Vector3d} from "../../../../data-model-wasm/pkg/data_model_wasm"
 
 export class DoorTool {
-    curTemp: any
+    curTemp: JsDoor
     width: number
     height: number
     length: number
@@ -22,33 +21,33 @@ export class DoorTool {
         return hovered && hovered.metadata && hovered.metadata.type == "Wall";
     }
 
-    createDoor(pt: math.Point3d, picked: BABYLON.Mesh)
+    createDoor(pt: Point3d, picked: BABYLON.Mesh)
     {
         if(!this.undoEventId) {
             this.undoEventId = ops.beginUndoEvent("Create Door")
         }
-        var door = new kernel.Door(this.curTemp.get("first"), this.curTemp.get("second"), this.width, this.height)
-        ops.deleteTempObject(this.curTemp.get("id"))
+        var door = new JsDoor(this.curTemp.first_pt, this.curTemp.second_pt, this.width, this.height)
+        ops.deleteTempObject(this.curTemp.id)
         ops.createObj(this.undoEventId, door)
         if(this.canJoinToWall(picked)) {
-            ops.snapToLine(this.undoEventId, picked.name, door.get("id"), pt)
+            ops.snapToLine(this.undoEventId, picked.name, door.id, pt)
         }
     }
 
-    onMouseDown(pt: math.Point3d, picked: BABYLON.Mesh)
+    onMouseDown(pt: Point3d, picked: BABYLON.Mesh)
     {
-        this.createDoor(new math.Point3d(pt.x, pt.y, 0), picked);
+        this.createDoor(new Point3d(pt.x, pt.y, 0), picked);
         this.curTemp = null;
     }
 
-    onMouseMove(pt: math.Point3d, hovered: BABYLON.Mesh)
+    onMouseMove(pt: Point3d, hovered: BABYLON.Mesh)
     {
         const joinable = this.canJoinToWall(hovered);
         if(this.curTemp == null)
         {
-            var first = new math.Point3d(pt.x, pt.y, 0)
-            var second = new math.Point3d(pt.x + this.length, pt.y, 0)
-            this.curTemp = new kernel.Door(first, second, this.width, this.height);
+            var first = new Point3d(pt.x, pt.y, 0)
+            var second = new Point3d(pt.x + this.length, pt.y, 0)
+            this.curTemp = new JsDoor(first, second, this.width, this.height);
             ops.renderTempObject(this.curTemp)
         }
         else
@@ -58,14 +57,14 @@ export class DoorTool {
                 var second_promise = ops.getObjectData(hovered.name, "Second");
                 Promise.all([first_promise, second_promise])
                 .then(([first, second]) => {
-                    var project = math.projectOnLine(first, second, new math.Point3d(pt.x, pt.y, 0));
-                    this.curTemp.set("first", project);
-                    this.curTemp.set_dir(new math.Point3d(second.x - first.x, second.y - first.y, 0));
+                    var project = math.projectOnLine(first, second, new Point3d(pt.x, pt.y, 0));
+                    this.curTemp.first_pt = project;
+                    this.curTemp.set_dir(new Vector3d(second.x - first.x, second.y - first.y, 0));
                 });
             }
             else {
-                this.curTemp.set("first", new math.Point3d(pt.x, pt.y, 0));
-                this.curTemp.set("second", new math.Point3d(pt.x + this.length, pt.y, 0));
+                this.curTemp.first_pt = new Point3d(pt.x, pt.y, 0);
+                this.curTemp.second_pt = new Point3d(pt.x + this.length, pt.y, 0);
             }
             this.drawDoor()
         }
@@ -77,7 +76,7 @@ export class DoorTool {
         if(this.undoEventId) {
             ops.cancelEvent(this.undoEventId)
         }
-        ops.deleteTempObject(this.curTemp.get("id"))
+        ops.deleteTempObject(this.curTemp.id)
     }
 
     drawDoor()
@@ -87,10 +86,10 @@ export class DoorTool {
         }
     }
 
-    finish(pt: math.Point3d, picked: BABYLON.Mesh)
+    finish(pt: Point3d, picked: BABYLON.Mesh)
     {
         if(this.curTemp) {
-            this.createDoor(new math.Point3d(pt.x, pt.y, 0), picked);
+            this.createDoor(new Point3d(pt.x, pt.y, 0), picked);
         }
         if(this.undoEventId) {
             ops.endUndoEvent(this.undoEventId)

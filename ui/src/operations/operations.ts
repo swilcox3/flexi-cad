@@ -1,6 +1,6 @@
 var kernel = require('../../native/index.node')
 import {Renderer} from '../rendering/renderer'
-import * as math from '../utils/math'
+import {Vector3d, Point3d} from "../../../data-model-wasm/pkg/data_model_wasm"
 var BABYLON = require("babylonjs")
 
 var renderer: Renderer = null;
@@ -10,11 +10,8 @@ var pendingChanges: Map<String, Array<(obj: BABYLON.Mesh) => void>> = new Map();
 var pendingReads: Map<String, (val: any) => void> = new Map();
 
 export interface DataObject {
-    get(prop: string): string,
-    set(prop: string, val: any): string,
     getTempRepr(): any,
-    addObject(filename: string, event: string, connection?: string):undefined
-    moveObj(delta: math.Point3d): undefined
+    moveObj(delta: Vector3d): void 
 }
 
 function initRenderer(canvas: HTMLCanvasElement)
@@ -228,7 +225,7 @@ export function createObj(event: string, obj: DataObject)
     return waitForChange(obj.get("id"));
 }
 
-export function joinAtPoints(event: string, id_1: string, id_2: string, pt: math.Point3d) 
+export function joinAtPoints(event: string, id_1: string, id_2: string, pt: Point3d) 
 {
     kernel.join_at_points(filename, event, id_1, id_2, pt, connection)
     return waitForAllChanges([id_1, id_2])
@@ -240,31 +237,31 @@ export function canReferTo(id:string)
     return waitForRead(query)
 }
 
-export function getClosestPoint(id:string, pt: math.Point3d)
+export function getClosestPoint(id:string, pt: Point3d)
 {
     const query = kernel.get_closest_point(filename, id, pt, connection)
     return waitForRead(query)
 }
 
-export function snapToPoint(event: string, id: string, snap_to_id: string, pt: math.Point3d)
+export function snapToPoint(event: string, id: string, snap_to_id: string, pt: Point3d)
 {
     kernel.snap_to_point(filename, event, id, snap_to_id, pt, connection)
     return waitForChange(id)
 }
 
-export function snapToLine(event: string, id: string, snap_to_id: string, pt: math.Point3d) 
+export function snapToLine(event: string, id: string, snap_to_id: string, pt: Point3d) 
 {
     kernel.snap_to_line(filename, event, id, snap_to_id, pt, connection)
     return waitForChange(id)
 }
 
-export function moveObj(event: string, id: string, delta: math.Point3d)
+export function moveObj(event: string, id: string, delta: Point3d)
 {
     kernel.move_object(filename, event, id, delta, connection)
     return waitForChange(id)
 }
 
-export function moveObjs(event: string, ids: Array<string>, delta: math.Point3d)
+export function moveObjs(event: string, ids: Array<string>, delta: Point3d)
 {
     kernel.move_objects(filename, event, ids, delta, connection)
     return waitForAllChanges(ids)
@@ -293,18 +290,18 @@ export function getMeshByID(id: string)
     return renderer.getMesh(id)
 }
 
-export function copyObjs(event: string, ids:Array<string>, delta: math.Point3d)
+export function copyObjs(event: string, ids:Array<string>, delta: Point3d)
 {
     var copyIds: Array<[string, string]> = kernel.copy_objects(filename, event, ids, delta, connection);
     return waitForAllChanges(copyIds.map(val => val[1]))
 }
 
-export async function demo(position: math.Point3d)
+export async function demo(position: Point3d)
 {
     await kernel.demo(filename, position, connection);
 }
 
-export async function demo_100(position: math.Point3d)
+export async function demo_100(position: Point3d)
 {
     console.log(connection)
     await kernel.demo_100(filename, position, connection);

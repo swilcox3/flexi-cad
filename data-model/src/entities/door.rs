@@ -10,7 +10,8 @@ pub struct Door {
 }
 
 impl Door {
-    pub fn new(id: RefID, first: Point3f, second: Point3f, width: WorldCoord, height: WorldCoord) -> Door {
+    pub fn new(first: Point3f, second: Point3f, width: WorldCoord, height: WorldCoord) -> Door {
+        let id = RefID::default();
         Door {
             id: id,
             dir: UpdatableGeometry::new(RefLineSeg::new(first, second)),

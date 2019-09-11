@@ -17,7 +17,8 @@ pub struct Wall {
 interfaces!(Wall: dyn query_interface::ObjectClone, dyn std::fmt::Debug, dyn Data, dyn ReferTo, dyn Position, dyn UpdateFromRefs);
 
 impl Wall {
-    pub fn new(id: RefID, first: Point3f, second: Point3f, width: WorldCoord, height: WorldCoord) -> Wall {
+    pub fn new(first: Point3f, second: Point3f, width: WorldCoord, height: WorldCoord) -> Wall {
+        let id = RefID::default();
         Wall {
             first_pt: UpdatableGeometry::new(RefPoint{pt: first}),
             second_pt: UpdatableGeometry::new(RefPoint{pt: second}),

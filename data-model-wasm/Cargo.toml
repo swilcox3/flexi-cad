@@ -1,0 +1,22 @@
+# You must change these to your own details.
+[package]
+name = "data_model_wasm"
+version = "0.1.0"
+authors = ["Scot Wilcox <wilcox.scot@gmail.com>"]
+categories = ["wasm"]
+readme = "README.md"
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+# This makes the compiled code faster and smaller, but it makes compiling slower,
+# so it's only enabled in release mode.
+lto = true
+
+[dependencies]
+wasm-bindgen = {version = "0.2.45", features = ["serde-serialize"]}
+data_model = {version = "0.1.0", path = "../data-model"}
+console_error_panic_hook = "0.1.5"
+query_interface = "0.3.5"
