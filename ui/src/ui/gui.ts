@@ -3,7 +3,7 @@ import {WallTool} from './tools/wall_tool'
 import {DoorTool} from './tools/door_tool'
 import {DimensionTool} from './tools/dimension_tool'
 import * as ops from '../operations/operations'
-import * as math from '../utils/math'
+import {Point3d} from '../../../data-model-wasm/pkg/data_model_wasm'
 
 export default class GUI
 {
@@ -57,10 +57,10 @@ export default class GUI
             mySingleton.setActiveTool(tool)
         })
         this.newButton("demo", "Demo 1", this.buttonPanel, () => {
-            ops.demo(new math.Point3d(0, 0, 0)) 
+            ops.demo(new Point3d(0, 0, 0)) 
         })
         this.newButton("demo 2", "Demo 100", this.buttonPanel, () => {
-            ops.demo_100(new math.Point3d(0, 0, 0))
+            ops.demo_100(new Point3d(0, 0, 0))
         });
     }
 

@@ -2,13 +2,14 @@ const gui = require('./gui')
 var BABYLON = require('babylonjs')
 import * as math from '../utils/math'
 import * as ops from '../operations/operations'
+import {Point3d, Vector3d} from "../../../data-model-wasm/pkg/data_model_wasm"
 
 interface Tool
 {
-    onMouseDown(pt: math.Point3d, hovered?:BABYLON.Mesh):undefined,
-    onMouseMove(pt: math.Point3d, hovered?:BABYLON.Mesh):boolean,
+    onMouseDown(pt: Point3d, hovered?:BABYLON.Mesh):undefined,
+    onMouseMove(pt: Point3d, hovered?:BABYLON.Mesh):boolean,
     cancel():undefined,
-    finish(pt: math.Point3d, picked?:BABYLON.Mesh):undefined
+    finish(pt: Point3d, picked?:BABYLON.Mesh):undefined
 }
 
 class SelectionController
@@ -88,7 +89,7 @@ class SelectionController
 
 class MoveObjectsController
 {
-    private delta: math.Point3d;
+    private delta: Point3d;
     private real_to_temp_objs: Map<string, ops.DataObject>;
     constructor() {
         this.delta = null;
@@ -129,7 +130,7 @@ class MoveObjectsController
             this.delta = null;
             promise.then((_) => {
                 this.real_to_temp_objs.forEach((temp) => {
-                    ops.deleteTempObject(temp.get("id"))
+                    ops.deleteTempObject(temp.id)
                 })
                 this.real_to_temp_objs = null;
             })
@@ -142,7 +143,7 @@ class UIController
     private activeTool: Tool
     private selection: SelectionController
     private moveObjs: MoveObjectsController
-    private shiftPt: math.Point3d;
+    private shiftPt: Point3d;
     private shiftPressed: boolean;
     private clipboard: Array<string>;
     constructor() {
@@ -163,7 +164,7 @@ class UIController
         this.activeTool = tool
     }
 
-    leftClick(pt:math.Point3d, mesh: BABYLON.Mesh)
+    leftClick(pt:Point3d, mesh: BABYLON.Mesh)
     {
         if(this.activeTool != null)
         {
@@ -180,7 +181,7 @@ class UIController
         }
     }
 
-    rightClick(pt:math.Point3d, picked: BABYLON.Mesh)
+    rightClick(pt:Point3d, picked: BABYLON.Mesh)
     {
         if(this.activeTool != null)
         {
@@ -193,17 +194,17 @@ class UIController
         }
     }
 
-    mouseMove(pt:math.Point3d, hovered: BABYLON.Mesh)
+    mouseMove(pt:Point3d, hovered: BABYLON.Mesh)
     {
         if(this.activeTool != null)
         {
             if(this.shiftPressed) {
                 if(this.shiftPt) {
                     if(Math.abs(pt.x - this.shiftPt.x) > Math.abs(pt.y - this.shiftPt.y)) {
-                        pt = new math.Point3d(pt.x, this.shiftPt.y, this.shiftPt.z);
+                        pt = new Point3d(pt.x, this.shiftPt.y, this.shiftPt.z);
                     }
                     else {
-                        pt = new math.Point3d(this.shiftPt.x, pt.y, this.shiftPt.z);
+                        pt = new Point3d(this.shiftPt.x, pt.y, this.shiftPt.z);
                     }
                 }
                 else {
@@ -288,7 +289,7 @@ class UIController
         if(this.activeTool == null)
         {
             const event = ops.beginUndoEvent("copy objs");
-            var copyIdsPromise = ops.copyObjs(event, this.clipboard, new math.Point3d(20, 0, 0))
+            var copyIdsPromise = ops.copyObjs(event, this.clipboard, new Point3d(20, 0, 0))
             ops.endUndoEvent(event);
             this.selection.deselectAll();
             copyIdsPromise.then((meshes: Array<BABYLON.Mesh>) => {

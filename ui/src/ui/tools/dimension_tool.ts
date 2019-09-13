@@ -1,9 +1,8 @@
 import * as ops from '../../operations/operations'
-import * as math from '../../utils/math'
-const kernel = require("../../../native/index.node")
+import {JsDimension, Point3d, Vector3d} from "../../../../data-model-wasm/pkg/data_model_wasm"
 
 export class DimensionTool {
-    curTemp: any
+    curTemp: JsDimension
     lastAttached: BABYLON.Mesh
     offset: number
     undoEventId: string
@@ -20,47 +19,47 @@ export class DimensionTool {
         return hovered && await ops.canReferTo(hovered.name);
     }
 
-    async createDimension(pt: math.Point3d, picked: BABYLON.Mesh)
+    async createDimension(pt: Point3d, picked: BABYLON.Mesh)
     {
         if(!this.undoEventId) {
             this.undoEventId = ops.beginUndoEvent("Create Dimension")
         }
-        var dim = new kernel.Dimension(this.curTemp.get("first"), this.curTemp.get("second"), this.offset)
-        ops.deleteTempObject(this.curTemp.get("id"))
+        var dim = new JsDimension(this.curTemp.first_pt, this.curTemp.second_pt, this.offset)
+        ops.deleteTempObject(this.curTemp.id)
         ops.createObj(this.undoEventId, dim)
         if(await this.canAttach(picked)) {
-            ops.snapToPoint(this.undoEventId, dim.get("id"), picked.name, dim.get("first"))
-            ops.snapToPoint(this.undoEventId, dim.get("id"), picked.name, pt)
+            ops.snapToPoint(this.undoEventId, dim.id, picked.name, dim.first_pt)
+            ops.snapToPoint(this.undoEventId, dim.id, picked.name, pt)
         }
     }
 
-    async onMouseDown(pt: math.Point3d, picked: BABYLON.Mesh)
+    async onMouseDown(pt: Point3d, picked: BABYLON.Mesh)
     {
         if(this.curTemp == null)
         {
             var first = null;
             if(await this.canAttach(picked)) {
-                first = await ops.getClosestPoint(picked.name, new math.Point3d(pt.x, pt.y, 0));
+                first = await ops.getClosestPoint(picked.name, new Point3d(pt.x, pt.y, 0));
             }
             else {
-                first = new math.Point3d(pt.x, pt.y, 0)
+                first = new Point3d(pt.x, pt.y, 0)
             }
-            var second = new math.Point3d(pt.x + 1, pt.y, 0)
-            this.curTemp = new kernel.Dimension(first, second, this.offset);
+            var second = new Point3d(pt.x + 1, pt.y, 0)
+            this.curTemp = new JsDimension(first, second, this.offset);
             ops.renderTempObject(this.curTemp)
         }
         else {
-            this.createDimension(new math.Point3d(pt.x, pt.y, 0), picked);
+            this.createDimension(new Point3d(pt.x, pt.y, 0), picked);
             this.curTemp = null;
         }
     }
 
-    async onMouseMove(pt: math.Point3d, hovered: BABYLON.Mesh)
+    async onMouseMove(pt: Point3d, hovered: BABYLON.Mesh)
     {
         const joinable = await this.canAttach(hovered);
         if(this.curTemp != null)
         {
-            this.curTemp.set("second", new math.Point3d(pt.x, pt.y, 0));
+            this.curTemp.second_pt = new Point3d(pt.x, pt.y, 0);
             this.drawDimension()
         }
         return joinable;
@@ -71,7 +70,7 @@ export class DimensionTool {
         if(this.undoEventId) {
             ops.cancelEvent(this.undoEventId)
         }
-        ops.deleteTempObject(this.curTemp.get("id"))
+        ops.deleteTempObject(this.curTemp.id)
     }
 
     drawDimension()
@@ -81,10 +80,10 @@ export class DimensionTool {
         }
     }
 
-    async finish(pt: math.Point3d, picked: BABYLON.Mesh)
+    async finish(pt: Point3d, picked: BABYLON.Mesh)
     {
         if(this.curTemp) {
-            await this.createDimension(new math.Point3d(pt.x, pt.y, 0), picked);
+            await this.createDimension(new Point3d(pt.x, pt.y, 0), picked);
         }
         if(this.undoEventId) {
             ops.endUndoEvent(this.undoEventId)

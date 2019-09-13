@@ -1,5 +1,5 @@
 import * as ops from '../../operations/operations'
-import {JsDoor, Point3d, Vector3d} from "../../../../data-model-wasm/pkg/data_model_wasm"
+import {JsDoor, Point3d, Vector3d, projectOnLine} from "../../../../data-model-wasm/pkg/data_model_wasm"
 
 export class DoorTool {
     curTemp: JsDoor
@@ -57,9 +57,9 @@ export class DoorTool {
                 var second_promise = ops.getObjectData(hovered.name, "Second");
                 Promise.all([first_promise, second_promise])
                 .then(([first, second]) => {
-                    var project = math.projectOnLine(first, second, new Point3d(pt.x, pt.y, 0));
+                    var project = projectOnLine(first, second, new Point3d(pt.x, pt.y, 0));
                     this.curTemp.first_pt = project;
-                    this.curTemp.set_dir(new Vector3d(second.x - first.x, second.y - first.y, 0));
+                    this.curTemp.setDir(new Vector3d(second.x - first.x, second.y - first.y, 0));
                 });
             }
             else {

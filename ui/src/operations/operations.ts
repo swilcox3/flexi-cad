@@ -10,8 +10,10 @@ var pendingChanges: Map<String, Array<(obj: BABYLON.Mesh) => void>> = new Map();
 var pendingReads: Map<String, (val: any) => void> = new Map();
 
 export interface DataObject {
-    getTempRepr(): any,
-    moveObj(delta: Vector3d): void 
+    getTempRepr(): any
+    moveObj(delta: Vector3d): void
+    getObj(): any
+    readonly id: string
 }
 
 function initRenderer(canvas: HTMLCanvasElement)
@@ -221,8 +223,9 @@ function renderFromMsg(msg: any)
 export function createObj(event: string, obj: DataObject)
 {
     renderFromMsg(obj.getTempRepr());
-    obj.addObject(filename, event, connection)
-    return waitForChange(obj.get("id"));
+    let json_obj = obj.getObj();
+    kernel.add_object(filename, event, json_obj.type, json_obj.obj)
+    return waitForChange(obj.id);
 }
 
 export function joinAtPoints(event: string, id_1: string, id_2: string, pt: Point3d) 

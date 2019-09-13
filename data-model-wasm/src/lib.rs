@@ -123,6 +123,10 @@ impl JsWall {
         self.wall.move_obj(&delta.vect);
     }
 
+    pub fn getObj(&self) -> JsValue {
+        JsValue::from_serde(&data_model::to_json("Wall", &self.wall)).unwrap()
+    }
+
     #[wasm_bindgen(getter)]
     pub fn first_pt(&self) -> Point3d {
         Point3d{pt: self.wall.first_pt.geom.pt.clone()}
@@ -191,6 +195,14 @@ impl JsDoor {
         self.door.move_obj(&delta.vect);
     }
 
+    pub fn getObj(&self) -> JsValue {
+        JsValue::from_serde(&data_model::to_json("Door", &self.door)).unwrap()
+    }
+
+    pub fn setDir(&mut self, delta: Vector3d) {
+        self.door.dir.geom.set_dir(&delta.vect);
+    }
+
     #[wasm_bindgen(getter)]
     pub fn first_pt(&self) -> Point3d {
         Point3d{pt: self.door.dir.geom.pt_1.clone()}
@@ -237,3 +249,74 @@ impl JsDoor {
     }
 }
 
+#[wasm_bindgen]
+pub struct JsDimension {
+    dim: data_model::Dimension
+}
+
+#[wasm_bindgen]
+impl JsDimension {
+    #[wasm_bindgen(constructor)]
+    pub fn new(first: Point3d, second: Point3d, offset: WorldCoord) -> JsDimension {
+        let dim = data_model::Dimension::new(first.pt, second.pt, offset);
+        JsDimension{ dim }
+    }
+
+    pub fn getTempRepr(&self) -> JsValue {
+        let msg = self.dim.get_temp_repr().unwrap();
+        JsValue::from_serde(&msg).unwrap()
+    }
+
+    pub fn moveObj(&mut self, delta: Vector3d) {
+        self.dim.move_obj(&delta.vect);
+    }
+
+    pub fn getObj(&self) -> JsValue{
+        JsValue::from_serde(&data_model::to_json("Dimension", &self.dim)).unwrap()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn first_pt(&self) -> Point3d {
+        Point3d{pt: self.dim.first.geom.pt.clone()}
+    }
+
+    #[wasm_bindgen(setter)]
+    pub fn set_first_pt(&mut self, val: Point3d) {
+        self.dim.first.geom.pt = val.pt;
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn second_pt(&self) -> Point3d {
+        Point3d{pt: self.dim.second.geom.pt.clone()}
+    }
+
+    #[wasm_bindgen(setter)]
+    pub fn set_second_pt(&mut self, val: Point3d) {
+        self.dim.second.geom.pt = val.pt;
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn offset(&self) -> WorldCoord {
+        self.dim.offset
+    }
+
+    #[wasm_bindgen(setter)]
+    pub fn set_offset(&mut self, val: WorldCoord) {
+        self.dim.offset = val;
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn id(&self) -> String {
+        format!("{:?}", self.dim.get_id().clone())
+    }
+}
+
+#[wasm_bindgen]
+pub fn projectOnLine(first: Point3d, second: Point3d, project: Point3d) -> Point3d {
+    Point3d{ pt: data_model::project_on_line(&first.pt, &second.pt, &project.pt) }
+}
+
+#[wasm_bindgen]
+pub fn getUserId() -> String {
+    format!("{:?}", UserID::new_v4())
+}
