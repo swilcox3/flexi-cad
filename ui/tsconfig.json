@@ -9,9 +9,7 @@
       "baseUrl": ".",
       "types": [
         "babylonjs",
-        "babylonjs-gui",
-        "jest",
-        "jest-extended"
+        "babylonjs-gui"
       ]
     },
     "include": [

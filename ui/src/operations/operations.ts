@@ -1,11 +1,15 @@
+console.log("Made it 0")
 var kernel = require('../../native/index.node')
+console.log("Made it 1");
 import {Renderer} from '../rendering/renderer'
-import {Vector3d, Point3d} from "../../../data-model-wasm/pkg/data_model_wasm"
-var BABYLON = require("babylonjs")
+console.log("Made it 2");
+import {Vector3d, Point3d, getUserId} from "../../../data-model-wasm/pkg/data_model_wasm"
+console.log("Made it 3");
 
 var renderer: Renderer = null;
 var filename: string = "";
 var connection: string = null;
+var user: string = getUserId();
 var pendingChanges: Map<String, Array<(obj: BABYLON.Mesh) => void>> = new Map();
 var pendingReads: Map<String, (val: any) => void> = new Map();
 
@@ -29,7 +33,7 @@ export function setConnection(conn: string) {
 export function initFile(canvas: HTMLCanvasElement)
 {
     filename = "defaultNew.flx"
-    kernel.init_file(filename, connection)
+    kernel.init_file(filename, user)
     initRenderer(canvas)
     renderNext(filename)  //This will readd itself, so it's an infinite loop in the background
 }
@@ -37,60 +41,60 @@ export function initFile(canvas: HTMLCanvasElement)
 export function openFile(in_file:string, canvas:HTMLCanvasElement)
 {
     filename = in_file;
-    kernel.open_file(filename, connection)
+    kernel.open_file(filename, user)
     initRenderer(canvas)
     renderNext(filename)
 }
 
 export function saveFile()
 {
-    kernel.save_file(filename, connection)
+    kernel.save_file(filename)
 }
 
 export function saveAsFile(in_file:string)
 {
-    kernel.save_as_file(filename, in_file, connection)
+    kernel.save_as_file(filename, in_file)
 }
 
 export function beginUndoEvent(desc: string)
 {
-    return kernel.begin_undo_event(filename, desc, connection)
+    return kernel.begin_undo_event(filename, desc, user)
 }
 
 export function endUndoEvent(event: string)
 {
-    kernel.end_undo_event(filename, event, connection)
+    kernel.end_undo_event(filename, event)
 }
 
 export function undoLatest()
 {
-    kernel.undo_latest(filename, connection)
+    kernel.undo_latest(filename, user)
     renderNext(filename)
 }
 
 export function suspendEvent(event: string)
 {
-    kernel.suspend_event(filename, event, connection)
+    kernel.suspend_event(filename, event)
 }
 
 export function resumeEvent(event: string)
 {
-    kernel.resume_event(filename, event, connection)
+    kernel.resume_event(filename, event)
 }
 
 export function cancelEvent(event: string)
 {
-    kernel.cancel_event(filename, event, connection)
+    kernel.cancel_event(filename, event)
 }
 
 export function redoLatest()
 {
-    kernel.redo_latest(filename, connection)
+    kernel.redo_latest(filename, user)
 }
 
 export function takeUndoSnapshot(event: string, id: string)
 {
-    kernel.take_undo_snapshot(filename, event, id, connection)
+    kernel.take_undo_snapshot(filename, event, id)
 }
 
 export function renderTempObject(obj: DataObject) 
@@ -111,7 +115,7 @@ export function deleteTempObject(id: string)
 
 export function deleteObject(event: string, id: string)
 {
-    kernel.delete_object(filename, event, id, connection)
+    kernel.delete_object(filename, event, id)
 }
 
 function renderNext(filename: string) 
@@ -230,61 +234,61 @@ export function createObj(event: string, obj: DataObject)
 
 export function joinAtPoints(event: string, id_1: string, id_2: string, pt: Point3d) 
 {
-    kernel.join_at_points(filename, event, id_1, id_2, pt, connection)
+    kernel.join_at_points(filename, event, id_1, id_2, pt)
     return waitForAllChanges([id_1, id_2])
 }
 
 export function canReferTo(id:string)
 {
-    const query = kernel.can_refer_to(filename, id, connection)
+    const query = kernel.can_refer_to(filename, id, user)
     return waitForRead(query)
 }
 
 export function getClosestPoint(id:string, pt: Point3d)
 {
-    const query = kernel.get_closest_point(filename, id, pt, connection)
+    const query = kernel.get_closest_point(filename, id, pt, user)
     return waitForRead(query)
 }
 
 export function snapToPoint(event: string, id: string, snap_to_id: string, pt: Point3d)
 {
-    kernel.snap_to_point(filename, event, id, snap_to_id, pt, connection)
+    kernel.snap_to_point(filename, event, id, snap_to_id, pt)
     return waitForChange(id)
 }
 
 export function snapToLine(event: string, id: string, snap_to_id: string, pt: Point3d) 
 {
-    kernel.snap_to_line(filename, event, id, snap_to_id, pt, connection)
+    kernel.snap_to_line(filename, event, id, snap_to_id, pt)
     return waitForChange(id)
 }
 
 export function moveObj(event: string, id: string, delta: Point3d)
 {
-    kernel.move_object(filename, event, id, delta, connection)
+    kernel.move_object(filename, event, id, delta)
     return waitForChange(id)
 }
 
 export function moveObjs(event: string, ids: Array<string>, delta: Point3d)
 {
-    kernel.move_objects(filename, event, ids, delta, connection)
+    kernel.move_objects(filename, event, ids, delta)
     return waitForAllChanges(ids)
 }
 
 export function getObjectData(id: string, prop_name: string)
 {
-    const query = kernel.get_object_data(filename, id, prop_name, connection)
+    const query = kernel.get_object_data(filename, id, prop_name, user)
     return waitForRead(query)
 }
 
 export function setObjectData(event: string, id: string, data:any) 
 {
-    kernel.set_object_data(filename, event, id, JSON.stringify(data), connection)
+    kernel.set_object_data(filename, event, id, JSON.stringify(data))
     return waitForChange(id)
 }
 
 export function setObjectsDatas(event: string, data: Array<[string, any]>)
 {
-    kernel.set_objects_datas(filename, event, data, connection)
+    kernel.set_objects_datas(filename, event, data)
     return waitForAllChanges(data.map(val => val[0]))
 }
 
@@ -295,19 +299,18 @@ export function getMeshByID(id: string)
 
 export function copyObjs(event: string, ids:Array<string>, delta: Point3d)
 {
-    var copyIds: Array<[string, string]> = kernel.copy_objects(filename, event, ids, delta, connection);
+    var copyIds: Array<[string, string]> = kernel.copy_objects(filename, event, ids, delta, user);
     return waitForAllChanges(copyIds.map(val => val[1]))
 }
 
 export async function demo(position: Point3d)
 {
-    await kernel.demo(filename, position, connection);
+    await kernel.demo(filename, position, user);
 }
 
 export async function demo_100(position: Point3d)
 {
-    console.log(connection)
-    await kernel.demo_100(filename, position, connection);
+    await kernel.demo_100(filename, position, user);
 }
 
 export function createDataObjectFromJSON(data: any) 

@@ -1,7 +1,9 @@
 var BABYLON = require("babylonjs");
-import {Point3d, Vector3d} from "../../../data-model-wasm/pkg/data_model_wasm"
+console.log("Made it math 1");
+import {Point3d} from "../../../data-model-wasm/pkg/data_model_wasm"
+console.log("Made it math 2");
 
-interface CoordTriple
+export interface CoordTriple
 {
     x: number,
     y: number,
