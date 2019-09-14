@@ -12,6 +12,7 @@ module.exports = {
     path: dist,
     filename: "[name].js"
   },
+  target: "electron-renderer",
   devServer: {
     contentBase: dist,
   },
