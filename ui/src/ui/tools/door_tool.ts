@@ -1,6 +1,5 @@
 import * as ops from '../../operations/operations'
-var wasm = require("../../../../data-model-wasm")
-import {JsDoor, Point3d, Vector3d, projectOnLine} from "../../../../data-model-wasm/pkg/index"
+import {JsDoor, Point3d, Vector3d, projectOnLine} from "../../../data-model-wasm/dist/index"
 
 export class DoorTool {
     curTemp: JsDoor

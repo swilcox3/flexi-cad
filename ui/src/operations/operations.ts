@@ -3,7 +3,7 @@ var kernel = require('../../native/index.node')
 console.log("Made it 1");
 import {Renderer} from '../rendering/renderer'
 console.log("Made it 2");
-import {Vector3d, Point3d, getUserId} from "../../../data-model-wasm/pkg/data_model_wasm"
+import {Vector3d, Point3d, getUserId} from "../../data-model-wasm/dist/index"
 console.log("Made it 3");
 
 var renderer: Renderer = null;

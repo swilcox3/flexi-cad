@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "wasm": "npm run build --prefix ../data-model-wasm",
+    "wasm": "npm run build --prefix ./data-model-wasm",
     "build": "electron-build-env neon build --release && tsc",
     "start": "npm run wasm && npm run build && electron ./app/main.js",
     "start_nb": "electron ./app/main.js"

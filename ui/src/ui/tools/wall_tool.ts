@@ -1,5 +1,5 @@
 import * as ops from '../../operations/operations'
-import {JsWall, Point3d} from "../../../../data-model-wasm/pkg/data_model_wasm"
+import {JsWall, Point3d} from "../../../data-model-wasm/dist/index"
 
 export class WallTool {
     curTemp: JsWall;

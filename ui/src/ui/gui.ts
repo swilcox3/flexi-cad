@@ -1,9 +1,16 @@
+console.log("made it gui 0")
 import * as BABYLONGUI from "babylonjs-gui"
+console.log("made it gui 1")
 import {WallTool} from './tools/wall_tool'
+console.log("made it gui 2")
 import {DoorTool} from './tools/door_tool'
+console.log("made it gui 3")
 import {DimensionTool} from './tools/dimension_tool'
+console.log("made it gui 4")
 import * as ops from '../operations/operations'
-import {Point3d} from '../../../data-model-wasm/pkg/data_model_wasm'
+console.log("made it gui 5")
+import {Point3d} from '../../data-model-wasm/dist/index'
+console.log("made it gui 6")
 
 export default class GUI
 {
