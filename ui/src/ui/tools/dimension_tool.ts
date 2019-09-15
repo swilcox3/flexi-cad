@@ -1,5 +1,5 @@
 import * as ops from '../../operations/operations'
-import {JsDimension, Point3d, Vector3d} from "../../../data-model-wasm/dist/index"
+import {JsDimension, Point3d} from "../../../data-model-wasm/pkg/data_model_wasm"
 
 export class DimensionTool {
     curTemp: JsDimension

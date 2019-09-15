@@ -10,3 +10,6 @@
 /ui/node_modules
 /ui/native/target
 /ui/native/index.node
+/ui/data-model-wasm/dist
+/ui/data-model-wasm/node_modules
+/ui/data-model-wasm/target

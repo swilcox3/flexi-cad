@@ -9,7 +9,7 @@ import {DimensionTool} from './tools/dimension_tool'
 console.log("made it gui 4")
 import * as ops from '../operations/operations'
 console.log("made it gui 5")
-import {Point3d} from '../../data-model-wasm/dist/index'
+import {Point3d} from '../../data-model-wasm/pkg/data_model_wasm'
 console.log("made it gui 6")
 
 export default class GUI

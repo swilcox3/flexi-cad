@@ -1,5 +1,5 @@
 import * as ops from '../../operations/operations'
-import {JsDoor, Point3d, Vector3d, projectOnLine} from "../../../data-model-wasm/dist/index"
+import {JsDoor, Point3d, Vector3d, projectOnLine} from "../../../data-model-wasm/pkg/data_model_wasm"
 
 export class DoorTool {
     curTemp: JsDoor
