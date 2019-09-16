@@ -1,11 +1,11 @@
 var user:string = null;
 
 export type WasmMod = typeof import("../../data-model-wasm/pkg/index");
-export var dataModelWasm: WasmMod = null;
+export var dataModel: WasmMod = null;
 
 var loaded = import("../../data-model-wasm/pkg/index").then( mod => {
-    dataModelWasm = mod;
-    user = dataModelWasm.getUserId();
+    dataModel = mod;
+    user = dataModel.getUserId();
 });
 export type Point3d = import("../../data-model-wasm/pkg/index").Point3d;
 export type Vector3d = import("../../data-model-wasm/pkg/index").Vector3d;

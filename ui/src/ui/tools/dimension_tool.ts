@@ -1,4 +1,4 @@
-import {JsDimension, Point3d, dataModelWasm} from '../../operations/operations'
+import {JsDimension, Point3d, dataModel} from '../../operations/operations'
 
 export class DimensionTool {
     curTemp: JsDimension
@@ -23,7 +23,7 @@ export class DimensionTool {
         if(!this.undoEventId) {
             this.undoEventId = ops.beginUndoEvent("Create Dimension")
         }
-        var dim = new dataModelWasm.JsDimension(this.curTemp.first_pt, this.curTemp.second_pt, this.offset)
+        var dim = new dataModel.JsDimension(this.curTemp.first_pt, this.curTemp.second_pt, this.offset)
         ops.deleteTempObject(this.curTemp.id)
         ops.createObj(this.undoEventId, dim)
         if(await this.canAttach(picked)) {
@@ -38,17 +38,17 @@ export class DimensionTool {
         {
             var first = null;
             if(await this.canAttach(picked)) {
-                first = await ops.getClosestPoint(picked.name, new dataModelWasm.Point3d(pt.x, pt.y, 0));
+                first = await ops.getClosestPoint(picked.name, new dataModel.Point3d(pt.x, pt.y, 0));
             }
             else {
-                first = new dataModelWasm.Point3d(pt.x, pt.y, 0)
+                first = new dataModel.Point3d(pt.x, pt.y, 0)
             }
-            var second = new dataModelWasm.Point3d(pt.x + 1, pt.y, 0)
-            this.curTemp = new dataModelWasm.JsDimension(first, second, this.offset);
+            var second = new dataModel.Point3d(pt.x + 1, pt.y, 0)
+            this.curTemp = new dataModel.JsDimension(first, second, this.offset);
             ops.renderTempObject(this.curTemp)
         }
         else {
-            this.createDimension(new dataModelWasm.Point3d(pt.x, pt.y, 0), picked);
+            this.createDimension(new dataModel.Point3d(pt.x, pt.y, 0), picked);
             this.curTemp = null;
         }
     }
@@ -58,7 +58,7 @@ export class DimensionTool {
         const joinable = await this.canAttach(hovered);
         if(this.curTemp != null)
         {
-            this.curTemp.second_pt = new dataModelWasm.Point3d(pt.x, pt.y, 0);
+            this.curTemp.second_pt = new dataModel.Point3d(pt.x, pt.y, 0);
             this.drawDimension()
         }
         return joinable;
@@ -82,7 +82,7 @@ export class DimensionTool {
     async finish(pt: Point3d, picked: BABYLON.Mesh)
     {
         if(this.curTemp) {
-            await this.createDimension(new dataModelWasm.Point3d(pt.x, pt.y, 0), picked);
+            await this.createDimension(new dataModel.Point3d(pt.x, pt.y, 0), picked);
         }
         if(this.undoEventId) {
             ops.endUndoEvent(this.undoEventId)

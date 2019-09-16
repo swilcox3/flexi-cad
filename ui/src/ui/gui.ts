@@ -2,7 +2,7 @@ import * as BABYLONGUI from "babylonjs-gui"
 import {WallTool} from './tools/wall_tool'
 import {DoorTool} from './tools/door_tool'
 import {DimensionTool} from './tools/dimension_tool'
-import {dataModelWasm} from "../operations/operations"
+import {dataModel} from "../operations/operations"
 
 export default class GUI
 {
@@ -56,10 +56,10 @@ export default class GUI
             mySingleton.setActiveTool(tool)
         })
         this.newButton("demo", "Demo 1", this.buttonPanel, () => {
-            ops.demo(new dataModelWasm.Point3d(0, 0, 0)) 
+            ops.demo(new dataModel.Point3d(0, 0, 0)) 
         })
         this.newButton("demo 2", "Demo 100", this.buttonPanel, () => {
-            ops.demo_100(new dataModelWasm.Point3d(0, 0, 0)) 
+            ops.demo_100(new dataModel.Point3d(0, 0, 0)) 
         });
     }
 

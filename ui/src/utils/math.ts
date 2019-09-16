@@ -1,5 +1,5 @@
 var BABYLON = require("babylonjs");
-import {dataModelWasm} from "../operations/operations"
+import {dataModel} from "../operations/operations"
 
 export interface CoordTriple
 {
@@ -10,12 +10,12 @@ export interface CoordTriple
 
 export function transformModelToGraphicCoords(point: CoordTriple)
 {
-    return new dataModelWasm.Point3d(point.x, point.z, -point.y)
+    return new dataModel.Point3d(point.x, point.z, -point.y)
 }
 
 export function transformGraphicToModelCoords(point: CoordTriple)
 {
-    return new dataModelWasm.Point3d(point.x, -point.z, point.y)
+    return new dataModel.Point3d(point.x, -point.z, point.y)
 }
 
 export function toBabylonVector3(point: CoordTriple)

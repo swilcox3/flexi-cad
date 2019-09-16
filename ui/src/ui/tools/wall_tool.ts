@@ -1,4 +1,4 @@
-import {JsWall, Point3d, dataModelWasm} from '../../operations/operations'
+import {JsWall, Point3d, dataModel} from '../../operations/operations'
 
 export class WallTool {
     curTemp: JsWall;
@@ -25,7 +25,7 @@ export class WallTool {
         if(!this.undoEventId) {
             this.undoEventId = ops.beginUndoEvent("Create Wall")
         }
-        var wall = new dataModelWasm.JsWall(this.curTemp.first_pt, this.curTemp.second_pt, this.width, this.height);
+        var wall = new dataModel.JsWall(this.curTemp.first_pt, this.curTemp.second_pt, this.width, this.height);
         ops.deleteTempObject(this.curTemp.id);
         ops.createObj(this.undoEventId, wall)
         if(this.lastId) {
@@ -41,17 +41,17 @@ export class WallTool {
     {
         if(this.curTemp == null)
         {
-            var first = new dataModelWasm.Point3d(pt.x, pt.y, 0)
-            var second = new dataModelWasm.Point3d(pt.x + 1, pt.y + 1, 0)
-            this.curTemp = new dataModelWasm.JsWall(first, second, this.width, this.height);
+            var first = new dataModel.Point3d(pt.x, pt.y, 0)
+            var second = new dataModel.Point3d(pt.x + 1, pt.y + 1, 0)
+            this.curTemp = new dataModel.JsWall(first, second, this.width, this.height);
             ops.renderTempObject(this.curTemp)
         }
         else
         {
             this.createWall(picked);
-            var first = new dataModelWasm.Point3d(pt.x, pt.y, 0)
-            var second = new dataModelWasm.Point3d(pt.x + .1, pt.y + .1, 0)
-            this.curTemp = new dataModelWasm.JsWall(first, second, this.width, this.height);
+            var first = new dataModel.Point3d(pt.x, pt.y, 0)
+            var second = new dataModel.Point3d(pt.x + .1, pt.y + .1, 0)
+            this.curTemp = new dataModel.JsWall(first, second, this.width, this.height);
             ops.renderTempObject(this.curTemp)
         }
     }
@@ -60,7 +60,7 @@ export class WallTool {
     {
         if(this.curTemp != null)
         {
-            this.curTemp.second_pt = new dataModelWasm.Point3d(pt.x, pt.y, 0);
+            this.curTemp.second_pt = new dataModel.Point3d(pt.x, pt.y, 0);
             this.drawWall()
         }
         return this.canJoinToWall(hovered);
