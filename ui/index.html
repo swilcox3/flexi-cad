@@ -23,30 +23,7 @@
 
 <body>
     <canvas id="render-canvas"></canvas>
-    <script>
-        var ops = require('./app/operations/operations')
-        var {ipcRenderer} = require('electron');
-        ipcRenderer.on('newFile', function(event, connection) {
-            if(connection !== undefined) {
-                ops.setConnection(connection)
-            }
-            ops.initFile(document.getElementById('render-canvas'))
-        })
-        ipcRenderer.on('openFile', function(event, path, connection) {
-            if(connection !== undefined) {
-                ops.setConnection(connection)
-            }
-            ops.openFile(path, document.getElementById('render-canvas'))
-        });
-        ipcRenderer.on('saveFile', function(event) {
-            ops.saveFile()
-        });
-        ipcRenderer.on('saveAsFile', function(event, path) {
-            ops.saveAsFile(path)
-        });
-
-        var keys = require('./app/ui/key_events')
-    </script>
+    <script type = 'text/javascript' src="dist/index.js"></script>
 </body>
 
 </html>

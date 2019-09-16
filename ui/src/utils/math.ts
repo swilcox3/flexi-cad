@@ -1,6 +1,6 @@
 var BABYLON = require("babylonjs");
 console.log("Made it math 1");
-import {Point3d} from "../../data-model-wasm/pkg/data_model_wasm"
+import {Point3d} from "../../data-model-wasm/pkg/index"
 console.log("Made it math 2");
 
 export interface CoordTriple

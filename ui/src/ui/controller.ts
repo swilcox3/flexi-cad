@@ -7,7 +7,7 @@ import * as math from '../utils/math'
 console.log("made it controller 3")
 import * as ops from '../operations/operations'
 console.log("made it controller 4")
-import {Point3d, Vector3d} from "../../data-model-wasm/pkg/data_model_wasm"
+import {Point3d, Vector3d} from "../../data-model-wasm/pkg/index"
 console.log("made it controller 5")
 
 interface Tool

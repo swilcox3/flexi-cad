@@ -1,12 +1,10 @@
 console.log("Made it 0")
 var user:string = null;
-import init, {Point3d, getUserId} from "../../data-model-wasm/pkg/data_model_wasm"
-
-var loaded = init().then(() => {
-    user = getUserId();
-    console.log(user)
-    return true;
-});
+import("../../data-model-wasm/pkg/index").then( mod => {
+    user = mod.getUserId();
+})
+type Point3d = import("../../data-model-wasm/pkg/index").Point3d;
+type Vector3d = import("../../data-model-wasm/pkg/index").Vector3d;
 
 var kernel = require('../../native/index.node')
 import {Renderer} from '../rendering/renderer'
@@ -19,7 +17,7 @@ var pendingReads: Map<String, (val: any) => void> = new Map();
 
 export interface DataObject {
     getTempRepr(): any
-    moveObj(delta: import("../../data-model-wasm/pkg/data_model_wasm").Vector3d): void
+    moveObj(delta: Vector3d): void
     getObj(): any
     readonly id: string
 }
@@ -36,13 +34,11 @@ export function setConnection(conn: string) {
 
 export function initFile(canvas: HTMLCanvasElement)
 {
-    loaded.then(() => {
-        console.log("Compiled!")
-        filename = "defaultNew.flx"
-        kernel.init_file(filename, user)
-        initRenderer(canvas)
-        renderNext(filename)  //This will readd itself, so it's an infinite loop in the background
-    })
+    console.log("Compiled!")
+    filename = "defaultNew.flx"
+    kernel.init_file(filename, user)
+    initRenderer(canvas)
+    renderNext(filename)  //This will readd itself, so it's an infinite loop in the background
 }
 
 export function openFile(in_file:string, canvas:HTMLCanvasElement)

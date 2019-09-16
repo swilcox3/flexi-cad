@@ -7,7 +7,7 @@ const dist = path.resolve(__dirname, "dist");
 module.exports = {
   mode: "production",
   entry: {
-    index: "./src/main.ts"
+    index: "./src/index.ts"
   },
   devtool: 'inline-source-map',
   module: {
@@ -31,7 +31,7 @@ module.exports = {
     path: dist,
     filename: "bundle.js"
   },
-  target: "electron-main",
+  target: "electron-renderer",
   plugins: [
     new WasmPackPlugin({
       crateDirectory: path.resolve(__dirname, "./data-model-wasm"),
