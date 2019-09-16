@@ -2,12 +2,14 @@
   "name": "cad-ui-js",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "private": true,
   "scripts": {
     "wasm": "npm run build --prefix ./data-model-wasm",
     "build": "electron-build-env neon build --release && tsc",
     "start": "npm run wasm && npm run build && electron ./app/main.js",
-    "start_nb": "electron ./app/main.js"
+    "pack": "webpack",
+    "start_nb": "electron ./app/main.js",
+    "start_pack": "npm run pack && electron ./dist/bundle.js"
   },
   "author": "",
   "license": "ISC",
@@ -17,14 +19,17 @@
     "mousetrap": "^1.6.3"
   },
   "devDependencies": {
-    "neon-cli": "^0.2.0",
-    "electron": "^3.1.12",
-    "electron-build-env": "^0.2.0",
-    "typescript": "^3.5.3",
     "@wasm-tool/wasm-pack-plugin": "^0.4.2",
     "copy-webpack-plugin": "^5.0.3",
+    "electron": "^3.1.12",
+    "electron-build-env": "^0.2.0",
+    "neon-cli": "^0.2.0",
+    "node-loader": "^0.6.0",
     "rimraf": "^2.6.3",
+    "ts-loader": "^6.1.0",
+    "typescript": "^3.5.3",
     "webpack": "^4.33.0",
-    "webpack-cli": "^3.3.3"
+    "webpack-cli": "^3.3.3",
+    "webpack-conditional-loader": "^1.0.12"
   }
 }

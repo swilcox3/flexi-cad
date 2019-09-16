@@ -7,19 +7,34 @@ const dist = path.resolve(__dirname, "dist");
 module.exports = {
   mode: "production",
   entry: {
-    index: "./js/index.js"
+    index: "./src/main.ts"
+  },
+  devtool: 'inline-source-map',
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/
+      },
+      {
+        test: /\.node$/,
+        use: 'node-loader',
+        exclude: /node_modules/
+      }
+    ]
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js']
   },
   output: {
     path: dist,
-    filename: "[name].js"
+    filename: "bundle.js"
   },
-  target: "node",
+  target: "electron-main",
   plugins: [
-    new CopyPlugin([
-      path.resolve(__dirname, "./pkg/index.d.ts")
-    ]),
     new WasmPackPlugin({
-      crateDirectory: __dirname,
+      crateDirectory: path.resolve(__dirname, "./data-model-wasm"),
       extraArgs: "--out-name index"
     }),
   ]
