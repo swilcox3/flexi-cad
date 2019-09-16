@@ -1,10 +1,17 @@
-console.log("Made it 0")
 var user:string = null;
-import("../../data-model-wasm/pkg/index").then( mod => {
-    user = mod.getUserId();
-})
-type Point3d = import("../../data-model-wasm/pkg/index").Point3d;
-type Vector3d = import("../../data-model-wasm/pkg/index").Vector3d;
+
+export type WasmMod = typeof import("../../data-model-wasm/pkg/index");
+export var dataModelWasm: WasmMod = null;
+
+var loaded = import("../../data-model-wasm/pkg/index").then( mod => {
+    dataModelWasm = mod;
+    user = dataModelWasm.getUserId();
+});
+export type Point3d = import("../../data-model-wasm/pkg/index").Point3d;
+export type Vector3d = import("../../data-model-wasm/pkg/index").Vector3d;
+export type JsDimension = import("../../data-model-wasm/pkg/index").JsDimension;
+export type JsWall = import("../../data-model-wasm/pkg/index").JsWall;
+export type JsDoor = import("../../data-model-wasm/pkg/index").JsDoor;
 
 var kernel = require('../../native/index.node')
 import {Renderer} from '../rendering/renderer'
@@ -34,11 +41,13 @@ export function setConnection(conn: string) {
 
 export function initFile(canvas: HTMLCanvasElement)
 {
-    console.log("Compiled!")
-    filename = "defaultNew.flx"
-    kernel.init_file(filename, user)
-    initRenderer(canvas)
-    renderNext(filename)  //This will readd itself, so it's an infinite loop in the background
+    loaded.then( () => {
+        console.log("Compiled!")
+        filename = "defaultNew.flx"
+        kernel.init_file(filename, user)
+        initRenderer(canvas)
+        renderNext(filename)  //This will readd itself, so it's an infinite loop in the background
+    })
 }
 
 export function openFile(in_file:string, canvas:HTMLCanvasElement)

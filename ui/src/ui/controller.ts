@@ -1,14 +1,8 @@
-console.log("made it controller 0")
 const gui = require('./gui')
-console.log("made it controller 1")
 var BABYLON = require('babylonjs')
-console.log("made it controller 2")
 import * as math from '../utils/math'
-console.log("made it controller 3")
-import * as ops from '../operations/operations'
-console.log("made it controller 4")
-import {Point3d, Vector3d} from "../../data-model-wasm/pkg/index"
-console.log("made it controller 5")
+import * as ops from "../operations/operations"
+import {Point3d, dataModelWasm} from "../operations/operations"
 
 interface Tool
 {
@@ -207,10 +201,10 @@ class UIController
             if(this.shiftPressed) {
                 if(this.shiftPt) {
                     if(Math.abs(pt.x - this.shiftPt.x) > Math.abs(pt.y - this.shiftPt.y)) {
-                        pt = new Point3d(pt.x, this.shiftPt.y, this.shiftPt.z);
+                        pt = new dataModelWasm.Point3d(pt.x, this.shiftPt.y, this.shiftPt.z);
                     }
                     else {
-                        pt = new Point3d(this.shiftPt.x, pt.y, this.shiftPt.z);
+                        pt = new dataModelWasm.Point3d(this.shiftPt.x, pt.y, this.shiftPt.z);
                     }
                 }
                 else {
@@ -295,7 +289,7 @@ class UIController
         if(this.activeTool == null)
         {
             const event = ops.beginUndoEvent("copy objs");
-            var copyIdsPromise = ops.copyObjs(event, this.clipboard, new Point3d(20, 0, 0))
+            var copyIdsPromise = ops.copyObjs(event, this.clipboard, new dataModelWasm.Point3d(20, 0, 0))
             ops.endUndoEvent(event);
             this.selection.deselectAll();
             copyIdsPromise.then((meshes: Array<BABYLON.Mesh>) => {

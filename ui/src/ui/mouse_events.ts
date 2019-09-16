@@ -1,10 +1,6 @@
-console.log("Made it mouse 0");
 import * as math from '../utils/math'
-console.log("Made it mouse 1");
 var uiController = require('./controller')
-console.log("Made it mouse 2");
 var uiSingleton = new uiController().getInstance()
-console.log("Made it mouse 3");
 
 function getGroundPosition(scene: BABYLON.Scene, ground: BABYLON.Mesh) 
 {

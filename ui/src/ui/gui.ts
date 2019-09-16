@@ -1,16 +1,8 @@
-console.log("made it gui 0")
 import * as BABYLONGUI from "babylonjs-gui"
-console.log("made it gui 1")
 import {WallTool} from './tools/wall_tool'
-console.log("made it gui 2")
 import {DoorTool} from './tools/door_tool'
-console.log("made it gui 3")
 import {DimensionTool} from './tools/dimension_tool'
-console.log("made it gui 4")
-import * as ops from '../operations/operations'
-console.log("made it gui 5")
-import {Point3d} from '../../data-model-wasm/pkg/index'
-console.log("made it gui 6")
+import {dataModelWasm} from "../operations/operations"
 
 export default class GUI
 {
@@ -64,10 +56,10 @@ export default class GUI
             mySingleton.setActiveTool(tool)
         })
         this.newButton("demo", "Demo 1", this.buttonPanel, () => {
-            ops.demo(new Point3d(0, 0, 0)) 
+            ops.demo(new dataModelWasm.Point3d(0, 0, 0)) 
         })
         this.newButton("demo 2", "Demo 100", this.buttonPanel, () => {
-            ops.demo_100(new Point3d(0, 0, 0))
+            ops.demo_100(new dataModelWasm.Point3d(0, 0, 0)) 
         });
     }
 
