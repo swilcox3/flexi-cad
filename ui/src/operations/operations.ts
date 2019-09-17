@@ -1,7 +1,8 @@
 var user:string = null;
 
-export type WasmMod = typeof import("../../data-model-wasm/pkg/index");
-export var dataModel: WasmMod = null;
+// #if navigator.userAgent.toLowerCase().indexOf(' electron/') == -1
+export type DataModelMod = typeof import("../../data-model-wasm/pkg/index");
+export var dataModel: DataModelMod = null;
 
 var loaded = import("../../data-model-wasm/pkg/index").then( mod => {
     dataModel = mod;
@@ -12,8 +13,12 @@ export type Vector3d = import("../../data-model-wasm/pkg/index").Vector3d;
 export type JsDimension = import("../../data-model-wasm/pkg/index").JsDimension;
 export type JsWall = import("../../data-model-wasm/pkg/index").JsWall;
 export type JsDoor = import("../../data-model-wasm/pkg/index").JsDoor;
+// #else
+export var dataModel: typeof import("../../native/index.node") = require("../../native/index.node");
+var kernel = require("../../native/index.node")
+// #endif
 
-var kernel = require('../../native/index.node')
+
 import {Renderer} from '../rendering/renderer'
 
 var renderer: Renderer = null;

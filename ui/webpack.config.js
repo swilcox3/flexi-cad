@@ -16,11 +16,6 @@ module.exports = {
         test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: /node_modules/
-      },
-      {
-        test: /\.node$/,
-        use: 'node-loader',
-        exclude: /node_modules/
       }
     ]
   },
@@ -31,7 +26,6 @@ module.exports = {
     path: dist,
     filename: "bundle.js"
   },
-  target: "electron-renderer",
   plugins: [
     new WasmPackPlugin({
       crateDirectory: path.resolve(__dirname, "./data-model-wasm"),

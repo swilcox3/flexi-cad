@@ -9,6 +9,11 @@ extern crate serde;
 extern crate serde_json;
 #[macro_use] extern crate lazy_static;
 
+mod dimension;
+mod door;
+mod math;
+mod wall;
+
 use neon::prelude::*;
 use std::path::PathBuf;
 use data_model::*;
@@ -336,6 +341,11 @@ fn demo_100(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
+fn get_user_id(mut cx: FunctionContext) -> JsResult<JsString> {
+    let user = UserID::new_v4();
+    Ok(cx.string(format!("{:?}", user)))
+}
+
 register_module!(mut cx, {
     cx.export_function("get_updates", get_updates)?;
     cx.export_function("init_file", init_file)?;
@@ -365,5 +375,12 @@ register_module!(mut cx, {
     cx.export_function("get_closest_point", get_closest_point)?;
     cx.export_function("demo", demo)?;
     cx.export_function("demo_100", demo_100)?;
+    cx.export_function("projectOnLine", project_one_line)?;
+    cx.export_function("getUserId", get_user_id)?;
+    cx.export_class::<dimension::JsDimension>("JsDimension")?;
+    cx.export_class::<wall::JsWall>("JsWall")?;
+    cx.export_class::<door::JsDoor>("JsDoor")?;
+    cx.export_class::<math::Point3d>("Point3d")?;
+    cx.export_class::<math::Vector3d>("Vector3d")?;
     Ok(())
 });
