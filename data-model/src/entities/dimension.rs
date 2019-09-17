@@ -11,7 +11,7 @@ pub struct Dimension {
 
 impl Dimension {
     pub fn new(first: Point3f, second: Point3f, offset: WorldCoord) -> Dimension {
-        let id = RefID::default();
+        let id = RefID::new_v4();
         Dimension {
             id,
             first: UpdatableGeometry::new(RefPoint{pt: first}),

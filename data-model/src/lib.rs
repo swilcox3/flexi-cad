@@ -91,11 +91,3 @@ pub trait UpdateFromRefs {
     fn get_associated_geom(&self, index: ReferInd) -> Option<RefGeometry>;
     fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>); 
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}

@@ -18,7 +18,7 @@ interfaces!(Wall: dyn query_interface::ObjectClone, dyn std::fmt::Debug, dyn Dat
 
 impl Wall {
     pub fn new(first: Point3f, second: Point3f, width: WorldCoord, height: WorldCoord) -> Wall {
-        let id = RefID::default();
+        let id = RefID::new_v4();
         Wall {
             first_pt: UpdatableGeometry::new(RefPoint{pt: first}),
             second_pt: UpdatableGeometry::new(RefPoint{pt: second}),

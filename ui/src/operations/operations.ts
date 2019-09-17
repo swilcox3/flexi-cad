@@ -1,3 +1,5 @@
+import WebSocketAsPromised from "websocket-as-promised"
+
 /*export type DataModelMod = typeof import("../../data-model-wasm/pkg/index");
 export var dataModel: DataModelMod = null;
 
@@ -46,9 +48,10 @@ import {Renderer} from '../rendering/renderer'
 
 var renderer: Renderer = null;
 var filename: string = "";
-var connection: string = null;
 var pendingChanges: Map<String, Array<(obj: BABYLON.Mesh) => void>> = new Map();
 var pendingReads: Map<String, (val: any) => void> = new Map();
+
+var connection: WebSocketAsPromised = null;
 
 export interface DataObject {
     getTempRepr(): any
@@ -63,14 +66,33 @@ function initRenderer(canvas: HTMLCanvasElement)
     renderer.initialize(canvas)
 }
 
-export function setConnection(conn: string) {
-    connection = conn;
+export async function setConnection(conn: string) {
+    conn = conn + "?user_id=" + user;
+    console.log(conn)
+    connection = new WebSocketAsPromised(conn, {
+        packMessage: (data:any) => JSON.stringify(data),
+        unpackMessage: (data:any) => JSON.parse(data)
+    });
+    await connection.open();
+}
+
+function send(func: string, params: Array<any>) {
+    var msg = {
+        "func_name": func,
+        "params": params
+    }
+    connection.sendPacked(msg)
 }
 
 export function initFile(canvas: HTMLCanvasElement)
 {
     filename = "defaultNew.flx"
-    kernel.init_file(filename, user)
+    if(connection) {
+        send("init_file", [filename])
+    }
+    else {
+        kernel.init_file(filename, user)
+    }
     initRenderer(canvas)
     renderNext(filename)  //This will readd itself, so it's an infinite loop in the background
 }
@@ -78,28 +100,53 @@ export function initFile(canvas: HTMLCanvasElement)
 export function openFile(in_file:string, canvas:HTMLCanvasElement)
 {
     filename = in_file;
-    kernel.open_file(filename, user)
+    if(connection) {
+        send("open_file", [filename])
+    }
+    else {
+        kernel.open_file(filename, user)
+    }
     initRenderer(canvas)
     renderNext(filename)
 }
 
 export function saveFile()
 {
-    kernel.save_file(filename)
+    if(connection) {
+        send("save_file", [filename])
+    }
+    else {
+        kernel.save_file(filename)
+    }
 }
 
 export function saveAsFile(in_file:string)
 {
-    kernel.save_as_file(filename, in_file)
+    if(connection) {
+        send("save_as_file", [filename, in_file])
+    }
+    else {
+        kernel.save_as_file(filename, in_file)
+    }
 }
 
 export function beginUndoEvent(desc: string)
 {
-    return kernel.begin_undo_event(filename, desc, user)
+    var event = kernel.getUndoEventId();
+    if(connection) {
+        send("begin_undo_event", [filename, user, event, desc])
+    }
+    else {
+        kernel.begin_undo_event(filename, user, event, desc)
+    }
+    return event;
 }
 
 export function endUndoEvent(event: string)
 {
+    if(connection) {
+        send("end_undo_event", [])
+    }
     kernel.end_undo_event(filename, event)
 }
 
@@ -355,8 +402,8 @@ export function createDataObjectFromJSON(data: any)
     switch (data.type)
     {
         case "Wall":
-            return new kernel.Wall(data.obj.first_pt.geom.pt, data.obj.second_pt.geom.pt, data.obj.width, data.obj.height)
+            return new kernel.JsWall(data.obj.first_pt.geom.pt, data.obj.second_pt.geom.pt, data.obj.width, data.obj.height)
         case "Door":
-            return new kernel.Door(data.obj.dir.geom.pt_1, data.obj.dir.geom.pt_2, data.obj.width, data.obj.height)
+            return new kernel.JsDoor(data.obj.dir.geom.pt_1, data.obj.dir.geom.pt_2, data.obj.width, data.obj.height)
     }
 }

@@ -58,7 +58,7 @@ export class DimensionTool {
         const joinable = await this.canAttach(hovered);
         if(this.curTemp != null)
         {
-            this.curTemp.second_pt = new dataModel.Point3d(pt.x, pt.y, 0);
+            this.curTemp.set_second_pt(new dataModel.Point3d(pt.x, pt.y, 0));
             this.drawDimension()
         }
         return joinable;

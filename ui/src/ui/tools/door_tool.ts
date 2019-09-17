@@ -57,13 +57,13 @@ export class DoorTool {
                 Promise.all([first_promise, second_promise])
                 .then(([first, second]) => {
                     var project = dataModel.projectOnLine(first, second, new dataModel.Point3d(pt.x, pt.y, 0));
-                    this.curTemp.first_pt = project;
+                    this.curTemp.set_first_pt(project);
                     this.curTemp.setDir(new dataModel.Vector3d(second.x - first.x, second.y - first.y, 0));
                 });
             }
             else {
-                this.curTemp.first_pt = new dataModel.Point3d(pt.x, pt.y, 0);
-                this.curTemp.second_pt = new dataModel.Point3d(pt.x + this.length, pt.y, 0);
+                this.curTemp.set_first_pt(new dataModel.Point3d(pt.x, pt.y, 0));
+                this.curTemp.set_second_pt(new dataModel.Point3d(pt.x + this.length, pt.y, 0));
             }
             this.drawDoor()
         }

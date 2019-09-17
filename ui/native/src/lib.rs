@@ -106,10 +106,10 @@ fn save_as_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
 fn begin_undo_event(mut cx: FunctionContext) -> JsResult<JsString> {
     let path = cx.argument::<JsString>(0)?.value();
-    let desc = cx.argument::<JsString>(1)?.value();
-    let user = cx.argument::<JsString>(2)?.value();
-    let event_id = UndoEventID::new_v4();
-    operations_kernel::begin_undo_event(&PathBuf::from(path), &UserID::from_str(&user).unwrap(), event_id.clone(), desc).unwrap();
+    let user = cx.argument::<JsString>(1)?.value();
+    let event_id = cx.argument::<JsString>(2)?.value();
+    let desc = cx.argument::<JsString>(3)?.value();
+    operations_kernel::begin_undo_event(&PathBuf::from(path), &UserID::from_str(&user).unwrap(), UndoEventID::from_str(&event_id).unwrap(), desc).unwrap();
     Ok(cx.string(format!("{:?}", event_id)))
 }
 
@@ -346,6 +346,11 @@ fn get_user_id(mut cx: FunctionContext) -> JsResult<JsString> {
     Ok(cx.string(format!("{:?}", user)))
 }
 
+fn get_undo_event_id(mut cx: FunctionContext) -> JsResult<JsString> {
+    let user = UndoEventID::new_v4();
+    Ok(cx.string(format!("{:?}", user)))
+}
+
 register_module!(mut cx, {
     cx.export_function("get_updates", get_updates)?;
     cx.export_function("init_file", init_file)?;
@@ -377,6 +382,7 @@ register_module!(mut cx, {
     cx.export_function("demo_100", demo_100)?;
     cx.export_function("projectOnLine", math::project_on_line)?;
     cx.export_function("getUserId", get_user_id)?;
+    cx.export_function("getUndoEventId", get_undo_event_id)?;
     cx.export_class::<dimension::JsDimension>("JsDimension")?;
     cx.export_class::<wall::JsWall>("JsWall")?;
     cx.export_class::<door::JsDoor>("JsDoor")?;
