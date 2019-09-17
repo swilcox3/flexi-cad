@@ -1,5 +1,3 @@
-var user:string = null;
-
 /*export type DataModelMod = typeof import("../../data-model-wasm/pkg/index");
 export var dataModel: DataModelMod = null;
 
@@ -13,14 +11,36 @@ export type JsDimension = import("../../data-model-wasm/pkg/index").JsDimension;
 export type JsWall = import("../../data-model-wasm/pkg/index").JsWall;
 export type JsDoor = import("../../data-model-wasm/pkg/index").JsDoor;*/
 
-
 var kernel = require("../../native/index.node")
 export var dataModel = kernel;
-export type Point3d = import("../../native/index.node").Point3d;
-export type Vector3d = import("../../native/index.node").Vector3d;
-export type JsDimension = import("../../native/index.node").JsDimension;
-export type JsWall = import("../../native/index.node").JsWall;
-export type JsDoor = import("../../native/index.node").JsDoor;
+export class Point3d {
+    public x: number
+    public y: number
+    public z: number
+    constructor(x: number, y: number, z: number) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+}
+
+export class Vector3d {
+    public x: number
+    public y: number
+    public z: number
+    constructor(x: number, y: number, z: number) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+}
+dataModel.Point3d = Point3d;
+dataModel.Vector3d = Vector3d;
+export type JsDimension = import("../../native/index").JsDimension;
+export type JsWall = import("../../native/index").JsWall;
+export type JsDoor = import("../../native/index").JsDoor;
+
+var user:string = kernel.getUserId();
 
 import {Renderer} from '../rendering/renderer'
 
@@ -34,7 +54,7 @@ export interface DataObject {
     getTempRepr(): any
     moveObj(delta: Vector3d): void
     getObj(): any
-    readonly id: string
+    id(): string
 }
 
 function initRenderer(canvas: HTMLCanvasElement)
@@ -49,13 +69,10 @@ export function setConnection(conn: string) {
 
 export function initFile(canvas: HTMLCanvasElement)
 {
-    loaded.then( () => {
-        console.log("Compiled!")
-        filename = "defaultNew.flx"
-        kernel.init_file(filename, user)
-        initRenderer(canvas)
-        renderNext(filename)  //This will readd itself, so it's an infinite loop in the background
-    })
+    filename = "defaultNew.flx"
+    kernel.init_file(filename, user)
+    initRenderer(canvas)
+    renderNext(filename)  //This will readd itself, so it's an infinite loop in the background
 }
 
 export function openFile(in_file:string, canvas:HTMLCanvasElement)
@@ -249,7 +266,7 @@ export function createObj(event: string, obj: DataObject)
     renderFromMsg(obj.getTempRepr());
     let json_obj = obj.getObj();
     kernel.add_object(filename, event, json_obj.type, json_obj.obj)
-    return waitForChange(obj.id);
+    return waitForChange(obj.id());
 }
 
 export function joinAtPoints(event: string, id_1: string, id_2: string, pt: Point3d) 

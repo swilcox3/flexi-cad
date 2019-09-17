@@ -130,7 +130,7 @@ class MoveObjectsController
             this.delta = null;
             promise.then((_) => {
                 this.real_to_temp_objs.forEach((temp) => {
-                    ops.deleteTempObject(temp.id)
+                    ops.deleteTempObject(temp.id())
                 })
                 this.real_to_temp_objs = null;
             })

@@ -25,11 +25,11 @@ export class DoorTool {
         if(!this.undoEventId) {
             this.undoEventId = ops.beginUndoEvent("Create Door")
         }
-        var door = new dataModel.JsDoor(this.curTemp.first_pt, this.curTemp.second_pt, this.width, this.height)
-        ops.deleteTempObject(this.curTemp.id)
+        var door = new dataModel.JsDoor(this.curTemp.first_pt(), this.curTemp.second_pt(), this.width, this.height)
+        ops.deleteTempObject(this.curTemp.id())
         ops.createObj(this.undoEventId, door)
         if(this.canJoinToWall(picked)) {
-            ops.snapToLine(this.undoEventId, picked.name, door.id, pt)
+            ops.snapToLine(this.undoEventId, picked.name, door.id(), pt)
         }
     }
 

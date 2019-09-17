@@ -1,11 +1,7 @@
 var BABYLON = require('babylonjs')
-console.log("Made it renderer 1");
 var mouse = require('../ui/mouse_events')
-console.log("Made it renderer 2");
 var gui = require('../ui/gui')
-console.log("Made it renderer 3");
 var uiController = require('../ui/controller')
-console.log("Made it renderer 4");
 
 function getHoveredMesh(scene: BABYLON.Scene, ground: BABYLON.Mesh)
 {

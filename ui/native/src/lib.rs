@@ -380,7 +380,5 @@ register_module!(mut cx, {
     cx.export_class::<dimension::JsDimension>("JsDimension")?;
     cx.export_class::<wall::JsWall>("JsWall")?;
     cx.export_class::<door::JsDoor>("JsDoor")?;
-    cx.export_class::<math::Point3d>("Point3d")?;
-    cx.export_class::<math::Vector3d>("Vector3d")?;
     Ok(())
 });

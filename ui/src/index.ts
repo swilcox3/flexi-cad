@@ -1,4 +1,4 @@
-var ops = require('./operations/operations')
+var ops = require('./app/operations/operations')
 
 if(navigator.userAgent.toLowerCase().indexOf(' electron/') == -1) {
     var connection = "ws://127.0.0.1:80/ws";
@@ -6,26 +6,25 @@ if(navigator.userAgent.toLowerCase().indexOf(' electron/') == -1) {
     ops.initFile(document.getElementById('render-canvas'));
 }
 else {
-    type IpcRendererEvent = import("electron").IpcRendererEvent;
     var {ipcRenderer} = require('electron');
-    ipcRenderer.on('newFile', function(event: IpcRendererEvent, connection: string) {
+    ipcRenderer.on('newFile', function(event: string, connection: string) {
         if(connection !== undefined) {
             ops.setConnection(connection)
         }
         ops.initFile(document.getElementById('render-canvas'))
     })
-    ipcRenderer.on('openFile', function(event: IpcRendererEvent, path: string, connection: string) {
+    ipcRenderer.on('openFile', function(event: string, path: string, connection: string) {
         if(connection !== undefined) {
             ops.setConnection(connection)
         }
         ops.openFile(path, document.getElementById('render-canvas'))
     });
-    ipcRenderer.on('saveFile', function(event: IpcRendererEvent) {
+    ipcRenderer.on('saveFile', function(event: string) {
         ops.saveFile()
     });
-    ipcRenderer.on('saveAsFile', function(event: IpcRendererEvent, path: string) {
+    ipcRenderer.on('saveAsFile', function(event: string, path: string) {
         ops.saveAsFile(path)
     });
 }
 
-var keys = require('./ui/key_events')
+var keys = require('./app/ui/key_events')

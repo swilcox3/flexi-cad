@@ -23,12 +23,12 @@ export class DimensionTool {
         if(!this.undoEventId) {
             this.undoEventId = ops.beginUndoEvent("Create Dimension")
         }
-        var dim = new dataModel.JsDimension(this.curTemp.first_pt, this.curTemp.second_pt, this.offset)
-        ops.deleteTempObject(this.curTemp.id)
+        var dim = new dataModel.JsDimension(this.curTemp.first_pt(), this.curTemp.second_pt(), this.offset)
+        ops.deleteTempObject(this.curTemp.id())
         ops.createObj(this.undoEventId, dim)
         if(await this.canAttach(picked)) {
-            ops.snapToPoint(this.undoEventId, dim.id, picked.name, dim.first_pt)
-            ops.snapToPoint(this.undoEventId, dim.id, picked.name, pt)
+            ops.snapToPoint(this.undoEventId, dim.id(), picked.name, dim.first_pt())
+            ops.snapToPoint(this.undoEventId, dim.id(), picked.name, pt)
         }
     }
 
@@ -69,7 +69,7 @@ export class DimensionTool {
         if(this.undoEventId) {
             ops.cancelEvent(this.undoEventId)
         }
-        ops.deleteTempObject(this.curTemp.id)
+        ops.deleteTempObject(this.curTemp.id())
     }
 
     drawDimension()

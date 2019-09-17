@@ -8,7 +8,13 @@ let curWindow: Electron.BrowserWindow;
 let defaultNew: string = "defaultNew.flx";
 
 function createWindow(title: string) {
-  var newWindow = new BrowserWindow({"title": title, show: false});
+  var newWindow = new BrowserWindow(
+    {"title": title, 
+      show: false,
+      webPreferences: {
+        nodeIntegration: true
+      }
+    });
 
   newWindow.loadURL(url.format({
       pathname: path.join(__dirname, "../index.html"),
@@ -20,7 +26,7 @@ function createWindow(title: string) {
   var connection: string = undefined;
 
   newWindow.once("ready-to-show", () => {
-    var response = dialog.showMessageBoxSync(newWindow, {"type": "question", "buttons": ["Yes", "No"], "defaultId": 1, "message": "Connect to server?"})
+    var response = dialog.showMessageBox(newWindow, {"type": "question", "buttons": ["Yes", "No"], "defaultId": 1, "message": "Connect to server?"})
     if(response === 0) {
       connection = "ws://127.0.0.1:80/ws"
     }
@@ -68,7 +74,7 @@ app.on("ready", () => {
         {
           label:'Save As...',
           click() {
-            dialog.showSaveDialog({}).then( (file) => {
+            dialog.showSaveDialog({ title: "Save"}, (file:string) => {
               if (file != undefined) {
                 curWindow.webContents.send('saveAsFile', file)
               }

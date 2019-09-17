@@ -3,9 +3,9 @@ import {dataModel} from "../operations/operations"
 
 export interface CoordTriple
 {
-    x: number,
-    y: number,
-    z: number
+    x(): number,
+    y(): number,
+    z(): number
 }
 
 export function transformModelToGraphicCoords(point: CoordTriple)
@@ -13,7 +13,7 @@ export function transformModelToGraphicCoords(point: CoordTriple)
     return new dataModel.Point3d(point.x, point.z, -point.y)
 }
 
-export function transformGraphicToModelCoords(point: CoordTriple)
+export function transformGraphicToModelCoords(point: BABYLON.Vector3)
 {
     return new dataModel.Point3d(point.x, -point.z, point.y)
 }

@@ -127,47 +127,38 @@ impl JsWall {
         JsValue::from_serde(&data_model::to_json("Wall", &self.wall)).unwrap()
     }
 
-    #[wasm_bindgen(getter)]
     pub fn first_pt(&self) -> Point3d {
         Point3d{pt: self.wall.first_pt.geom.pt.clone()}
     }
 
-    #[wasm_bindgen(setter)]
     pub fn set_first_pt(&mut self, val: Point3d) {
         self.wall.first_pt.geom.pt = val.pt;
     }
 
-    #[wasm_bindgen(getter)]
     pub fn second_pt(&self) -> Point3d {
         Point3d{pt: self.wall.second_pt.geom.pt.clone()}
     }
 
-    #[wasm_bindgen(setter)]
     pub fn set_second_pt(&mut self, val: Point3d) {
         self.wall.second_pt.geom.pt = val.pt;
     }
 
-    #[wasm_bindgen(getter)]
     pub fn height(&self) -> WorldCoord {
         self.wall.height
     }
 
-    #[wasm_bindgen(setter)]
     pub fn set_height(&mut self, val: WorldCoord) {
         self.wall.height = val;
     }
 
-    #[wasm_bindgen(getter)]
     pub fn width(&self) -> WorldCoord {
         self.wall.width
     }
 
-    #[wasm_bindgen(setter)]
     pub fn set_width(&mut self, val: WorldCoord) {
         self.wall.width = val;
     }
 
-    #[wasm_bindgen(getter)]
     pub fn id(&self) -> String {
         format!("{:?}", self.wall.get_id().clone())
     }
@@ -203,47 +194,38 @@ impl JsDoor {
         self.door.dir.geom.set_dir(&delta.vect);
     }
 
-    #[wasm_bindgen(getter)]
     pub fn first_pt(&self) -> Point3d {
         Point3d{pt: self.door.dir.geom.pt_1.clone()}
     }
 
-    #[wasm_bindgen(setter)]
     pub fn set_first_pt(&mut self, val: Point3d) {
         self.door.dir.geom.pt_2 = val.pt;
     }
 
-    #[wasm_bindgen(getter)]
     pub fn second_pt(&self) -> Point3d {
         Point3d{pt: self.door.dir.geom.pt_2.clone()}
     }
 
-    #[wasm_bindgen(setter)]
     pub fn set_second_pt(&mut self, val: Point3d) {
         self.door.dir.geom.pt_2 = val.pt;
     }
 
-    #[wasm_bindgen(getter)]
     pub fn height(&self) -> WorldCoord {
         self.door.height
     }
 
-    #[wasm_bindgen(setter)]
     pub fn set_height(&mut self, val: WorldCoord) {
         self.door.height = val;
     }
 
-    #[wasm_bindgen(getter)]
     pub fn width(&self) -> WorldCoord {
         self.door.width
     }
 
-    #[wasm_bindgen(setter)]
     pub fn set_width(&mut self, val: WorldCoord) {
         self.door.width = val;
     }
 
-    #[wasm_bindgen(getter)]
     pub fn id(&self) -> String {
         format!("{:?}", self.door.get_id().clone())
     }
@@ -275,37 +257,30 @@ impl JsDimension {
         JsValue::from_serde(&data_model::to_json("Dimension", &self.dim)).unwrap()
     }
 
-    #[wasm_bindgen(getter)]
     pub fn first_pt(&self) -> Point3d {
         Point3d{pt: self.dim.first.geom.pt.clone()}
     }
 
-    #[wasm_bindgen(setter)]
     pub fn set_first_pt(&mut self, val: Point3d) {
         self.dim.first.geom.pt = val.pt;
     }
 
-    #[wasm_bindgen(getter)]
     pub fn second_pt(&self) -> Point3d {
         Point3d{pt: self.dim.second.geom.pt.clone()}
     }
 
-    #[wasm_bindgen(setter)]
     pub fn set_second_pt(&mut self, val: Point3d) {
         self.dim.second.geom.pt = val.pt;
     }
 
-    #[wasm_bindgen(getter)]
     pub fn offset(&self) -> WorldCoord {
         self.dim.offset
     }
 
-    #[wasm_bindgen(setter)]
     pub fn set_offset(&mut self, val: WorldCoord) {
         self.dim.offset = val;
     }
 
-    #[wasm_bindgen(getter)]
     pub fn id(&self) -> String {
         format!("{:?}", self.dim.get_id().clone())
     }
