@@ -375,7 +375,7 @@ register_module!(mut cx, {
     cx.export_function("get_closest_point", get_closest_point)?;
     cx.export_function("demo", demo)?;
     cx.export_function("demo_100", demo_100)?;
-    cx.export_function("projectOnLine", project_one_line)?;
+    cx.export_function("projectOnLine", math::project_on_line)?;
     cx.export_function("getUserId", get_user_id)?;
     cx.export_class::<dimension::JsDimension>("JsDimension")?;
     cx.export_class::<wall::JsWall>("JsWall")?;

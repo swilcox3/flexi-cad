@@ -1,7 +1,5 @@
 use data_model::*;
 use neon::prelude::*;
-use std::path::PathBuf;
-use std::str::FromStr;
 
 declare_types! {
     pub class JsDimension for Dimension {
@@ -11,14 +9,7 @@ declare_types! {
             let point_1 = neon_serde::from_value(&mut cx, arg_0)?;
             let point_2 = neon_serde::from_value(&mut cx, arg_1)?;
             let offset = cx.argument::<JsNumber>(2)?.value();
-            let id = match cx.argument_opt(3) {
-                Some(arg) => {
-                    let id_str = arg.downcast::<JsString>().or_throw(&mut cx)?.value();
-                    RefID::from_str(&id_str).unwrap()
-                }
-                None => RefID::new_v4()
-            };
-            Ok(Dimension::new(id, point_1, point_2, offset))
+            Ok(Dimension::new(point_1, point_2, offset))
         }
 
         method get(mut cx) {
@@ -111,9 +102,12 @@ declare_types! {
 
         method getObj(mut cx) {
             let this = cx.this();
-            let guard = cx.lock();
-            let dim = this.borrow(&guard);
-            let val = neon_serde::to_value(&mut cx, dim)?;
+            let dim = {
+                let guard = cx.lock();
+                let dim = this.borrow(&guard).clone();
+                dim
+            };
+            let val = neon_serde::to_value(&mut cx, &dim)?;
             Ok(val.upcast())
         }
 

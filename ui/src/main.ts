@@ -20,7 +20,7 @@ function createWindow(title: string) {
   var connection: string = undefined;
 
   newWindow.once("ready-to-show", () => {
-    var response = dialog.showMessageBox(newWindow, {"type": "question", "buttons": ["Yes", "No"], "defaultId": 1, "message": "Connect to server?"})
+    var response = dialog.showMessageBoxSync(newWindow, {"type": "question", "buttons": ["Yes", "No"], "defaultId": 1, "message": "Connect to server?"})
     if(response === 0) {
       connection = "ws://127.0.0.1:80/ws"
     }
@@ -56,7 +56,7 @@ app.on("ready", () => {
           click() {
             dialog.showOpenDialog({
               properties: ['openFile']
-            }, function (files) {
+            }, function (files: Array<string>) {
               if (files != undefined) {
                 files.forEach((file) => {
                   createWindow(file)
@@ -68,7 +68,7 @@ app.on("ready", () => {
         {
           label:'Save As...',
           click() {
-            dialog.showSaveDialog({}, (file) => {
+            dialog.showSaveDialog({}).then( (file) => {
               if (file != undefined) {
                 curWindow.webContents.send('saveAsFile', file)
               }

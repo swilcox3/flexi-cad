@@ -1,7 +1,5 @@
 use data_model::*;
 use neon::prelude::*;
-use std::path::PathBuf;
-use std::str::FromStr;
 
 declare_types! {
     pub class JsDoor for Door {
@@ -12,14 +10,7 @@ declare_types! {
             let point_2 = neon_serde::from_value(&mut cx, arg_1)?;
             let width = cx.argument::<JsNumber>(2)?.value();
             let height = cx.argument::<JsNumber>(3)?.value();
-            let id = match cx.argument_opt(5) {
-                Some(arg) => {
-                    let id_str = arg.downcast::<JsString>().or_throw(&mut cx)?.value();
-                    RefID::from_str(&id_str).unwrap()
-                }
-                None => RefID::new_v4()
-            };
-            Ok(Door::new(id, point_1, point_2, width, height))
+            Ok(Door::new(point_1, point_2, width, height))
         }
 
         method set_dir(mut cx) {
@@ -139,9 +130,12 @@ declare_types! {
 
         method getObj(mut cx) {
             let this = cx.this();
-            let guard = cx.lock();
-            let door = this.borrow(&guard);
-            let val = neon_serde::to_value(&mut cx, door)?;
+            let door = {
+                let guard = cx.lock();
+                let door = this.borrow(&guard).clone();
+                door
+            };
+            let val = neon_serde::to_value(&mut cx, &door)?;
             Ok(val.upcast())
         }
 

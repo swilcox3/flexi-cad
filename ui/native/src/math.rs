@@ -1,4 +1,5 @@
 use neon::prelude::*;
+use data_model::{Point3f, Vector3f};
 
 declare_types! {
     pub class Point3d for Point3f {
@@ -38,6 +39,7 @@ declare_types! {
                     };
                     Ok(cx.number(val).upcast())
                 }
+                _ => cx.throw_type_error("property does not exist")
             }
         }
 
@@ -68,6 +70,7 @@ declare_types! {
                     }
                     Ok(cx.undefined().upcast())
                 }
+                _ => cx.throw_type_error("property does not exist")
             }
         }
     }
@@ -109,6 +112,7 @@ declare_types! {
                     };
                     Ok(cx.number(val).upcast())
                 }
+                _ => cx.throw_type_error("property does not exist")
             }
         }
 
@@ -139,6 +143,7 @@ declare_types! {
                     }
                     Ok(cx.undefined().upcast())
                 }
+                _ => cx.throw_type_error("property does not exist")
             }
         }
     }

@@ -1,7 +1,5 @@
 use data_model::*;
 use neon::prelude::*;
-use std::path::PathBuf;
-use std::str::FromStr;
 
 declare_types! {
     pub class JsWall for Wall {
@@ -12,14 +10,7 @@ declare_types! {
             let point_2 = neon_serde::from_value(&mut cx, arg_1)?;
             let width = cx.argument::<JsNumber>(2)?.value();
             let height = cx.argument::<JsNumber>(3)?.value();
-            let id = match cx.argument_opt(4) {
-                Some(arg) => {
-                    let id_str = arg.downcast::<JsString>().or_throw(&mut cx)?.value();
-                    RefID::from_str(&id_str).unwrap()
-                }
-                None => RefID::new_v4()
-            };
-            Ok(Wall::new(id, point_1, point_2, width, height))
+            Ok(Wall::new(point_1, point_2, width, height))
         }
 
         method get(mut cx) {
@@ -128,9 +119,12 @@ declare_types! {
 
         method getObj(mut cx) {
             let this = cx.this();
-            let guard = cx.lock();
-            let wall = this.borrow(&guard);
-            let val = neon_serde::to_value(&mut cx, wall)?;
+            let wall = {
+                let guard = cx.lock();
+                let wall = this.borrow(&guard).clone();
+                wall
+            };
+            let val = neon_serde::to_value(&mut cx, &wall)?;
             Ok(val.upcast())
         }
 

@@ -1,7 +1,6 @@
 var user:string = null;
 
-// #if navigator.userAgent.toLowerCase().indexOf(' electron/') == -1
-export type DataModelMod = typeof import("../../data-model-wasm/pkg/index");
+/*export type DataModelMod = typeof import("../../data-model-wasm/pkg/index");
 export var dataModel: DataModelMod = null;
 
 var loaded = import("../../data-model-wasm/pkg/index").then( mod => {
@@ -12,12 +11,16 @@ export type Point3d = import("../../data-model-wasm/pkg/index").Point3d;
 export type Vector3d = import("../../data-model-wasm/pkg/index").Vector3d;
 export type JsDimension = import("../../data-model-wasm/pkg/index").JsDimension;
 export type JsWall = import("../../data-model-wasm/pkg/index").JsWall;
-export type JsDoor = import("../../data-model-wasm/pkg/index").JsDoor;
-// #else
-export var dataModel: typeof import("../../native/index.node") = require("../../native/index.node");
-var kernel = require("../../native/index.node")
-// #endif
+export type JsDoor = import("../../data-model-wasm/pkg/index").JsDoor;*/
 
+
+var kernel = require("../../native/index.node")
+export var dataModel = kernel;
+export type Point3d = import("../../native/index.node").Point3d;
+export type Vector3d = import("../../native/index.node").Vector3d;
+export type JsDimension = import("../../native/index.node").JsDimension;
+export type JsWall = import("../../native/index.node").JsWall;
+export type JsDoor = import("../../native/index.node").JsDoor;
 
 import {Renderer} from '../rendering/renderer'
 

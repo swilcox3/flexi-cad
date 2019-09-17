@@ -22,6 +22,9 @@ module.exports = {
   resolve: {
     extensions: ['.tsx', '.ts', '.js']
   },
+  devServer: {
+    contentBase: dist,
+  },
   output: {
     path: dist,
     filename: "bundle.js"

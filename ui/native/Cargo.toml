@@ -11,13 +11,13 @@ name = "cad_ui_js"
 crate-type = ["dylib"]
 
 [build-dependencies]
-neon-build = "0.2.0"
+neon-build = "0.3.1"
 
 [dependencies]
-neon = "0.2.0"
+neon = "0.3.1"
 operations_kernel = {version = "0.1.0", path = "../../operations"}
 data_model = {version = "0.1.0", path = "../../data-model"}
-neon-serde = "0.1.1"
+neon-serde = "0.2.0"
 serde = {version = "1.0.92", features = ["derive"]}
 serde_json = "1.0.40"
 crossbeam-channel = "0.3.8"
