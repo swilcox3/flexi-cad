@@ -67,13 +67,15 @@ function initRenderer(canvas: HTMLCanvasElement)
 }
 
 export async function setConnection(conn: string) {
-    conn = conn + "?user_id=" + user;
-    console.log(conn)
-    connection = new WebSocketAsPromised(conn, {
-        packMessage: (data:any) => JSON.stringify(data),
-        unpackMessage: (data:any) => JSON.parse(data)
-    });
-    await connection.open();
+    if(conn) {
+        conn = conn + "?user_id=" + user;
+        console.log(conn)
+        connection = new WebSocketAsPromised(conn, {
+            packMessage: (data:any) => JSON.stringify(data),
+            unpackMessage: (data:any) => JSON.parse(data)
+        });
+        await connection.open();
+    }
 }
 
 function send(func: string, params: Array<any>) {
@@ -134,7 +136,7 @@ export function beginUndoEvent(desc: string)
 {
     var event = kernel.getUndoEventId();
     if(connection) {
-        send("begin_undo_event", [filename, user, event, desc])
+        send("begin_undo_event", [filename, event, desc])
     }
     else {
         kernel.begin_undo_event(filename, user, event, desc)
@@ -145,40 +147,72 @@ export function beginUndoEvent(desc: string)
 export function endUndoEvent(event: string)
 {
     if(connection) {
-        send("end_undo_event", [])
+        send("end_undo_event", [filename, event])
     }
-    kernel.end_undo_event(filename, event)
+    else {
+        kernel.end_undo_event(filename, event)
+    }
 }
 
 export function undoLatest()
 {
-    kernel.undo_latest(filename, user)
+    if(connection) {
+        send("undo_latest", [filename])
+    }
+    else {
+        kernel.undo_latest(filename, user)
+    }
     renderNext(filename)
 }
 
 export function suspendEvent(event: string)
 {
-    kernel.suspend_event(filename, event)
+    if(connection) {
+        send("suspend_event", [filename, event])
+    }
+    else {
+        kernel.suspend_event(filename, event)
+    }
 }
 
 export function resumeEvent(event: string)
 {
-    kernel.resume_event(filename, event)
+    if(connection) {
+        send("resume_event", [filename, event])
+    }
+    else {
+        kernel.resume_event(filename, event)
+    }
 }
 
 export function cancelEvent(event: string)
 {
-    kernel.cancel_event(filename, event)
+    if(connection) {
+        send("cancel_event", [filename, event])
+    }
+    else {
+        kernel.cancel_event(filename, event)
+    }
 }
 
 export function redoLatest()
 {
-    kernel.redo_latest(filename, user)
+    if(connection) {
+        send("redo_latest", [filename])
+    }
+    else {
+        kernel.redo_latest(filename, user)
+    }
 }
 
 export function takeUndoSnapshot(event: string, id: string)
 {
-    kernel.take_undo_snapshot(filename, event, id)
+    if(connection) {
+        send("take_undo_snapshot", [filename, event, id])
+    }
+    else {
+        kernel.take_undo_snapshot(filename, event, id)
+    }
 }
 
 export function renderTempObject(obj: DataObject) 
@@ -199,7 +233,12 @@ export function deleteTempObject(id: string)
 
 export function deleteObject(event: string, id: string)
 {
-    kernel.delete_object(filename, event, id)
+    if(connection) {
+        send("delete_object", [filename, event, id])
+    }
+    else {
+        kernel.delete_object(filename, event, id)
+    }
 }
 
 function renderNext(filename: string) 
@@ -312,67 +351,125 @@ export function createObj(event: string, obj: DataObject)
 {
     renderFromMsg(obj.getTempRepr());
     let json_obj = obj.getObj();
-    kernel.add_object(filename, event, json_obj.type, json_obj.obj)
+    if(connection) {
+        send("add_object", [filename, event, json_obj.type, json_obj.obj])
+    }
+    else {
+        kernel.add_object(filename, event, json_obj.type, json_obj.obj)
+    }
     return waitForChange(obj.id());
 }
 
 export function joinAtPoints(event: string, id_1: string, id_2: string, pt: Point3d) 
 {
-    kernel.join_at_points(filename, event, id_1, id_2, pt)
+    if(connection) {
+        send("join_at_points", [filename, event, id_1, id_2, pt])
+    }
+    else {
+        kernel.join_at_points(filename, event, id_1, id_2, pt)
+    }
     return waitForAllChanges([id_1, id_2])
 }
 
 export function canReferTo(id:string)
 {
-    const query = kernel.can_refer_to(filename, id, user)
+    const query = kernel.getQueryId();
+    if(connection) {
+        send("can_refer_to", [filename, id, query])
+    } 
+    else {
+        kernel.can_refer_to(filename, id, user, query)
+    }
     return waitForRead(query)
 }
 
 export function getClosestPoint(id:string, pt: Point3d)
 {
-    const query = kernel.get_closest_point(filename, id, pt, user)
+    const query = kernel.getQueryId();
+    if(connection) {
+        send("get_closest_point", [filename, id, pt, query])
+    }
+    else {
+        kernel.get_closest_point(filename, id, pt, user, query)
+    }
     return waitForRead(query)
 }
 
 export function snapToPoint(event: string, id: string, snap_to_id: string, pt: Point3d)
 {
-    kernel.snap_to_point(filename, event, id, snap_to_id, pt)
+    if(connection) {
+        send("snap_to_point", [filename, event, id, snap_to_id, pt])
+    }
+    else {
+        kernel.snap_to_point(filename, event, id, snap_to_id, pt)
+    }
     return waitForChange(id)
 }
 
 export function snapToLine(event: string, id: string, snap_to_id: string, pt: Point3d) 
 {
-    kernel.snap_to_line(filename, event, id, snap_to_id, pt)
+    if(connection) {
+        send("snap_to_line", [filename, event, id, snap_to_id, pt])
+    }
+    else {
+        kernel.snap_to_line(filename, event, id, snap_to_id, pt)
+    }
     return waitForChange(id)
 }
 
 export function moveObj(event: string, id: string, delta: Point3d)
 {
-    kernel.move_object(filename, event, id, delta)
+    if(connection) {
+        send("move_object", [filename, event, id, delta])
+    }
+    else {
+        kernel.move_object(filename, event, id, delta)
+    }
     return waitForChange(id)
 }
 
 export function moveObjs(event: string, ids: Array<string>, delta: Point3d)
 {
-    kernel.move_objects(filename, event, ids, delta)
+    if(connection) {
+        send("move_objects", [filename, event, ids, delta])
+    }
+    else {
+        kernel.move_objects(filename, event, ids, delta)
+    }
     return waitForAllChanges(ids)
 }
 
 export function getObjectData(id: string, prop_name: string)
 {
-    const query = kernel.get_object_data(filename, id, prop_name, user)
+    const query = kernel.getQueryId();
+    if(connection) {
+        send("get_object_data", [filename, id, prop_name, query])
+    }
+    else {
+        kernel.get_object_data(filename, id, prop_name, user, query)
+    }
     return waitForRead(query)
 }
 
 export function setObjectData(event: string, id: string, data:any) 
 {
-    kernel.set_object_data(filename, event, id, JSON.stringify(data))
+    if(connection) {
+        send("set_object_data", [filename, event, id, data])
+    }
+    else {
+        kernel.set_object_data(filename, event, id, JSON.stringify(data))
+    }
     return waitForChange(id)
 }
 
 export function setObjectsDatas(event: string, data: Array<[string, any]>)
 {
-    kernel.set_objects_datas(filename, event, data)
+    if(connection) {
+        send("set_object_datas", [filename, event, data])
+    }
+    else {
+        kernel.set_objects_datas(filename, event, data)
+    }
     return waitForAllChanges(data.map(val => val[0]))
 }
 
@@ -383,18 +480,34 @@ export function getMeshByID(id: string)
 
 export function copyObjs(event: string, ids:Array<string>, delta: Point3d)
 {
-    var copyIds: Array<[string, string]> = kernel.copy_objects(filename, event, ids, delta, user);
-    return waitForAllChanges(copyIds.map(val => val[1]))
+    const query = kernel.getQueryId();
+    if(connection) {
+        send("copy_objects", [filename, event, ids, delta, user, query])
+    }
+    else {
+        kernel.copy_objects(filename, event, ids, delta, user, query);
+    }
+    return waitForRead(query)
 }
 
-export async function demo(position: Point3d)
+export function demo(position: Point3d)
 {
-    await kernel.demo(filename, position, user);
+    if(connection) {
+        send("demo", [filename, position])
+    }
+    else {
+        kernel.demo(filename, position, user);
+    }
 }
 
-export async function demo_100(position: Point3d)
+export function demo_100(position: Point3d)
 {
-    await kernel.demo_100(filename, position, user);
+    if(connection) {
+        send("demo_100", [filename, position])
+    }
+    else {
+        kernel.demo_100(filename, position, user);
+    }
 }
 
 export function createDataObjectFromJSON(data: any) 

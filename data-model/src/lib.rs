@@ -59,6 +59,24 @@ pub fn to_json<T : Serialize>(type_label: &str, obj: &T) -> serde_json::Value {
     })
 }
 
+pub fn from_json(type_str: &str, obj: serde_json::Value) -> Result<DataObject, DBError> {
+    match type_str.as_ref() {
+        "Wall" => {
+            let val: Wall = serde_json::from_value(obj).map_err(error_other)?;
+            Ok(Box::new(val))
+        }
+        "Door" => {
+            let val: Door = serde_json::from_value(obj).map_err(error_other)?;
+            Ok(Box::new(val))
+        }
+        "Dimension" => {
+            let val: Dimension = serde_json::from_value(obj).map_err(error_other)?;
+            Ok(Box::new(val))
+        }
+        _ => Err(DBError::ObjNotFound)
+    }
+}
+
 #[typetag::serde]
 pub trait Data : Object + Send + Sync {
     fn get_id(&self) -> &RefID;

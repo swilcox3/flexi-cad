@@ -167,22 +167,10 @@ fn add_object(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let type_str = cx.argument::<JsString>(2)?.value();
-    let obj = cx.argument::<JsValue>(3)?;
-    match type_str.as_ref() {
-        "Wall" => {
-            let wall: Wall = neon_serde::from_value(&mut cx, obj).unwrap();
-            operations_kernel::add_obj(&PathBuf::from(path), &event, Box::new(wall)).unwrap();
-        }
-        "Door" => {
-            let door: Door = neon_serde::from_value(&mut cx, obj).unwrap();
-            operations_kernel::add_obj(&PathBuf::from(path), &event, Box::new(door)).unwrap();
-        }
-        "Dimension" => {
-            let dim: Dimension = neon_serde::from_value(&mut cx, obj).unwrap();
-            operations_kernel::add_obj(&PathBuf::from(path), &event, Box::new(dim)).unwrap();
-        }
-        _ => panic!("Unsupported type")
-    }
+    let arg_3 = cx.argument::<JsValue>(3)?;
+    let obj: serde_json::Value = neon_serde::from_value(&mut cx, arg_3)?;
+    let boxed = data_model::from_json(&type_str, obj).unwrap();
+    operations_kernel::add_obj(&PathBuf::from(path), &event, boxed).unwrap();
     Ok(cx.undefined())
 }
 
@@ -219,24 +207,24 @@ fn snap_to_point(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
-fn can_refer_to(mut cx: FunctionContext) -> JsResult<JsString> {
+fn can_refer_to(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let id_1 = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let user = cx.argument::<JsString>(2)?.value();
-    let query_id = QueryID::new_v4();
-    operations_kernel::can_refer_to(&PathBuf::from(path), &id_1, query_id.clone(), &UserID::from_str(&user).unwrap()).unwrap();
-    Ok(cx.string(format!("{:?}", query_id)))
+    let query_id = QueryID::from_str(&cx.argument::<JsString>(3)?.value()).unwrap();
+    operations_kernel::can_refer_to(&PathBuf::from(path), &id_1, query_id, &UserID::from_str(&user).unwrap()).unwrap();
+    Ok(cx.undefined())
 }
 
-fn get_closest_point(mut cx: FunctionContext) -> JsResult<JsString> {
+fn get_closest_point(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let id_1 = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let arg_2 = cx.argument::<JsValue>(2)?;
     let user = cx.argument::<JsString>(3)?.value();
+    let query_id = QueryID::from_str(&cx.argument::<JsString>(4)?.value()).unwrap();
     let point = neon_serde::from_value(&mut cx, arg_2)?;
-    let query_id = QueryID::new_v4();
-    operations_kernel::get_closest_result(&PathBuf::from(&path), &id_1, &RefType::Point, &point, query_id.clone(), &UserID::from_str(&user).unwrap()).unwrap();
-    Ok(cx.string(format!("{:?}", query_id)))
+    operations_kernel::get_closest_result(&PathBuf::from(&path), &id_1, &RefType::Point, &point, query_id, &UserID::from_str(&user).unwrap()).unwrap();
+    Ok(cx.undefined())
 }
 
 fn move_object(mut cx: FunctionContext) -> JsResult<JsUndefined> {
@@ -257,14 +245,14 @@ fn delete_object(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
-fn get_object_data(mut cx: FunctionContext) -> JsResult<JsString> {
+fn get_object_data(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let id = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let prop_name = cx.argument::<JsString>(2)?.value();
     let user = cx.argument::<JsString>(3)?.value();
-    let query_id = QueryID::new_v4();
-    operations_kernel::get_obj_data(&PathBuf::from(path), &id, &prop_name, query_id.clone(), &UserID::from_str(&user).unwrap()).unwrap();
-    Ok(cx.string(format!("{:?}", query_id)))
+    let query_id = QueryID::from_str(&cx.argument::<JsString>(4)?.value()).unwrap();
+    operations_kernel::get_obj_data(&PathBuf::from(path), &id, &prop_name, query_id, &UserID::from_str(&user).unwrap()).unwrap();
+    Ok(cx.undefined())
 }
 
 fn set_object_data(mut cx: FunctionContext) -> JsResult<JsUndefined> {
@@ -307,7 +295,7 @@ fn move_objects(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(ret)
 }
 
-fn copy_objects(mut cx: FunctionContext) -> JsResult<JsString> {
+fn copy_objects(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let event = RefID::from_str(&cx.argument::<JsString>(1)?.value()).unwrap();
     let arg_2 = cx.argument::<JsArray>(2)?;
@@ -318,9 +306,9 @@ fn copy_objects(mut cx: FunctionContext) -> JsResult<JsString> {
         let val_str:Handle<JsString> = val.downcast().unwrap();
         data.insert(RefID::from_str(&val_str.value()).unwrap());
     }
-    let query_id = QueryID::new_v4();
-    operations_kernel::copy_objs(PathBuf::from(path), &event, data, query_id.clone(), &UserID::from_str(&user).unwrap()).unwrap();
-    Ok(cx.string(format!("{:?}", query_id)))
+    let query_id = QueryID::from_str(&cx.argument::<JsString>(4)?.value()).unwrap();
+    operations_kernel::copy_objs(PathBuf::from(path), &event, data, query_id, &UserID::from_str(&user).unwrap()).unwrap();
+    Ok(cx.undefined())
 }
 
 fn demo(mut cx: FunctionContext) -> JsResult<JsUndefined> {
@@ -347,8 +335,13 @@ fn get_user_id(mut cx: FunctionContext) -> JsResult<JsString> {
 }
 
 fn get_undo_event_id(mut cx: FunctionContext) -> JsResult<JsString> {
-    let user = UndoEventID::new_v4();
-    Ok(cx.string(format!("{:?}", user)))
+    let event = UndoEventID::new_v4();
+    Ok(cx.string(format!("{:?}", event)))
+}
+
+fn get_query_id(mut cx: FunctionContext) -> JsResult<JsString> {
+    let query = QueryID::new_v4();
+    Ok(cx.string(format!("{:?}", query)))
 }
 
 register_module!(mut cx, {
@@ -383,6 +376,7 @@ register_module!(mut cx, {
     cx.export_function("projectOnLine", math::project_on_line)?;
     cx.export_function("getUserId", get_user_id)?;
     cx.export_function("getUndoEventId", get_undo_event_id)?;
+    cx.export_function("getQueryId", get_query_id)?;
     cx.export_class::<dimension::JsDimension>("JsDimension")?;
     cx.export_class::<wall::JsWall>("JsWall")?;
     cx.export_class::<door::JsDoor>("JsDoor")?;

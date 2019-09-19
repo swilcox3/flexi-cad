@@ -169,23 +169,13 @@ impl MyWebSocket {
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::get_closest_result(&path, &id, &type_1, &point, query, &self.id).map_err(error)
             }
-            "add_wall" => {
-                let wall: Wall = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
+            "add_object" => {
+                let json = msg.params.remove(3);
+                let type_str: String = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
+                let boxed = data_model::from_json(&type_str, json).map_err(error)?;
                 let event: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::add_obj(&path, &event, Box::new(wall)).map_err(error)
-            }
-            "add_door" => {
-                let door: Door = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
-                let event: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
-                let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::add_obj(&path, &event, Box::new(door)).map_err(error)
-            }
-            "add_dimension" => {
-                let dim: Dimension = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
-                let event: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
-                let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::add_obj(&path, &event, Box::new(dim)).map_err(error)
+                operations_kernel::add_obj(&path, &event, boxed).map_err(error)
             }
             "move_obj" => {
                 let delta: Vector3f = serde_json::from_value(msg.params.remove(3)).map_err(error)?;
