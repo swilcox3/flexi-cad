@@ -1,3 +1,4 @@
+//@ts-ignore
 import WebSocketAsPromised from "websocket-as-promised"
 
 /*export type DataModelMod = typeof import("../../data-model-wasm/pkg/index");
@@ -72,8 +73,13 @@ export async function setConnection(conn: string) {
         console.log(conn)
         connection = new WebSocketAsPromised(conn, {
             packMessage: (data:any) => JSON.stringify(data),
-            unpackMessage: (data:any) => JSON.parse(data)
+            unpackMessage: (data:any) => {
+                JSON.parse(data);
+            }
         });
+        connection.onUnpackedMessage.addListener((data:any) => {
+            handleUpdate(data)
+        })
         await connection.open();
     }
 }
@@ -241,49 +247,61 @@ export function deleteObject(event: string, id: string)
     }
 }
 
+function handleUpdate(msg: any) {
+    //console.log(msg);
+    if(msg.Error) {
+        console.log(msg.Error.msg)
+    }
+    else if(msg.Delete) {
+        renderer.deleteMesh(msg.Delete.key)
+    }
+    else {
+        if(msg.Read) {
+            var cb = pendingReads.get(msg.Read.query_id) 
+            if(cb) {
+                cb(msg.Read.data)
+                pendingReads.delete(msg.Read.query_id)
+            }
+        }
+        else {
+            var id = null;
+            if(msg.Mesh) {
+                console.log("Made it mesh")
+                id = msg.Mesh.data.id;
+                renderer.renderMesh(msg.Mesh.data, id)
+            }
+            if(msg.Other) {
+                id = msg.Other.data.id;
+                renderer.renderObject(msg.Other.data, id)
+            }
+            if(id) {
+                let callbacks = pendingChanges.get(id)
+                if(callbacks) {
+                    let mesh = renderer.getMesh(id)
+                    callbacks.forEach((callback) => {
+                        callback(mesh)
+                    })
+                }
+                pendingChanges.delete(id)
+            }
+        }
+    }
+}
+
+function handleUpdates(err: any, updates:any) {
+    if(!err) {
+        updates.forEach((msg: any) => {
+            handleUpdate(msg)
+        })
+    }
+    renderNext(filename)
+}
+
 function renderNext(filename: string) 
 {
-    kernel.get_updates(filename, (err: any, updates: any) => {
-        if(!err) {
-            updates.forEach((msg: any) => {
-                //console.log(msg);
-                if(msg.Delete) {
-                    renderer.deleteMesh(msg.Delete.key)
-                }
-                else {
-                    if(msg.Read) {
-                        var cb = pendingReads.get(msg.Read.query_id) 
-                        if(cb) {
-                            cb(msg.Read.data)
-                            pendingReads.delete(msg.Read.query_id)
-                        }
-                    }
-                    else {
-                        var id = null;
-                        if(msg.Mesh) {
-                            id = msg.Mesh.data.id;
-                            renderer.renderMesh(msg.Mesh.data, id)
-                        }
-                        if(msg.Other) {
-                            id = msg.Other.data.id;
-                            renderer.renderObject(msg.Other.data, id)
-                        }
-                        if(id) {
-                            let callbacks = pendingChanges.get(id)
-                            if(callbacks) {
-                                let mesh = renderer.getMesh(id)
-                                callbacks.forEach((callback) => {
-                                    callback(mesh)
-                                })
-                            }
-                            pendingChanges.delete(id)
-                        }
-                    }
-                }
-            })
-        }
-        renderNext(filename)
-    })
+    if(!connection) {
+        kernel.get_updates(filename, handleUpdates);
+    }
 }
 
 function addPendingChange(id: string, callback: (obj: BABYLON.Mesh) => void) 

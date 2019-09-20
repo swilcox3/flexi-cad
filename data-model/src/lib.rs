@@ -43,7 +43,8 @@ pub enum UpdateMsg {
     Delete{key: RefID},
     Mesh{data: MeshData},
     Read{query_id: QueryID, user: UserID, data: serde_json::Value},
-    Other{data: serde_json::Value}
+    Other{data: serde_json::Value},
+    Error{msg: String}
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

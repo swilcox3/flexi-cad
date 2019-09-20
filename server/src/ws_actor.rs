@@ -66,7 +66,8 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for MyWebSocket {
                 info!("{:?}", cmd);
                 if let Err(e) = self.route(cmd) {
                     error!("{:?}", e);
-                    ctx.text(e);
+                    let msg = data_model::UpdateMsg::Error{msg: format!("{:?}", e)};
+                    ctx.text(serde_json::to_string(&msg).unwrap());
                 }
             }
             ws::Message::Binary(_) => (),
@@ -177,7 +178,7 @@ impl MyWebSocket {
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::add_obj(&path, &event, boxed).map_err(error)
             }
-            "move_obj" => {
+            "move_object" => {
                 let delta: Vector3f = serde_json::from_value(msg.params.remove(3)).map_err(error)?;
                 let id: RefID = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
                 let event: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
@@ -210,7 +211,7 @@ impl MyWebSocket {
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::set_objs_data(path, &event, data).map_err(error)
             }
-            "move_objs" => {
+            "move_objects" => {
                 let delta: Vector3f = serde_json::from_value(msg.params.remove(3)).map_err(error)?;
                 let data: std::collections::HashSet<RefID> = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
                 let event: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
