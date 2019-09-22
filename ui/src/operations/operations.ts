@@ -5,8 +5,8 @@ import {Point3d, Vector3d} from "../utils/math"
 var kernel: any = null;
 var user: string = null;
 // #if process.env.BUILD_TARGET != "browser"
-    kernel = require("../../native/index.node")
-    user = kernel.getUserId();
+//    kernel = require("../../native/index.node")
+//    user = kernel.getUserId();
 // #endif
 export default(mod?: any) => {
     console.log("made it")

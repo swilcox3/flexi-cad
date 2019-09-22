@@ -8,6 +8,7 @@ edition = "2018"
 actix = "0.8.3"
 actix-web = "1.0.5"
 actix-web-actors = "1.0.0"
+actix-files = "0.1.4"
 serde = {version = "1.0.92", features = ["derive"]}
 serde_json = "1.0.40"
 data_model = {version = "0.1.0", path = "../data-model"}

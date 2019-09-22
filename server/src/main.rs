@@ -1,6 +1,7 @@
 extern crate actix;
 extern crate actix_web;
 extern crate actix_web_actors;
+extern crate actix_files;
 extern crate serde;
 extern crate serde_json;
 extern crate operations_kernel;
@@ -11,22 +12,33 @@ extern crate crossbeam_channel;
 extern crate structopt;
 extern crate ccl;
 
-use actix_web::{web, App, HttpServer};
+use actix_web::{web, App, HttpServer, Error};
+use actix_files::NamedFile;
 use structopt::StructOpt;
 use log::LevelFilter;
 
 mod ws_actor;
 
-pub fn start(url: &str, ws_port: u16) {
+pub fn index() -> Result<NamedFile, Error> {
+    Ok(NamedFile::open("../ui/dist/index.html")?)
+}
+
+pub fn start(url: &str, ws_port: u16, http_port: u16) {
     let ws_url = format!("{}:{}", url, ws_port);
+    let http_url = format!("{}:{}", url, http_port);
     HttpServer::new(move || {
         App::new()
+            .service(
+                web::resource("/")
+                    .route(web::get().to(index))
+            )
             .service(
                 web::resource("/ws")
                     .route(web::get().to(ws_actor::ws_index))
             )
     })
     .bind(&ws_url).unwrap()
+    .bind(&http_url).unwrap()
     .run().unwrap();
 }
 
@@ -40,6 +52,10 @@ struct Opt {
     ///Port to run websockets from
     #[structopt(name="ws_port", default_value="80")]
     ws_port: u16,
+
+    ///Port to run http from
+    #[structopt(name="http_port", default_value="8000")]
+    http_port: u16,
 
     ///Logging level, from 0-5 where 0 is off
     #[structopt(short="l", long = "log", default_value="3")]
@@ -74,5 +90,5 @@ fn main() {
         .chain(std::io::stdout())
         .apply().unwrap();    
 
-    start(&opt.url, opt.ws_port);
+    start(&opt.url, opt.ws_port, opt.http_port);
 }

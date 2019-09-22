@@ -5,8 +5,8 @@
   "private": true,
   "scripts": {
     "wasm": "npm run build --prefix ./data-model-wasm",
-    "build": "electron-build-env neon build --release && tsc",
-    "pack": "rimraf data-model-wasm/pkg && rimraf dist && webpack",
+    "build": "electron-build-env neon build --release && tsc --module commonjs",
+    "pack": "cross-env BUILD_TARGET=browser rimraf data-model-wasm/pkg && rimraf dist && webpack",
     "start": "npm run build && electron ./app/main.js",
     "start_nb": "electron ./app/main.js"
   },
@@ -21,6 +21,7 @@
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "^0.4.2",
     "copy-webpack-plugin": "^5.0.3",
+    "cross-env": "^6.0.0",
     "electron": "^3.1.13",
     "electron-build-env": "^0.2.0",
     "neon-cli": "^0.3.1",
