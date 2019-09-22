@@ -85,6 +85,7 @@ export class Renderer {
         });
     }
     initialize(canvas: HTMLCanvasElement) {
+        console.log("made it initialize")
         const engine = new BABYLON.Engine(canvas, true, {stencil: true});
         this.createScene(canvas, engine);
         engine.runRenderLoop(() => {

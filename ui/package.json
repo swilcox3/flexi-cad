@@ -8,6 +8,7 @@
     "build": "electron-build-env neon build --release && tsc --module commonjs",
     "pack": "cross-env BUILD_TARGET=browser rimraf data-model-wasm/pkg && rimraf dist && webpack",
     "start": "npm run build && electron ./app/main.js",
+    "start_wp": "webpack-dev-server --open",
     "start_nb": "electron ./app/main.js"
   },
   "author": "",
@@ -31,6 +32,7 @@
     "typescript": "^3.5.3",
     "webpack": "^4.33.0",
     "webpack-cli": "^3.3.3",
-    "webpack-conditional-loader": "^1.0.12"
+    "webpack-conditional-loader": "^1.0.12",
+    "webpack-dev-server": "^3.8.1"
   }
 }

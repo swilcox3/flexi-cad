@@ -5,7 +5,7 @@ import {DimensionTool} from './tools/dimension_tool'
 import * as ops from "../operations/operations"
 import {Point3d} from "../utils/math"
 
-export default class GUI
+export class GUI
 {
     private advancedTexture: BABYLONGUI.AdvancedDynamicTexture
     private buttonPanel: BABYLONGUI.StackPanel;
