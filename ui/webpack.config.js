@@ -14,7 +14,7 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
+        use: ['ts-loader', 'webpack-conditional-loader'],
         exclude: /node_modules/
       }
     ]
@@ -37,5 +37,6 @@ module.exports = {
       crateDirectory: path.resolve(__dirname, "./data-model-wasm"),
       extraArgs: "--out-name index"
     }),
+
   ]
 };

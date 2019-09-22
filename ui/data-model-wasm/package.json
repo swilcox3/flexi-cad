@@ -3,7 +3,7 @@
   "name": "data-model-wasm",
   "version": "0.1.0",
   "scripts": {
-    "build": "rimraf pkg && wasm-pack build --release --target web"
+    "build": "rimraf pkg && wasm-pack build --release --target web --out-name index"
   },
   "devDependencies": {
     "rimraf": "^2.6.3"

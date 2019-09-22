@@ -1,6 +1,7 @@
-var ops = require('./app/operations/operations')
 var keys = require('./app/ui/key_events')
 var {ipcRenderer} = require('electron');
+
+var ops = require('./app/operations/operations')
 ipcRenderer.on('newFile', function(event: string, connection: string) {
     if(connection !== undefined) {
         ops.setConnection(connection).then( () => {

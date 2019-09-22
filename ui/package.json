@@ -6,7 +6,7 @@
   "scripts": {
     "wasm": "npm run build --prefix ./data-model-wasm",
     "build": "electron-build-env neon build --release && tsc",
-    "start_wasm": "rimraf data-model-wasm/pkg && rimraf dist && webpack && tsc && electron ./app/main.js",
+    "pack": "rimraf data-model-wasm/pkg && rimraf dist && webpack",
     "start": "npm run build && electron ./app/main.js",
     "start_nb": "electron ./app/main.js"
   },

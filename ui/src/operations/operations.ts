@@ -1,49 +1,22 @@
 //@ts-ignore
 import WebSocketAsPromised from "websocket-as-promised"
+import {Point3d, Vector3d} from "../utils/math"
 
-/*export type DataModelMod = typeof import("../../data-model-wasm/pkg/index");
-export var dataModel: DataModelMod = null;
-
-var loaded = import("../../data-model-wasm/pkg/index").then( mod => {
-    dataModel = mod;
-    user = dataModel.getUserId();
-});
-export type Point3d = import("../../data-model-wasm/pkg/index").Point3d;
-export type Vector3d = import("../../data-model-wasm/pkg/index").Vector3d;
-export type JsDimension = import("../../data-model-wasm/pkg/index").JsDimension;
-export type JsWall = import("../../data-model-wasm/pkg/index").JsWall;
-export type JsDoor = import("../../data-model-wasm/pkg/index").JsDoor;*/
-
-var kernel = require("../../native/index.node")
+var kernel: any = null;
+var user: string = null;
+// #if process.env.BUILD_TARGET != "browser"
+    kernel = require("../../native/index.node")
+    user = kernel.getUserId();
+// #endif
+export default(mod?: any) => {
+    console.log("made it")
+    if(mod) {
+        kernel = mod;
+        user = kernel.getUserId();
+    }
+}
 export var dataModel = kernel;
-export class Point3d {
-    public x: number
-    public y: number
-    public z: number
-    constructor(x: number, y: number, z: number) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-}
 
-export class Vector3d {
-    public x: number
-    public y: number
-    public z: number
-    constructor(x: number, y: number, z: number) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-}
-dataModel.Point3d = Point3d;
-dataModel.Vector3d = Vector3d;
-export type JsDimension = import("../../native/index").JsDimension;
-export type JsWall = import("../../native/index").JsWall;
-export type JsDoor = import("../../native/index").JsDoor;
-
-var user:string = kernel.getUserId();
 
 import {Renderer} from '../rendering/renderer'
 
