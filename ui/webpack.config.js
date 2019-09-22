@@ -30,6 +30,9 @@ module.exports = {
     filename: "bundle.js"
   },
   plugins: [
+    new CopyPlugin([
+      path.resolve(__dirname, "index.html")
+    ]),
     new WasmPackPlugin({
       crateDirectory: path.resolve(__dirname, "./data-model-wasm"),
       extraArgs: "--out-name index"
