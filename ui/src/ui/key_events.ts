@@ -1,7 +1,7 @@
 import * as ops from '../operations/operations'
-var myController = require('./controller')
-var mySingleton = new myController().getInstance();
-var Mousetrap = require('mousetrap')
+import {UIControllerSingleton} from './controller'
+var mySingleton = new UIControllerSingleton().getInstance();
+import * as Mousetrap from 'mousetrap'
 
 Mousetrap.bind('mod+z', () => ops.undoLatest())
 Mousetrap.bind('mod+y', () => ops.redoLatest())

@@ -1,9 +1,11 @@
 import * as BABYLONGUI from "babylonjs-gui"
+import * as BABYLON from 'babylonjs'
 import {WallTool} from './tools/wall_tool'
 import {DoorTool} from './tools/door_tool'
 import {DimensionTool} from './tools/dimension_tool'
 import * as ops from "../operations/operations"
 import {Point3d} from "../utils/math"
+import {UIControllerSingleton} from './controller'
 
 export class GUI
 {
@@ -33,8 +35,7 @@ export class GUI
 
     init()
     {
-        var myController = require('./controller')
-        var mySingleton = new myController().getInstance()
+        var mySingleton = new UIControllerSingleton().getInstance()
         this.advancedTexture = BABYLONGUI.AdvancedDynamicTexture.CreateFullscreenUI("ui1");
         this.buttonPanel = new BABYLONGUI.StackPanel();
         this.buttonPanel.width = "100px";
@@ -169,9 +170,4 @@ export class GUI
     }
 }
 
-var guiInstance = new GUI()
-
-module.exports = {
-    guiInstance
-}
-
+export var guiInstance = new GUI()

@@ -1,4 +1,4 @@
-var BABYLON = require("babylonjs");
+import * as BABYLON from 'babylonjs'
 
 export class Point3d {
     public x: number

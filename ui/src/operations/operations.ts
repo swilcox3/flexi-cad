@@ -1,6 +1,7 @@
 //@ts-ignore
 import WebSocketAsPromised from "websocket-as-promised"
 import {Point3d, Vector3d} from "../utils/math"
+import * as BABYLON from 'babylonjs'
 
 var kernel: any = null;
 var user: string = null;
@@ -8,7 +9,7 @@ var user: string = null;
 //    kernel = require("../../native/index.node")
 //    user = kernel.getUserId();
 // #endif
-export default(mod?: any) => {
+export function initialize(mod?: any) {
     console.log("made it")
     if(mod) {
         kernel = mod;
@@ -16,7 +17,6 @@ export default(mod?: any) => {
     }
 }
 export var dataModel = kernel;
-
 
 import {Renderer} from '../rendering/renderer'
 

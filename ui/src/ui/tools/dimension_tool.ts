@@ -1,5 +1,6 @@
 import * as ops from '../../operations/operations'
 import {Point3d} from "../../utils/math"
+import * as BABYLON from 'babylonjs'
 
 export class DimensionTool {
     curTemp: JsDimension
@@ -33,20 +34,24 @@ export class DimensionTool {
         }
     }
 
-    async onMouseDown(pt: Point3d, picked: BABYLON.Mesh)
+    onMouseDown(pt: Point3d, picked: BABYLON.Mesh)
     {
         if(this.curTemp == null)
         {
-            var first = null;
-            if(await this.canAttach(picked)) {
-                first = await ops.getClosestPoint(picked.name, new Point3d(pt.x, pt.y, 0));
-            }
-            else {
-                first = new Point3d(pt.x, pt.y, 0)
-            }
-            var second = new Point3d(pt.x + 1, pt.y, 0)
-            this.curTemp = new ops.dataModel.JsDimension(first, second, this.offset);
-            ops.renderTempObject(this.curTemp)
+            var first: Point3d = null;
+            this.canAttach(picked).then( res => {
+                if(res) {
+                    ops.getClosestPoint(picked.name, new Point3d(pt.x, pt.y, 0)).then( pt => {
+                        first = pt;
+                    })
+                }
+                else {
+                    first = new Point3d(pt.x, pt.y, 0)
+                }
+                var second = new Point3d(pt.x + 1, pt.y, 0)
+                this.curTemp = new ops.dataModel.JsDimension(first, second, this.offset);
+                ops.renderTempObject(this.curTemp)
+            }) 
         }
         else {
             this.createDimension(new Point3d(pt.x, pt.y, 0), picked);
@@ -54,15 +59,18 @@ export class DimensionTool {
         }
     }
 
-    async onMouseMove(pt: Point3d, hovered: BABYLON.Mesh)
+    onMouseMove(pt: Point3d, hovered: BABYLON.Mesh)
     {
-        const joinable = await this.canAttach(hovered);
         if(this.curTemp != null)
         {
             //@ts-ignore
             this.curTemp.set_second_pt(new Point3d(pt.x, pt.y, 0));
             this.drawDimension()
         }
+        var joinable = false;
+        this.canAttach(hovered).then(res => {
+            joinable = true;
+        })
         return joinable;
     }
 
@@ -81,13 +89,14 @@ export class DimensionTool {
         }
     }
 
-    async finish(pt: Point3d, picked: BABYLON.Mesh)
+    finish(pt: Point3d, picked: BABYLON.Mesh)
     {
         if(this.curTemp) {
-            await this.createDimension(new Point3d(pt.x, pt.y, 0), picked);
-        }
-        if(this.undoEventId) {
-            ops.endUndoEvent(this.undoEventId)
+            this.createDimension(new Point3d(pt.x, pt.y, 0), picked).then(() => {
+                if(this.undoEventId) {
+                    ops.endUndoEvent(this.undoEventId)
+                }
+            });
         }
     }
 }

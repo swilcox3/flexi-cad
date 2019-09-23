@@ -1,5 +1,6 @@
 import * as ops from '../../operations/operations'
 import {Point3d} from "../../utils/math"
+import * as BABYLON from 'babylonjs'
 
 export class WallTool {
     curTemp: JsWall;

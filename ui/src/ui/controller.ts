@@ -1,14 +1,14 @@
-const gui = require('./gui')
-var BABYLON = require('babylonjs')
+import * as gui from './gui'
+import * as BABYLON from 'babylonjs'
 import {Point3d, transformGraphicToModelCoords} from '../utils/math'
 import * as ops from "../operations/operations"
 
 interface Tool
 {
-    onMouseDown(pt: Point3d, hovered?:BABYLON.Mesh):undefined,
+    onMouseDown(pt: Point3d, hovered?:BABYLON.Mesh):void,
     onMouseMove(pt: Point3d, hovered?:BABYLON.Mesh):boolean,
-    cancel():undefined,
-    finish(pt: Point3d, picked?:BABYLON.Mesh):undefined
+    cancel():void,
+    finish(pt: Point3d, picked?:BABYLON.Mesh):void
 }
 
 class SelectionController
@@ -300,7 +300,7 @@ class UIController
     }
 }
 
-class UIControllerSingleton
+export class UIControllerSingleton
 {
     private static instance: UIController
     constructor() {
@@ -313,5 +313,3 @@ class UIControllerSingleton
         return UIControllerSingleton.instance
     }
 }
-
-module.exports = UIControllerSingleton
