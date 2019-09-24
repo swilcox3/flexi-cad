@@ -1,7 +1,5 @@
 import './ui/key_events'
 
-export type DataModelMod = typeof import("../data-model-wasm/pkg/index");
-
 declare global {
     export type JsDimension = import("../data-model-wasm/pkg/index").JsDimension;
     export type JsWall = import("../data-model-wasm/pkg/index").JsWall;
