@@ -11,7 +11,11 @@
 /ui/native/target
 /ui/native/index.node
 /ui/native/artifacts.json
-/ui/data-model-wasm/dist
-/ui/data-model-wasm/node_modules
-/ui/data-model-wasm/target
 /ui/dist
+/browser/data-model-wasm/dist
+/browser/data-model-wasm/node_modules
+/browser/data-model-wasm/target
+/browser/data-model-wasm/pkg
+/browser/dist
+/browser/pkg
+/browser/node_modules
