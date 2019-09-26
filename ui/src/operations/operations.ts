@@ -3,20 +3,19 @@ import WebSocketAsPromised from "websocket-as-promised"
 import {Point3d, Vector3d} from "../utils/math"
 import * as BABYLON from 'babylonjs'
 
-var kernel: any = null;
+export var dataModel: any = null;
 var user: string = null;
 // #if process.env.BUILD_TARGET != "browser"
-//    kernel = require("../../native/index.node")
-//    user = kernel.getUserId();
+//    dataModel = require("../../native/index.node")
+//    user = dataModel.getUserId();
 // #endif
 export function initialize(mod?: any) {
-    console.log("made it")
+    console.log(mod)
     if(mod) {
-        kernel = mod;
-        user = kernel.getUserId();
+        dataModel = mod;
+        user = dataModel.getUserId();
     }
 }
-export var dataModel = kernel;
 
 import {Renderer} from '../rendering/renderer'
 
@@ -25,7 +24,7 @@ var filename: string = "";
 var pendingChanges: Map<String, Array<(obj: BABYLON.Mesh) => void>> = new Map();
 var pendingReads: Map<String, (val: any) => void> = new Map();
 
-var connection: WebSocketAsPromised = null;
+var connection: any = null;
 
 export interface DataObject {
     getTempRepr(): any
@@ -72,7 +71,7 @@ export function initFile(canvas: HTMLCanvasElement)
         send("init_file", [filename])
     }
     else {
-        kernel.init_file(filename, user)
+        dataModel.init_file(filename, user)
     }
     initRenderer(canvas)
     renderNext(filename)  //This will readd itself, so it's an infinite loop in the background
@@ -85,7 +84,7 @@ export function openFile(in_file:string, canvas:HTMLCanvasElement)
         send("open_file", [filename])
     }
     else {
-        kernel.open_file(filename, user)
+        dataModel.open_file(filename, user)
     }
     initRenderer(canvas)
     renderNext(filename)
@@ -97,7 +96,7 @@ export function saveFile()
         send("save_file", [filename])
     }
     else {
-        kernel.save_file(filename)
+        dataModel.save_file(filename)
     }
 }
 
@@ -107,18 +106,18 @@ export function saveAsFile(in_file:string)
         send("save_as_file", [filename, in_file])
     }
     else {
-        kernel.save_as_file(filename, in_file)
+        dataModel.save_as_file(filename, in_file)
     }
 }
 
 export function beginUndoEvent(desc: string)
 {
-    var event = kernel.getUndoEventId();
+    var event = dataModel.getUndoEventId();
     if(connection) {
         send("begin_undo_event", [filename, event, desc])
     }
     else {
-        kernel.begin_undo_event(filename, user, event, desc)
+        dataModel.begin_undo_event(filename, user, event, desc)
     }
     return event;
 }
@@ -129,7 +128,7 @@ export function endUndoEvent(event: string)
         send("end_undo_event", [filename, event])
     }
     else {
-        kernel.end_undo_event(filename, event)
+        dataModel.end_undo_event(filename, event)
     }
 }
 
@@ -139,7 +138,7 @@ export function undoLatest()
         send("undo_latest", [filename])
     }
     else {
-        kernel.undo_latest(filename, user)
+        dataModel.undo_latest(filename, user)
     }
     renderNext(filename)
 }
@@ -150,7 +149,7 @@ export function suspendEvent(event: string)
         send("suspend_event", [filename, event])
     }
     else {
-        kernel.suspend_event(filename, event)
+        dataModel.suspend_event(filename, event)
     }
 }
 
@@ -160,7 +159,7 @@ export function resumeEvent(event: string)
         send("resume_event", [filename, event])
     }
     else {
-        kernel.resume_event(filename, event)
+        dataModel.resume_event(filename, event)
     }
 }
 
@@ -170,7 +169,7 @@ export function cancelEvent(event: string)
         send("cancel_event", [filename, event])
     }
     else {
-        kernel.cancel_event(filename, event)
+        dataModel.cancel_event(filename, event)
     }
 }
 
@@ -180,7 +179,7 @@ export function redoLatest()
         send("redo_latest", [filename])
     }
     else {
-        kernel.redo_latest(filename, user)
+        dataModel.redo_latest(filename, user)
     }
 }
 
@@ -190,7 +189,7 @@ export function takeUndoSnapshot(event: string, id: string)
         send("take_undo_snapshot", [filename, event, id])
     }
     else {
-        kernel.take_undo_snapshot(filename, event, id)
+        dataModel.take_undo_snapshot(filename, event, id)
     }
 }
 
@@ -216,7 +215,7 @@ export function deleteObject(event: string, id: string)
         send("delete_object", [filename, event, id])
     }
     else {
-        kernel.delete_object(filename, event, id)
+        dataModel.delete_object(filename, event, id)
     }
 }
 
@@ -273,7 +272,7 @@ function handleUpdates(err: any, updates:any) {
 function renderNext(filename: string) 
 {
     if(!connection) {
-        kernel.get_updates(filename, handleUpdates);
+        dataModel.get_updates(filename, handleUpdates);
     }
 }
 
@@ -346,7 +345,7 @@ export function createObj(event: string, obj: DataObject)
         send("add_object", [filename, event, json_obj.type, json_obj.obj])
     }
     else {
-        kernel.add_object(filename, event, json_obj.type, json_obj.obj)
+        dataModel.add_object(filename, event, json_obj.type, json_obj.obj)
     }
     return waitForChange(obj.id());
 }
@@ -357,31 +356,31 @@ export function joinAtPoints(event: string, id_1: string, id_2: string, pt: Poin
         send("join_at_points", [filename, event, id_1, id_2, pt])
     }
     else {
-        kernel.join_at_points(filename, event, id_1, id_2, pt)
+        dataModel.join_at_points(filename, event, id_1, id_2, pt)
     }
     return waitForAllChanges([id_1, id_2])
 }
 
 export function canReferTo(id:string)
 {
-    const query = kernel.getQueryId();
+    const query = dataModel.getQueryId();
     if(connection) {
         send("can_refer_to", [filename, id, query])
     } 
     else {
-        kernel.can_refer_to(filename, id, user, query)
+        dataModel.can_refer_to(filename, id, user, query)
     }
     return waitForRead(query)
 }
 
 export function getClosestPoint(id:string, pt: Point3d)
 {
-    const query = kernel.getQueryId();
+    const query = dataModel.getQueryId();
     if(connection) {
         send("get_closest_point", [filename, id, pt, query])
     }
     else {
-        kernel.get_closest_point(filename, id, pt, user, query)
+        dataModel.get_closest_point(filename, id, pt, user, query)
     }
     return waitForRead(query)
 }
@@ -392,7 +391,7 @@ export function snapToPoint(event: string, id: string, snap_to_id: string, pt: P
         send("snap_to_point", [filename, event, id, snap_to_id, pt])
     }
     else {
-        kernel.snap_to_point(filename, event, id, snap_to_id, pt)
+        dataModel.snap_to_point(filename, event, id, snap_to_id, pt)
     }
     return waitForChange(id)
 }
@@ -403,7 +402,7 @@ export function snapToLine(event: string, id: string, snap_to_id: string, pt: Po
         send("snap_to_line", [filename, event, id, snap_to_id, pt])
     }
     else {
-        kernel.snap_to_line(filename, event, id, snap_to_id, pt)
+        dataModel.snap_to_line(filename, event, id, snap_to_id, pt)
     }
     return waitForChange(id)
 }
@@ -414,7 +413,7 @@ export function moveObj(event: string, id: string, delta: Point3d)
         send("move_object", [filename, event, id, delta])
     }
     else {
-        kernel.move_object(filename, event, id, delta)
+        dataModel.move_object(filename, event, id, delta)
     }
     return waitForChange(id)
 }
@@ -425,19 +424,19 @@ export function moveObjs(event: string, ids: Array<string>, delta: Point3d)
         send("move_objects", [filename, event, ids, delta])
     }
     else {
-        kernel.move_objects(filename, event, ids, delta)
+        dataModel.move_objects(filename, event, ids, delta)
     }
     return waitForAllChanges(ids)
 }
 
 export function getObjectData(id: string, prop_name: string)
 {
-    const query = kernel.getQueryId();
+    const query = dataModel.getQueryId();
     if(connection) {
         send("get_object_data", [filename, id, prop_name, query])
     }
     else {
-        kernel.get_object_data(filename, id, prop_name, user, query)
+        dataModel.get_object_data(filename, id, prop_name, user, query)
     }
     return waitForRead(query)
 }
@@ -448,7 +447,7 @@ export function setObjectData(event: string, id: string, data:any)
         send("set_object_data", [filename, event, id, data])
     }
     else {
-        kernel.set_object_data(filename, event, id, JSON.stringify(data))
+        dataModel.set_object_data(filename, event, id, JSON.stringify(data))
     }
     return waitForChange(id)
 }
@@ -459,7 +458,7 @@ export function setObjectsDatas(event: string, data: Array<[string, any]>)
         send("set_object_datas", [filename, event, data])
     }
     else {
-        kernel.set_objects_datas(filename, event, data)
+        dataModel.set_objects_datas(filename, event, data)
     }
     return waitForAllChanges(data.map(val => val[0]))
 }
@@ -471,12 +470,12 @@ export function getMeshByID(id: string)
 
 export function copyObjs(event: string, ids:Array<string>, delta: Point3d)
 {
-    const query = kernel.getQueryId();
+    const query = dataModel.getQueryId();
     if(connection) {
         send("copy_objects", [filename, event, ids, delta, user, query])
     }
     else {
-        kernel.copy_objects(filename, event, ids, delta, user, query);
+        dataModel.copy_objects(filename, event, ids, delta, user, query);
     }
     return waitForRead(query)
 }
@@ -487,7 +486,7 @@ export function demo(position: Point3d)
         send("demo", [filename, position])
     }
     else {
-        kernel.demo(filename, position, user);
+        dataModel.demo(filename, position, user);
     }
 }
 
@@ -497,7 +496,7 @@ export function demo_100(position: Point3d)
         send("demo_100", [filename, position])
     }
     else {
-        kernel.demo_100(filename, position, user);
+        dataModel.demo_100(filename, position, user);
     }
 }
 
@@ -506,8 +505,8 @@ export function createDataObjectFromJSON(data: any)
     switch (data.type)
     {
         case "Wall":
-            return new kernel.JsWall(data.obj.first_pt.geom.pt, data.obj.second_pt.geom.pt, data.obj.width, data.obj.height)
+            return new dataModel.JsWall(data.obj.first_pt.geom.pt, data.obj.second_pt.geom.pt, data.obj.width, data.obj.height)
         case "Door":
-            return new kernel.JsDoor(data.obj.dir.geom.pt_1, data.obj.dir.geom.pt_2, data.obj.width, data.obj.height)
+            return new dataModel.JsDoor(data.obj.dir.geom.pt_1, data.obj.dir.geom.pt_2, data.obj.width, data.obj.height)
     }
 }

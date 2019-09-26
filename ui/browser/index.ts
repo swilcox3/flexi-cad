@@ -1,5 +1,5 @@
-import * as ops from './operations/operations';
-import './ui/key_events'
+import * as ops from '../src/operations/operations';
+import '../src/ui/key_events'
 
 declare global {
     export type JsDimension = import("../data-model-wasm/pkg/index").JsDimension;

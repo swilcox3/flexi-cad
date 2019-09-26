@@ -12,14 +12,14 @@ const distFolder = "./dist";
 
 module.exports = {
   mode: 'development',
-  entry: './src/index.ts',
+  entry: './index.ts',
   plugins: [
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
-      template: 'src/index.ejs'
+      template: './index.ejs'
     }),
     new WasmPackPlugin({
-      crateDirectory: path.resolve(__dirname, "./data-model-wasm"),
+      crateDirectory: path.resolve(__dirname, "../data-model-wasm"),
     })
   ],
   devtool: 'inline-source-map',

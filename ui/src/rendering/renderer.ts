@@ -23,26 +23,32 @@ export class Renderer {
         this._engine = engine;
         // This creates a basic Babylon Scene object (non-mesh)
         const scene = new BABYLON.Scene(engine);
-        this._highlight = new BABYLON.HighlightLayer("highlight1", scene);
         this._scene = scene;
+        console.log("made it scene")
+        this._highlight = new BABYLON.HighlightLayer("highlight1", this._scene);
+        console.log("made it highlight")
         // This creates and positions a free camera (non-mesh)
         const camera = new BABYLON.ArcRotateCamera("camera1", -Math.PI / 2, 1.0, 500, new BABYLON.Vector3(500, 0, -500), scene);
+        console.log("made it camera")
         camera.panningSensibility = 50;
         camera.panningInertia = .7;
         // This attaches the camera to the canvas
         camera.attachControl(canvas, true);
         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-        const light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+        const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), this._scene);
+        console.log("made it light")
         // Default intensity is 1. Let's dim the light a small amount
         light.intensity = 0.7;
         light.parent = camera;
 
-        var ground = BABYLON.Mesh.CreateGround("ground", 10000, 10000, 0, scene, false);
-        var groundMaterial = new BABYLON.StandardMaterial("ground", scene);
+        var ground = BABYLON.Mesh.CreateGround("ground", 10000, 10000, 0, this._scene, false);
+        console.log("made it ground")
+        var groundMaterial = new BABYLON.StandardMaterial("ground", this._scene);
         groundMaterial.specularColor = BABYLON.Color3.Black();
         ground.material = groundMaterial;
 
         gui.guiInstance.init();
+        console.log("made it gui")
 
         var onPointerClick = (evt: MouseEvent) => {
             mouse.onPointerClick(this._scene, evt, ground)
@@ -50,8 +56,8 @@ export class Renderer {
 
         var current_hover: BABYLON.Mesh = null;
         var onPointerMove = (evt: MouseEvent) => {
-            var hovered = getHoveredMesh(scene, ground)
-            var layer = scene.getHighlightLayerByName("highlight1");
+            var hovered = getHoveredMesh(this._scene, ground)
+            var layer = this._scene.getHighlightLayerByName("highlight1");
             if (current_hover && hovered != current_hover) {
                 layer.removeMesh(current_hover)
             }
@@ -88,6 +94,7 @@ export class Renderer {
         console.log("made it initialize")
         const engine = new BABYLON.Engine(canvas, true, {stencil: true});
         this.createScene(canvas, engine);
+        console.log("scene created")
         engine.runRenderLoop(() => {
             this._scene.render();
         });

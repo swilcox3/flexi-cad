@@ -15,11 +15,6 @@
       ]
     },
     "include": [
-      "src/**/*"
-    ],
-    "exclude": [
-      "node_modules",
-      "src/index_electron.ts",
-      "src/main.ts"
+      "../src/**/*"
     ]
   }
