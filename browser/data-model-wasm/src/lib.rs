@@ -13,94 +13,27 @@ pub fn main_js() -> Result<(), JsValue> {
 }
 
 #[wasm_bindgen]
-pub struct Point3d {
-    pt: data_model::Point3f
+extern "C" {
+    pub type CoordTriple;
+
+    #[wasm_bindgen(structural, method, getter)]
+    pub fn x(this: &CoordTriple) -> f64;
+
+    #[wasm_bindgen(structural, method, getter)]
+    pub fn y(this: &CoordTriple) -> f64;
+
+    #[wasm_bindgen(structural, method, getter)]
+    pub fn z(this: &CoordTriple) -> f64;
 }
 
-#[wasm_bindgen]
-impl Point3d {
-    #[wasm_bindgen(constructor)]
-    pub fn new(x: WorldCoord, y: WorldCoord, z: WorldCoord) -> Point3d {
-        Point3d {
-            pt: Point3f::new(x, y, z)
-        }
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn x(&self) -> WorldCoord {
-        self.pt.x
-    }
-
-    #[wasm_bindgen(setter)]
-    pub fn set_x(&mut self, val: WorldCoord) {
-        self.pt.x = val;
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn y(&self) -> WorldCoord {
-        self.pt.y
-    }
-
-    #[wasm_bindgen(setter)]
-    pub fn set_y(&mut self, val: WorldCoord) {
-        self.pt.y = val;
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn z(&self) -> WorldCoord {
-        self.pt.z
-    }
-
-    #[wasm_bindgen(setter)]
-    pub fn set_z(&mut self, val: WorldCoord) {
-        self.pt.z = val;
-    }
+fn point_3f(coord: &CoordTriple) -> data_model::Point3f {
+    data_model::Point3f::new(coord.x(), coord.y(), coord.z())
 }
 
-#[wasm_bindgen]
-pub struct Vector3d {
-    vect: data_model::Vector3f
+fn vector_3f(coord: &CoordTriple) -> data_model::Vector3f {
+    data_model::Vector3f::new(coord.x(), coord.y(), coord.z())
 }
 
-#[wasm_bindgen]
-impl Vector3d {
-    #[wasm_bindgen(constructor)]
-    pub fn new(x: WorldCoord, y: WorldCoord, z: WorldCoord) -> Vector3d {
-        Vector3d {
-            vect: Vector3f::new(x, y, z)
-        }
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn x(&self) -> WorldCoord {
-        self.vect.x
-    }
-
-    #[wasm_bindgen(setter)]
-    pub fn set_x(&mut self, val: WorldCoord) {
-        self.vect.x = val;
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn y(&self) -> WorldCoord {
-        self.vect.y
-    }
-
-    #[wasm_bindgen(setter)]
-    pub fn set_y(&mut self, val: WorldCoord) {
-        self.vect.y = val;
-    }
-
-    #[wasm_bindgen(getter)]
-    pub fn z(&self) -> WorldCoord {
-        self.vect.z
-    }
-
-    #[wasm_bindgen(setter)]
-    pub fn set_z(&mut self, val: WorldCoord) {
-        self.vect.z = val;
-    }
-}
 #[wasm_bindgen]
 pub struct JsWall {
     wall: data_model::Wall,
@@ -109,8 +42,8 @@ pub struct JsWall {
 #[wasm_bindgen]
 impl JsWall {
     #[wasm_bindgen(constructor)]
-    pub fn new(first: Point3d, second: Point3d, width: WorldCoord, height: WorldCoord) -> JsWall {
-        let wall = data_model::Wall::new(first.pt, second.pt, width, height );
+    pub fn new(first: CoordTriple, second: CoordTriple, width: WorldCoord, height: WorldCoord) -> JsWall {
+        let wall = data_model::Wall::new(point_3f(&first), point_3f(&second), width, height );
         JsWall{ wall }
     }
 
@@ -119,28 +52,28 @@ impl JsWall {
         JsValue::from_serde(&msg).unwrap()
     }
 
-    pub fn moveObj(&mut self, delta: Vector3d) {
-        self.wall.move_obj(&delta.vect);
+    pub fn moveObj(&mut self, delta: CoordTriple) {
+        self.wall.move_obj(&vector_3f(&delta));
     }
 
     pub fn getObj(&self) -> JsValue {
         JsValue::from_serde(&data_model::to_json("Wall", &self.wall)).unwrap()
     }
 
-    pub fn first_pt(&self) -> Point3d {
-        Point3d{pt: self.wall.first_pt.geom.pt.clone()}
+    pub fn first_pt(&self) -> JsValue {
+        JsValue::from_serde(&self.wall.first_pt.geom.pt).unwrap()
     }
 
-    pub fn set_first_pt(&mut self, val: Point3d) {
-        self.wall.first_pt.geom.pt = val.pt;
+    pub fn set_first_pt(&mut self, val: CoordTriple) {
+        self.wall.first_pt.geom.pt = point_3f(&val);
     }
 
-    pub fn second_pt(&self) -> Point3d {
-        Point3d{pt: self.wall.second_pt.geom.pt.clone()}
+    pub fn second_pt(&self) -> JsValue {
+        JsValue::from_serde(&self.wall.second_pt.geom.pt).unwrap()
     }
 
-    pub fn set_second_pt(&mut self, val: Point3d) {
-        self.wall.second_pt.geom.pt = val.pt;
+    pub fn set_second_pt(&mut self, val: CoordTriple) {
+        self.wall.second_pt.geom.pt = point_3f(&val);
     }
 
     pub fn height(&self) -> WorldCoord {
@@ -160,7 +93,7 @@ impl JsWall {
     }
 
     pub fn id(&self) -> String {
-        format!("{:?}", self.wall.get_id().clone())
+        format!("{:?}", self.wall.get_id())
     }
 }
 
@@ -172,8 +105,8 @@ pub struct JsDoor {
 #[wasm_bindgen]
 impl JsDoor {
     #[wasm_bindgen(constructor)]
-    pub fn new(first: Point3d, second: Point3d, width: WorldCoord, height: WorldCoord) -> JsDoor {
-        let door = data_model::Door::new(first.pt, second.pt, width, height );
+    pub fn new(first: CoordTriple, second: CoordTriple, width: WorldCoord, height: WorldCoord) -> JsDoor {
+        let door = data_model::Door::new(point_3f(&first), point_3f(&second), width, height );
         JsDoor{ door }
     }
 
@@ -182,32 +115,32 @@ impl JsDoor {
         JsValue::from_serde(&msg).unwrap()
     }
 
-    pub fn moveObj(&mut self, delta: Vector3d) {
-        self.door.move_obj(&delta.vect);
+    pub fn moveObj(&mut self, delta: CoordTriple) {
+        self.door.move_obj(&vector_3f(&delta));
     }
 
     pub fn getObj(&self) -> JsValue {
         JsValue::from_serde(&data_model::to_json("Door", &self.door)).unwrap()
     }
 
-    pub fn setDir(&mut self, delta: Vector3d) {
-        self.door.dir.geom.set_dir(&delta.vect);
+    pub fn setDir(&mut self, delta: CoordTriple) {
+        self.door.dir.geom.set_dir(&vector_3f(&delta));
     }
 
-    pub fn first_pt(&self) -> Point3d {
-        Point3d{pt: self.door.dir.geom.pt_1.clone()}
+    pub fn first_pt(&self) -> JsValue {
+        JsValue::from_serde(&self.door.dir.geom.pt_1).unwrap()
     }
 
-    pub fn set_first_pt(&mut self, val: Point3d) {
-        self.door.dir.geom.pt_2 = val.pt;
+    pub fn set_first_pt(&mut self, val: CoordTriple) {
+        self.door.dir.geom.pt_2 = point_3f(&val);
     }
 
-    pub fn second_pt(&self) -> Point3d {
-        Point3d{pt: self.door.dir.geom.pt_2.clone()}
+    pub fn second_pt(&self) -> JsValue {
+        JsValue::from_serde(&self.door.dir.geom.pt_2).unwrap()
     }
 
-    pub fn set_second_pt(&mut self, val: Point3d) {
-        self.door.dir.geom.pt_2 = val.pt;
+    pub fn set_second_pt(&mut self, val: CoordTriple) {
+        self.door.dir.geom.pt_2 = point_3f(&val);
     }
 
     pub fn height(&self) -> WorldCoord {
@@ -227,7 +160,7 @@ impl JsDoor {
     }
 
     pub fn id(&self) -> String {
-        format!("{:?}", self.door.get_id().clone())
+        format!("{:?}", self.door.get_id())
     }
 }
 
@@ -239,8 +172,8 @@ pub struct JsDimension {
 #[wasm_bindgen]
 impl JsDimension {
     #[wasm_bindgen(constructor)]
-    pub fn new(first: Point3d, second: Point3d, offset: WorldCoord) -> JsDimension {
-        let dim = data_model::Dimension::new(first.pt, second.pt, offset);
+    pub fn new(first: CoordTriple, second: CoordTriple, offset: WorldCoord) -> JsDimension {
+        let dim = data_model::Dimension::new(point_3f(&first), point_3f(&second), offset);
         JsDimension{ dim }
     }
 
@@ -249,28 +182,28 @@ impl JsDimension {
         JsValue::from_serde(&msg).unwrap()
     }
 
-    pub fn moveObj(&mut self, delta: Vector3d) {
-        self.dim.move_obj(&delta.vect);
+    pub fn moveObj(&mut self, delta: CoordTriple) {
+        self.dim.move_obj(&vector_3f(&delta));
     }
 
     pub fn getObj(&self) -> JsValue{
         JsValue::from_serde(&data_model::to_json("Dimension", &self.dim)).unwrap()
     }
 
-    pub fn first_pt(&self) -> Point3d {
-        Point3d{pt: self.dim.first.geom.pt.clone()}
+    pub fn first_pt(&self) -> JsValue {
+        JsValue::from_serde(&self.dim.first.geom.pt).unwrap()
     }
 
-    pub fn set_first_pt(&mut self, val: Point3d) {
-        self.dim.first.geom.pt = val.pt;
+    pub fn set_first_pt(&mut self, val: CoordTriple) {
+        self.dim.first.geom.pt = point_3f(&val);
     }
 
-    pub fn second_pt(&self) -> Point3d {
-        Point3d{pt: self.dim.second.geom.pt.clone()}
+    pub fn second_pt(&self) -> JsValue {
+        JsValue::from_serde(&self.dim.second.geom.pt).unwrap()
     }
 
-    pub fn set_second_pt(&mut self, val: Point3d) {
-        self.dim.second.geom.pt = val.pt;
+    pub fn set_second_pt(&mut self, val: CoordTriple) {
+        self.dim.second.geom.pt = point_3f(&val);
     }
 
     pub fn offset(&self) -> WorldCoord {
@@ -282,16 +215,26 @@ impl JsDimension {
     }
 
     pub fn id(&self) -> String {
-        format!("{:?}", self.dim.get_id().clone())
+        format!("{:?}", self.dim.get_id())
     }
 }
 
 #[wasm_bindgen]
-pub fn projectOnLine(first: Point3d, second: Point3d, project: Point3d) -> Point3d {
-    Point3d{ pt: data_model::project_on_line(&first.pt, &second.pt, &project.pt) }
+pub fn projectOnLine(first: CoordTriple, second: CoordTriple, project: CoordTriple) -> JsValue {
+    JsValue::from_serde(&data_model::project_on_line(&point_3f(&first), &point_3f(&second), &point_3f(&project))).unwrap()
 }
 
 #[wasm_bindgen]
 pub fn getUserId() -> String {
     format!("{:?}", UserID::new_v4())
+}
+
+#[wasm_bindgen]
+pub fn getUndoEventId() -> String {
+    format!("{:?}", UndoEventID::new_v4())
+}
+
+#[wasm_bindgen]
+pub fn getQueryId() -> String {
+    format!("{:?}", QueryID::new_v4())
 }
