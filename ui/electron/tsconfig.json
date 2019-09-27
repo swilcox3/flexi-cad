@@ -1,13 +1,13 @@
 {
     "compilerOptions": {
       "target": "es6",
-      "module": "esNext",
+      "module": "commonjs",
       "moduleResolution": "node",
       "noImplicitAny": true,
       "sourceMap": true,
       "allowJs": true,
       "outDir": "app",
-      "baseUrl": ".",
+      "baseUrl": "./node_modules",
       "esModuleInterop": true,
       "types": [
         "babylonjs",

@@ -6,6 +6,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 // cleans dist folder
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
+const TsConfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 
 // output folder location
 const distFolder = "./dist";
@@ -54,7 +55,10 @@ module.exports = {
     }
   },
   resolve: {
-    extensions: [ ".tsx", ".ts", ".js" ]
+    extensions: [ ".tsx", ".ts", ".js" ],
+    plugins: [
+      new TsConfigPathsPlugin({})
+    ]
   },
   output: {
     filename: '[name].bundle.js',

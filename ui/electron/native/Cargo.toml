@@ -15,8 +15,8 @@ neon-build = "0.3.1"
 
 [dependencies]
 neon = "0.3.1"
-operations_kernel = {version = "0.1.0", path = "../../operations"}
-data_model = {version = "0.1.0", path = "../../data-model"}
+operations_kernel = {version = "0.1.0", path = "../../../operations"}
+data_model = {version = "0.1.0", path = "../../../data-model"}
 neon-serde = "0.2.0"
 serde = {version = "1.0.92", features = ["derive"]}
 serde_json = "1.0.40"
