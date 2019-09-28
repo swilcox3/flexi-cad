@@ -23,7 +23,41 @@
 
 <body>
     <canvas id="render-canvas"></canvas>
-    <script src="app/electron/index_electron.js"></script>
+    <script>
+        require("./app/src/ui/key_events");
+        const electron_1 = require("electron");
+        const ops = require("./app/src/operations/operations");
+        console.log("made it");
+        var mod = require("./native/index.node");
+        ops.initialize(mod);
+        electron_1.ipcRenderer.on('newFile', function (event, connection) {
+            console.log(connection);
+            if (connection !== undefined) {
+                ops.setConnection(connection).then(() => {
+                    ops.initFile(document.getElementById('render-canvas'));
+                });
+            }
+            else {
+                ops.initFile(document.getElementById('render-canvas'));
+            }
+        });
+        electron_1.ipcRenderer.on('openFile', function (event, path, connection) {
+            if (connection !== undefined) {
+                ops.setConnection(connection).then(() => {
+                    ops.openFile(path, document.getElementById('render-canvas'));
+                });
+            }
+            else {
+                ops.openFile(path, document.getElementById('render-canvas'));
+            }
+        });
+        electron_1.ipcRenderer.on('saveFile', function (event) {
+            ops.saveFile();
+        });
+        electron_1.ipcRenderer.on('saveAsFile', function (event, path) {
+            ops.saveAsFile(path);
+        });
+    </script>
 </body>
 
 </html>

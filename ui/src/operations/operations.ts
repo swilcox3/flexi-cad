@@ -5,10 +5,6 @@ import * as BABYLON from 'babylonjs'
 
 export var dataModel: any = null;
 var user: string = null;
-// #if process.env.BUILD_TARGET != "browser"
-//    dataModel = require("../../native/index.node")
-//    user = dataModel.getUserId();
-// #endif
 export function initialize(mod?: any) {
     console.log(mod)
     if(mod) {
