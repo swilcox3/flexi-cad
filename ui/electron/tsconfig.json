@@ -2,19 +2,24 @@
     "compilerOptions": {
       "target": "es6",
       "module": "commonjs",
-      "moduleResolution": "node",
       "noImplicitAny": true,
       "sourceMap": true,
       "allowJs": true,
       "outDir": "app",
       "baseUrl": "./node_modules",
-      "esModuleInterop": true,
       "types": [
         "babylonjs",
         "babylonjs-gui"
       ]
     },
+    "files": [
+      "./index_electron.ts",
+      "./main.ts"
+    ],
     "include": [
       "../src/**/*"
+    ],
+    "exclude": [
+      "node_modules"
     ]
   }

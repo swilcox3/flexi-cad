@@ -1,6 +1,7 @@
 import * as ops from '../operations/operations'
 import {UIControllerSingleton} from './controller'
 var mySingleton = new UIControllerSingleton().getInstance();
+//@ts-ignore
 import Mousetrap from 'mousetrap'
 
 Mousetrap.bind('mod+z', () => ops.undoLatest())

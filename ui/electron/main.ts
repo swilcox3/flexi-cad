@@ -17,7 +17,7 @@ function createWindow(title: string) {
     });
 
   newWindow.loadURL(url.format({
-      pathname: path.join(__dirname, "../index_electron.html"),
+      pathname: path.join(__dirname, "../../index_electron.html"),
       protocol: "file:",
       slashes: true,
   }));
