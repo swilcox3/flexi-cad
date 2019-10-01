@@ -1,15 +1,22 @@
-//@ts-ignore
-import WebSocketAsPromised from "websocket-as-promised"
 import {Point3d, Vector3d} from "../utils/math"
 import * as BABYLON from 'babylonjs'
 
 export var dataModel: any = null;
 var user: string = null;
-export function initialize(mod?: any) {
-    console.log(mod)
-    if(mod) {
-        dataModel = mod;
-        user = dataModel.getUserId();
+var connection: any = null;
+export function initialize(mod: any) {
+    dataModel = mod;
+    user = dataModel.getUserId();
+    return user;
+}
+
+export async function setConnection(conn?: any) {
+    if(conn) {
+        connection = conn;
+        connection.onUnpackedMessage.addListener((data:any) => {
+            handleUpdate(data);
+        });
+        await connection.open();
     }
 }
 
@@ -20,7 +27,6 @@ var filename: string = "";
 var pendingChanges: Map<String, Array<(obj: BABYLON.Mesh) => void>> = new Map();
 var pendingReads: Map<String, (val: any) => void> = new Map();
 
-var connection: any = null;
 
 export interface DataObject {
     getTempRepr(): any
@@ -33,23 +39,6 @@ function initRenderer(canvas: HTMLCanvasElement)
 {
     renderer = new Renderer()
     renderer.initialize(canvas)
-}
-
-export async function setConnection(conn: string) {
-    if(conn) {
-        conn = conn + "?user_id=" + user;
-        console.log(conn)
-        connection = new WebSocketAsPromised(conn, {
-            packMessage: (data:any) => JSON.stringify(data),
-            unpackMessage: (data:any) => {
-                JSON.parse(data);
-            }
-        });
-        connection.onUnpackedMessage.addListener((data:any) => {
-            handleUpdate(data)
-        })
-        await connection.open();
-    }
 }
 
 function send(func: string, params: Array<any>) {

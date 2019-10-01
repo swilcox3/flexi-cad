@@ -2,9 +2,8 @@
 The goal of this project is to design an architectural CAD product that uses largely the same code for three different versions: workstation, thin-client/thick-server, and browser based.  The name is dumb, but it works for now.
 
 Follow the setup instructions for Neon: https://neon-bindings.com/docs/getting-started
-Clone this repository, then navigate to /ui in a terminal and execute:
-npm install
-Then go to /ui/data-model-wasm and npm install there as well.  Then back up to ui and run:
-npm run start
-
-Currently you'll be presented with a dialog on startup saying "Connect to server?".  Choose no, the server isn't started, so you'll start in workstation mode.  If you want to run in server/client configuration, go to /server and run cargo run --release, then go back to /ui and run npm run start and choose yes at the dialog.  You can start two instances of the client with two terminals, one calling npm run start, then once that's done running npm run start_nb (which skips the build step) in the second terminal.   
+Clone this repository.
+For workstation configuration, go to ui/electron and npm install, then npm run start.  A dialog will pop up saying "Connect to server?"  Choose no.
+For thin-client configuration, first go to /server and cargo run --release.  Then execute the above instructions to start the electron client and choose yes on the dialog.
+For browser, start the server as above, then go to /ui/browser and npm install, then npm run start.  A browser tab will pop up.
+All three configurations build and successfully get into the application now.
