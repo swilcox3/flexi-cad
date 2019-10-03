@@ -53,10 +53,10 @@ export class GUI
             var tool = new DoorTool()
             mySingleton.setActiveTool(tool)
         })
-        this.newButton("but3", "Dimension", this.buttonPanel, () => {
+        /*this.newButton("but3", "Dimension", this.buttonPanel, () => {
             var tool = new DimensionTool()
             mySingleton.setActiveTool(tool)
-        })
+        })*/
         this.newButton("demo", "Demo 1", this.buttonPanel, () => {
             ops.demo(new Point3d(0, 0, 0)) 
         })

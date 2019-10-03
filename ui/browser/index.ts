@@ -9,10 +9,7 @@ declare global {
     export type JsDoor = import("../data-model-wasm/pkg/index").JsDoor;
 }
 window.addEventListener('DOMContentLoaded', () => {
-  console.log("made it index")
   import("../data-model-wasm/pkg/index").then( mod => {
-    console.log("loaded")
-    console.log("After ops")
     var connection = "ws://127.0.0.1:80/ws";
     var user = ops.initialize(mod);
     connection = connection + "?user_id=" + user;
@@ -21,9 +18,7 @@ window.addEventListener('DOMContentLoaded', () => {
       unpackMessage: (data:any) => JSON.parse(data),
     });
     ops.setConnection(conn).then(() => {
-        console.log("connection set")
         ops.initFile(document.getElementById('renderCanvas') as HTMLCanvasElement);
-        console.log("after init file")
     });
   });
 });

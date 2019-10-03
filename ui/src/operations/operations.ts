@@ -205,7 +205,7 @@ export function deleteObject(event: string, id: string)
 }
 
 function handleUpdate(msg: any) {
-    //console.log(msg);
+    console.log(msg);
     if(msg.Error) {
         console.log(msg.Error.msg)
     }
@@ -223,7 +223,6 @@ function handleUpdate(msg: any) {
         else {
             var id = null;
             if(msg.Mesh) {
-                console.log("Made it mesh")
                 id = msg.Mesh.data.id;
                 renderer.renderMesh(msg.Mesh.data, id)
             }

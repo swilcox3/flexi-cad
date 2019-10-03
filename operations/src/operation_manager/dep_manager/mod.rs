@@ -12,37 +12,55 @@ impl DependencyManager {
         }
     }
 
-    fn get_obj_deps(&self, obj: &RefID, results: &mut HashSet<RefID>) {
-        if let Some(set) = self.pub_subs.get(obj) {
-            for key in &(*set) {
-                if results.insert(key.clone()) {
-                    self.get_obj_deps(key, results);
+    //Breadth-first-search
+    fn get_deps(&self, obj: &RefID) -> Vec<HashSet<RefID>> {
+        let mut processing = std::collections::VecDeque::new();
+        let mut visited = HashSet::new();
+        let mut result = Vec::new();
+        visited.insert(obj.clone());
+        processing.push_back(obj.clone());
+        while processing.len() > 0 {
+            if let Some(current) = processing.pop_front() {
+                if let Some(sub_set) = self.pub_subs.get(&current) {
+                    let mut cur_level = HashSet::new();
+                    for sub in &(*sub_set) {
+                        if let None = visited.get(sub) {
+                            visited.insert(sub.clone());
+                            cur_level.insert(sub.clone());
+                            processing.push_back(sub.clone());
+                        }
+                    }
+                    if cur_level.len() > 0 {
+                        result.push(cur_level);
+                    }
                 }
             }
         }
+        result
     }
 
-    pub fn get_deps(&self, obj: &RefID) -> HashSet<RefID> {
-        let mut results = HashSet::new();
-        results.insert(*obj);  //We have to do some fancy things here to make sure we don't get cycles.
-        self.get_obj_deps(obj, &mut results);
-        results.remove(obj);
-        results
-    }
-
-    pub fn get_all_deps(&self, ids: &Vec<RefID>) -> HashSet<RefID> 
+    pub fn get_all_deps<T>(&self, objs: T) -> Vec<RefID> 
+        where T: IntoIterator<Item = RefID> 
     {
-        let mut results = HashSet::new();
-        for id in ids {
-            results.insert(*id);
+        let mut results = Vec::new();
+        let mut levels: Vec<HashSet<RefID>> = Vec::new();
+        for obj in objs.into_iter() {
+            let mut i = 0;
+            for level in self.get_deps(&obj) {
+                if let Some(exists) = levels.get_mut(i) {
+                    exists.extend(level);
+                }
+                else {
+                    levels.push(level);
+                }
+                i += 1;
+            }
         }
-        for id in ids {
-            self.get_obj_deps(id, &mut results);
+        for level in levels {
+            for obj in level {
+                results.push(obj);
+            }
         }
-        for id in ids {
-            results.remove(id);
-        }
-        println!("deps: {:?}", results);
         results
     }
 
@@ -56,7 +74,7 @@ impl DependencyManager {
     }
 
     pub fn register_sub(&self, publisher: &RefID, sub: RefID) {
-        if sub != RefID::nil() {
+        if sub != RefID::nil() && *publisher != sub {
             match self.pub_subs.get_mut(publisher) {
                 Some(mut set) => {
                     set.insert(sub);
@@ -81,6 +99,107 @@ impl DependencyManager {
         self.pub_subs.alter(|(_, set)| {
             set.remove(publisher);
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    macro_rules! set {
+        ( $( $x:expr ),* ) => {  // Match zero or more comma delimited items
+            {
+                let mut temp_set = HashSet::new();  // Create a mutable HashSet
+                $(
+                    temp_set.insert($x); // Insert each item matched into the HashSet
+                )*
+                temp_set // Return the populated HashSet
+            }
+        };
+    }
+
+    #[test]
+    fn test_get_deps() {
+        let deps = DependencyManager::new();
+        let a = RefID::new_v4();
+        let b = RefID::new_v4();
+        let c = RefID::new_v4();
+        let d = RefID::new_v4();
+        let e = RefID::new_v4();
+        let f = RefID::new_v4();
+
+        deps.register_sub(&a, b.clone());
+        deps.register_sub(&a, c.clone());
+        deps.register_sub(&a, d.clone());
+        deps.register_sub(&b, a.clone());
+        deps.register_sub(&b, c.clone());
+        deps.register_sub(&c, a.clone());
+        deps.register_sub(&c, d.clone());
+        deps.register_sub(&d, a.clone());
+        deps.register_sub(&e, b.clone());
+        deps.register_sub(&e, c.clone());
+        deps.register_sub(&e, d.clone());
+        deps.register_sub(&e, f.clone());
+
+        assert_eq!(deps.get_deps(&a), vec![set![b.clone(), c.clone(), d.clone()]]);
+        assert_eq!(deps.get_deps(&b), vec![set![a.clone(), c.clone()], set![d.clone()]]);
+        assert_eq!(deps.get_deps(&c), vec![set![a.clone(), d.clone()], set![b.clone()]]);
+        assert_eq!(deps.get_deps(&d), vec![set![a.clone()], set![b.clone(), c.clone()]]);
+        assert_eq!(deps.get_deps(&e), vec![set![b.clone(), c.clone(), d.clone(), f.clone()], set![a.clone()]]);
+        assert_eq!(deps.get_deps(&f), vec![]);
+    }
+
+    fn set_exists_within_range(mut set: HashSet<RefID>, base: &Vec<RefID>, index: usize, size: usize) -> bool {
+        for i in index..index + size {
+            set.remove(&base[i]);
+        }
+        set.len() == 0
+    }
+
+    fn deps_equals(input: Vec<RefID>, answers: Vec<HashSet<RefID>>) -> bool {
+        let mut cur_index = 0;
+        for set in answers {
+            let size = set.len();
+            if !set_exists_within_range(set, &input, cur_index, size) {
+                return false;
+            }
+            cur_index += size;
+        }
+        true
+    }
+
+    #[test]
+    fn test_get_all_deps() {
+        let deps = DependencyManager::new();
+        let a = RefID::new_v4();
+        let b = RefID::new_v4();
+        let c = RefID::new_v4();
+        let d = RefID::new_v4();
+        let e = RefID::new_v4();
+        let f = RefID::new_v4();
+
+        deps.register_sub(&a, b.clone());
+        deps.register_sub(&a, c.clone());
+        deps.register_sub(&a, d.clone());
+        deps.register_sub(&b, a.clone());
+        deps.register_sub(&b, c.clone());
+        deps.register_sub(&c, a.clone());
+        deps.register_sub(&c, d.clone());
+        deps.register_sub(&d, a.clone());
+        deps.register_sub(&e, b.clone());
+        deps.register_sub(&e, c.clone());
+        deps.register_sub(&e, d.clone());
+        deps.register_sub(&e, f.clone());
+
+        let input = deps.get_all_deps(vec![a.clone(), e.clone()]);
+        let answers = vec![set![b.clone(), c.clone(), d.clone(), f.clone()]];
+        assert!(deps_equals(input, answers));
+
+        let input = deps.get_all_deps(vec![d.clone(), f.clone()]);
+        let answers = vec![set![a.clone()], set![b.clone(), c.clone()]];
+        assert!(deps_equals(input, answers));
+
+        let input = deps.get_all_deps(vec![f.clone()]);
+        assert_eq!(input.len(), 0);
     }
 }
 

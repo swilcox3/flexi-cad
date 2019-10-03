@@ -205,7 +205,7 @@ pub fn update_deps(file: PathBuf, id: RefID) {
 pub fn update_all_deps(file: PathBuf, ids: Vec<RefID>) {
     rayon::spawn(move || {
         if let Some(ops) = APP_STATE.files.get(&file) {
-            ops.update_all_deps(&ids).unwrap();
+            ops.update_all_deps(ids).unwrap();
         }
     });
 }

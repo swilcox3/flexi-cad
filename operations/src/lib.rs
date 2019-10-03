@@ -139,7 +139,7 @@ pub fn demo(file: &PathBuf, user: &UserID, position: &Point3f) -> Result<(), DBE
     let door_id = door.get_id().clone();
     app_state::add_obj(file, &event, Box::new(door))?;
     entity_ops::join_refs(file, &event, &door_id, &id_1, &RefType::Line, &RefType::Rect, &door_pos)?;
-    let offset = 5.0;
+    /*let offset = 5.0;
     let dim_1 = Dimension::new(position.clone(), position_2.clone(), offset);
     let dim_2 = Dimension::new(position_2.clone(), position_3.clone(), offset);
     let dim_3 = Dimension::new(position_3.clone(), position_4.clone(), offset);
@@ -159,9 +159,9 @@ pub fn demo(file: &PathBuf, user: &UserID, position: &Point3f) -> Result<(), DBE
     entity_ops::snap_to_ref(file, &event, &dim_id_3, &id_3, &RefType::Point, &position_3)?;
     entity_ops::snap_to_ref(file, &event, &dim_id_3, &id_3, &RefType::Point, &position_4)?;
     entity_ops::snap_to_ref(file, &event, &dim_id_4, &id_4, &RefType::Point, &position_4)?;
-    entity_ops::snap_to_ref(file, &event, &dim_id_4, &id_4, &RefType::Point, position)?;
+    entity_ops::snap_to_ref(file, &event, &dim_id_4, &id_4, &RefType::Point, position)?;*/
     app_state::end_undo_event(file, event)?;
-    app_state::update_all_deps(file.clone(), vec![id_1, id_2, id_3, id_4, door_id, dim_id_1, dim_id_2, dim_id_3, dim_id_4]);
+    app_state::update_all_deps(file.clone(), vec![id_1, id_2, id_3, id_4, door_id, /*dim_id_1, dim_id_2, dim_id_3, dim_id_4*/]);
     Ok(())
 }
 

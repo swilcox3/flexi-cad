@@ -90,9 +90,7 @@ impl OperationManager {
 
     pub fn cancel_event(&self, event_id: &UndoEventID) -> Result<(), DBError> {
         let set = self.data.cancel_event(event_id)?;
-        self.update_set(&set, None)?;
-        let deps: Vec<RefID> = set.into_iter().collect();
-        self.update_all_deps(&deps)
+        self.update_all_deps(set)
     }
 
     pub fn take_undo_snapshot(&self, event_id: &UndoEventID, key: &RefID) -> Result<(), DBError> {
@@ -101,16 +99,12 @@ impl OperationManager {
 
     pub fn undo_latest(&self, user: &UserID) -> Result<(), DBError> {
         let set = self.data.undo_latest(user)?;
-        self.update_set(&set, None)?;
-        let deps: Vec<RefID> = set.into_iter().collect();
-        self.update_all_deps(&deps)
+        self.update_all_deps(set)
     }
 
     pub fn redo_latest(&self, user: &UserID) -> Result<(), DBError> {
         let set = self.data.redo_latest(user)?;
-        self.update_set(&set, None)?;
-        let deps: Vec<RefID> = set.into_iter().collect();
-        self.update_all_deps(&deps)
+        self.update_all_deps(set)
     }
 
     pub fn update_all(&self, only_to: Option<&UserID>) -> Result<(), DBError> {
@@ -119,17 +113,19 @@ impl OperationManager {
             set.insert(obj.get_id().clone());
             Ok(())
         })?;
-        self.update_set(&set, only_to)
+        self.update_set(set, only_to)
     }
 
-    fn update_set(&self, set: &HashSet<RefID>, only_to: Option<&UserID>) -> Result<(), DBError> {
-        for obj_id in set {
+    fn update_set<T>(&self, set: T, only_to: Option<&UserID>) -> Result<(), DBError> 
+        where T: IntoIterator<Item = RefID>
+    {
+        for obj_id in set.into_iter() {
             if let Err(e) = self.data.get_mut_obj_no_undo(&obj_id, &mut |obj: &mut DataObject| {
                 let msg = obj.update()?;
                 self.send(msg, only_to)
             }) {
                 match e {
-                    DBError::ObjNotFound => self.send(UpdateMsg::Delete{key: *obj_id}, None)?,
+                    DBError::ObjNotFound => self.send(UpdateMsg::Delete{key: obj_id}, None)?,
                     _ => return Err(e)
                 }
             }
@@ -184,8 +180,11 @@ impl OperationManager {
         Ok(msg)
     }
 
-    fn update_set_from_refs(&self, deps: &HashSet<RefID>) -> Result<(), DBError> {
-        for dep_id in deps {
+    fn update_set_from_refs<T>(&self, deps: T) -> Result<(), DBError> 
+        where T: IntoIterator<Item = RefID> + std::fmt::Debug
+    {
+        println!("deps: {:?}", deps);
+        for dep_id in deps.into_iter() {
             match self.update_from_refs(&dep_id) {
                 Ok(msg) => {
                     self.send(msg, None)?;
@@ -202,13 +201,15 @@ impl OperationManager {
     }
 
     pub fn update_deps(&self, id: &RefID) -> Result<(), DBError> {
-        let deps = self.deps.get_deps(id);
-        self.update_set_from_refs(&deps)
+        let deps = self.deps.get_all_deps(vec![id.clone()]);
+        self.update_set_from_refs(deps)
     }
 
-    pub fn update_all_deps<'a>(&self, ids: &Vec<RefID>) -> Result<(), DBError>{
+    pub fn update_all_deps<T>(&self, ids: T) -> Result<(), DBError>
+        where T: IntoIterator<Item = RefID>
+    {
         let deps = self.deps.get_all_deps(ids);
-        self.update_set_from_refs(&deps)
+        self.update_set_from_refs(deps)
     }
 
     pub fn add_dep(&self, publisher: &RefID, sub: RefID) {

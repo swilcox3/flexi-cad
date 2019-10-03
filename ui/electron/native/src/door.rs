@@ -13,7 +13,7 @@ declare_types! {
             Ok(Door::new(point_1, point_2, width, height))
         }
 
-        method set_dir(mut cx) {
+        method setDir(mut cx) {
             let mut this = cx.this();
             let arg = cx.argument::<JsValue>(0)?;
             let dir = neon_serde::from_value(&mut cx, arg)?;

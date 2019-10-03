@@ -66,10 +66,10 @@ fn test_copy_objs() {
 #[test]
 fn test_join_walls() {
     test_setup("join walls", |file, user, rcv| {
-        let id_1 = RefID::new_v4();
-        let first = Box::new(Wall::new(id_1.clone(), Point3f::new(1.0, 2.0, 3.0), Point3f::new(2.0, 2.0, 3.0), 1.0, 1.0));
-        let id_2 = RefID::new_v4();
-        let second = Box::new(Wall::new(id_2.clone(), Point3f::new(2.0, 3.0, 4.0,), Point3f::new(4.0, 5.0, 6.0), 1.0, 1.0));
+        let first = Box::new(Wall::new(Point3f::new(1.0, 2.0, 3.0), Point3f::new(2.0, 2.0, 3.0), 1.0, 1.0));
+        let id_1 = first.get_id().clone();
+        let second = Box::new(Wall::new(Point3f::new(2.0, 3.0, 4.0,), Point3f::new(4.0, 5.0, 6.0), 1.0, 1.0));
+        let id_2 = second.get_id().clone();
         let event = UndoEventID::new_v4();
         app_state::begin_undo_event(&file, &user, event.clone(), String::from("add objs")).unwrap();
         app_state::add_obj(&file, &event, first).unwrap();
@@ -103,10 +103,10 @@ fn test_join_walls() {
 #[test]
 fn test_join_door_and_wall() {
     test_setup("snap door to wall", |file, user, rcv| {
-        let id_1 = RefID::new_v4();
-        let first = Box::new(Wall::new(id_1.clone(), Point3f::new(0.0, 0.0, 0.0), Point3f::new(1.0, 0.0, 0.0), 1.0, 1.0));
-        let id_2 = RefID::new_v4();
-        let second = Box::new(Door::new(id_2.clone(), Point3f::new(1.0, 2.0, 3.0), Point3f::new(1.0, 2.5, 3.0), 1.0, 1.0));
+        let first = Box::new(Wall::new(Point3f::new(0.0, 0.0, 0.0), Point3f::new(1.0, 0.0, 0.0), 1.0, 1.0));
+        let id_1 = first.get_id().clone();
+        let second = Box::new(Door::new(Point3f::new(1.0, 2.0, 3.0), Point3f::new(1.0, 2.5, 3.0), 1.0, 1.0));
+        let id_2 = second.get_id().clone();
 
         let event = UndoEventID::new_v4();
         app_state::begin_undo_event(&file, &user, event.clone(), String::from("add objs")).unwrap();
