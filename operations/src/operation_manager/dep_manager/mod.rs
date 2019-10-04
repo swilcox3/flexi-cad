@@ -2,7 +2,7 @@ use crate::prelude::*;
 use ccl::dhashmap::DHashMap;
 
 pub struct DependencyManager {
-    pub_subs: DHashMap<RefID, HashSet<RefID>>
+    pub_subs: DHashMap<RefRecord, HashSet<RefRecord>>
 }
 
 impl DependencyManager {
@@ -12,8 +12,7 @@ impl DependencyManager {
         }
     }
 
-    //Breadth-first-search
-    fn get_deps(&self, obj: &RefID) -> Vec<HashSet<RefID>> {
+    fn breadth_first_search(&self, obj: Reference) -> Vec<HashSet<RefSource>> {
         let mut processing = std::collections::VecDeque::new();
         let mut visited = HashSet::new();
         let mut result = Vec::new();
@@ -24,10 +23,10 @@ impl DependencyManager {
                 if let Some(sub_set) = self.pub_subs.get(&current) {
                     let mut cur_level = HashSet::new();
                     for sub in &(*sub_set) {
-                        if let None = visited.get(sub) {
-                            visited.insert(sub.clone());
+                        if let None = visited.get(&sub.id) {
+                            visited.insert(sub.id.clone());
                             cur_level.insert(sub.clone());
-                            processing.push_back(sub.clone());
+                            processing.push_back(sub.id.clone());
                         }
                     }
                     if cur_level.len() > 0 {
@@ -39,7 +38,7 @@ impl DependencyManager {
         result
     }
 
-    pub fn get_all_deps<T>(&self, objs: T) -> Vec<RefID> 
+    pub fn get_all_deps<T>(&self, objs: T) -> Vec<Reference> 
         where T: IntoIterator<Item = RefID> 
     {
         let mut results = Vec::new();
@@ -73,7 +72,7 @@ impl DependencyManager {
         }
     }
 
-    pub fn register_sub(&self, publisher: &RefID, sub: RefID) {
+    pub fn register_sub(&self, publisher: &RefRecord, sub: RefRecord) {
         if sub != RefID::nil() && *publisher != sub {
             match self.pub_subs.get_mut(publisher) {
                 Some(mut set) => {

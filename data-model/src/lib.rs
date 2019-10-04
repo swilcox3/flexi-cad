@@ -97,16 +97,16 @@ pub type UndoEventID = Uuid;
 pub type QueryID = Uuid;
 
 pub trait ReferTo {
-    fn get_result(&self, index: ResultInd) -> Option<RefGeometry>;
-    fn get_all_results(&self) -> Vec<RefGeometry>;
+    fn get_point(&self, index: PointIndex) -> Option<Point3f>;
+    fn get_all_points(&self) -> Vec<Point3f>;
 }
 
 pub trait UpdateFromRefs {
     fn clear_refs(&mut self);
     fn get_refs(&self) -> Vec<Option<Reference>>;
-    fn set_ref(&mut self, index: ReferInd, result: &RefGeometry, other_ref: Reference, snap_pt: &Option<Point3f>);
-    fn add_ref(&mut self, result: &RefGeometry, other_ref: Reference, snap_pt: &Option<Point3f>) -> bool;
-    fn delete_ref(&mut self, index: ReferInd);
-    fn get_associated_geom(&self, index: ReferInd) -> Option<RefGeometry>;
-    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>); 
+    fn set_ref(&mut self, index: PointIndex, result: Point3f, other_ref: Reference);
+    fn add_ref(&mut self, result: Point3f, other_ref: Reference) -> bool;
+    fn delete_ref(&mut self, index: PointIndex);
+    fn get_associated_point(&self, index: PointIndex) -> Option<Point3f>;
+    fn set_associated_point(&mut self, index: PointIndex, geom: &Option<Point3f>);
 }

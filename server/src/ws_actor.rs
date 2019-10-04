@@ -147,6 +147,14 @@ impl MyWebSocket {
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::join_objs(path, &event_id, id_1, id_2, &type_1, &type_2, &point).map_err(error)
             }
+            "join_at_points" => {
+                let point = serde_json::from_value(msg.params.remove(4)).map_err(error)?;
+                let id_2: RefID = serde_json::from_value(msg.params.remove(3)).map_err(error)?;
+                let id_1: RefID = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
+                let event_id: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
+                operations_kernel::join_objs(path, &event_id, id_1, id_2, &RefType::Point, &RefType::Point, &point).map_err(error)
+            }
             "snap_obj_to_other" => {
                 let point: Point3f = serde_json::from_value(msg.params.remove(5)).map_err(error)?;
                 let type_1: RefType = serde_json::from_value(msg.params.remove(4)).map_err(error)?;
@@ -155,6 +163,9 @@ impl MyWebSocket {
                 let event_id: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::snap_obj_to_other(path, &event_id, id_1, &id_2, &type_1, &point).map_err(error)
+            }
+            "snap_to_line" => {
+                
             }
             "can_refer_to" => {
                 let query: QueryID = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
@@ -191,7 +202,7 @@ impl MyWebSocket {
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::delete_obj(&path, &event, &id).map_err(error)
             }
-            "get_obj_data" => {
+            "get_object_data" => {
                 let query: QueryID = serde_json::from_value(msg.params.remove(3)).map_err(error)?;
                 let prop_name: String = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
                 let id: RefID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;

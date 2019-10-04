@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Door {
     id: RefID,
-    pub dir: UpdatableGeometry<RefLineSeg>,
+    pub dir: Geometry<RefLineSeg>,
     pub width: WorldCoord,
     pub height: WorldCoord,
 }
@@ -14,7 +14,7 @@ impl Door {
         let id = RefID::new_v4();
         Door {
             id: id,
-            dir: UpdatableGeometry::new(RefLineSeg::new(first, second)),
+            dir: Geometry::new(RefLineSeg::new(first, second)),
             width: width,
             height: height,
         }
@@ -93,24 +93,24 @@ impl Data for Door {
 }
 
 impl ReferTo for Door {
-    fn get_result(&self, res: ResultInd) -> Option<RefGeometry> {
+    fn get_point(&self, res: PointIndex) -> Option<Point3f> {
         match res.index {
-            0 => Some(RefGeometry::Point{pt: self.dir.geom.pt_1}),
-            1 => Some(RefGeometry::Point{pt: self.dir.geom.pt_2}),
+            0 => Some(Point3f::Point{pt: self.dir.geom.pt_1}),
+            1 => Some(Point3f::Point{pt: self.dir.geom.pt_2}),
             2 => {
                 let third = Point3f::new(self.dir.geom.pt_2.x, self.dir.geom.pt_2.y, self.dir.geom.pt_2.z + self.height);
-                Some(RefGeometry::Rect{pt_1: self.dir.geom.pt_1, pt_2: self.dir.geom.pt_2, pt_3: third})
+                Some(Point3f::Rect{pt_1: self.dir.geom.pt_1, pt_2: self.dir.geom.pt_2, pt_3: third})
             }
             _ => None 
         }
     }
 
-    fn get_all_results(&self) -> Vec<RefGeometry> {
+    fn get_all_points(&self) -> Vec<Point3f> {
         let mut results = Vec::new();
-        results.push(RefGeometry::Point{pt: self.dir.geom.pt_1});
-        results.push(RefGeometry::Point{pt: self.dir.geom.pt_2});
+        results.push(Point3f::Point{pt: self.dir.geom.pt_1});
+        results.push(Point3f::Point{pt: self.dir.geom.pt_2});
         let third = Point3f::new(self.dir.geom.pt_2.x, self.dir.geom.pt_2.y, self.dir.geom.pt_2.z + self.height);
-        results.push(RefGeometry::Rect{pt_1: self.dir.geom.pt_1, pt_2: self.dir.geom.pt_2, pt_3: third});
+        results.push(Point3f::Rect{pt_1: self.dir.geom.pt_1, pt_2: self.dir.geom.pt_2, pt_3: third});
         results
     }
 }
@@ -124,36 +124,37 @@ impl UpdateFromRefs for Door {
         vec![self.dir.refer.clone()]
     }
 
-    fn set_ref(&mut self, index: ReferInd, result: &RefGeometry, other_ref: Reference, snap_pt: &Option<Point3f>) {
-        match index.index {
+    fn set_ref(&mut self, index: PointIndex, result: &Point3f, other_ref: Reference, snap_pt: &Option<Point3f>) {
+        match index {
             0 => self.dir.set_reference(result, other_ref, snap_pt),
             _ => ()
         }
     }
 
-    fn add_ref(&mut self, _: &RefGeometry, _: Reference, _: &Option<Point3f>) -> bool {
+    fn add_ref(&mut self, _: &Point3f, _: Reference, _: &Option<Point3f>) -> bool {
         return false;
     }
 
-    fn delete_ref(&mut self, index: ReferInd) {
-        match index.index {
+    fn delete_ref(&mut self, index: PointIndex) {
+        match index {
             0 => self.dir.refer = None,
             _ => ()
         }
     }
 
-    fn get_associated_geom(&self, index: ReferInd) -> Option<RefGeometry> {
-        match index.index {
-            0 => Some(self.dir.geom.get_geom()),
+    fn get_associated_point(&self, index: PointIndex) -> Option<Point3f> {
+        match index {
+            0 => Some(self.dir.pt),
             _ => {
                 None
             }
         }
     }
 
-    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>) {
-        if let Some(geom) = results.get(0) {
-            self.dir.update(geom);
+    fn set_associated_point(&mut self, index: PointIndex, geom: &Option<Point3f>) {
+        match index {
+            0 => self.dir.update(geom),
+            _ => ()
         }
     }
 }
