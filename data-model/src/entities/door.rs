@@ -4,20 +4,35 @@ use serde::{Serialize, Deserialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Door {
     id: RefID,
-    pub dir: Geometry<RefLineSeg>,
-    pub width: WorldCoord,
-    pub height: WorldCoord,
+    wall_pt_1: ParametricPoint,
+    wall_pt_2: ParametricPoint,
+    interp: Interp,
+    length: WorldCoord,
+    pt_1: Point3f,
+    pt_2: Point3f,
+    width: WorldCoord,
+    height: WorldCoord,
 }
 
 impl Door {
     pub fn new(first: Point3f, second: Point3f, width: WorldCoord, height: WorldCoord) -> Door {
         let id = RefID::new_v4();
+        let length = (first - second).magnitude();
         Door {
             id: id,
-            dir: Geometry::new(RefLineSeg::new(first, second)),
-            width: width,
-            height: height,
+            wall_pt_1: ParametricPoint::new(Point3f::new(0.0, 0.0, 0.0)),
+            wall_pt_2: ParametricPoint::new(Point3f::new(0.0, 0.0, 0.0)),
+            interp: Interp::new(0.0),
+            length,
+            pt_1: first,
+            pt_2: second,
+            width,
+            height,
         }
+    }
+
+    pub fn set_dir(&mut self, dir: &Vector3f) {
+        self.pt_2 = self.pt_1 + dir.normalize()*self.length;
     }
 }
 
@@ -40,8 +55,8 @@ impl Data for Door {
             indices: Vec::with_capacity(36),
             metadata: Some(to_json("Door", &self))
         };
-        let rotated = rotate_point_through_angle_2d(&self.dir.geom.pt_1, &self.dir.geom.pt_2, cgmath::Rad(std::f64::consts::FRAC_PI_4));
-        primitives::rectangular_prism(&self.dir.geom.pt_1, &rotated, self.width, self.height, &mut data);
+        let rotated = rotate_point_through_angle_2d(&self.pt_1, &self.pt_2, cgmath::Rad(std::f64::consts::FRAC_PI_4));
+        primitives::rectangular_prism(&self.pt_1, &rotated, self.width, self.height, &mut data);
         Ok(UpdateMsg::Mesh{data: data})
     }
 
@@ -53,8 +68,8 @@ impl Data for Door {
             indices: Vec::with_capacity(36),
             metadata: None
         };
-        let rotated = rotate_point_through_angle_2d(&self.dir.geom.pt_1, &self.dir.geom.pt_2, cgmath::Rad(std::f64::consts::FRAC_PI_4));
-        primitives::rectangular_prism(&self.dir.geom.pt_1, &rotated, self.width, self.height, &mut data);
+        let rotated = rotate_point_through_angle_2d(&self.pt_1, &self.pt_2, cgmath::Rad(std::f64::consts::FRAC_PI_4));
+        primitives::rectangular_prism(&self.pt_1, &rotated, self.width, self.height, &mut data);
         Ok(UpdateMsg::Mesh{data: data})
     }
 
@@ -62,9 +77,9 @@ impl Data for Door {
         match prop_name {
             "Width" => Ok(json!(self.width)),
             "Height" => Ok(json!(self.height)),
-            "Length" => Ok(json!(self.dir.geom.length)),
-            "First" => serde_json::to_value(&self.dir.geom.pt_1).map_err(error_other),
-            "Second" => serde_json::to_value(&self.dir.geom.pt_2).map_err(error_other),
+            "Length" => Ok(json!(self.length)),
+            "First" => serde_json::to_value(&self.pt_1).map_err(error_other),
+            "Second" => serde_json::to_value(&self.pt_2).map_err(error_other),
             _ => Err(DBError::PropertyNotFound)
         }
     }
@@ -81,7 +96,7 @@ impl Data for Door {
         }
         if let serde_json::Value::Number(num) = &data["Length"] {
             changed = true;
-            self.dir.geom.length = num.as_f64().unwrap();
+            self.length = num.as_f64().unwrap();
         }
         if changed {
             Ok(())
@@ -93,13 +108,13 @@ impl Data for Door {
 }
 
 impl ReferTo for Door {
-    fn get_point(&self, res: PointIndex) -> Option<Point3f> {
-        match res.index {
-            0 => Some(Point3f::Point{pt: self.dir.geom.pt_1}),
-            1 => Some(Point3f::Point{pt: self.dir.geom.pt_2}),
+    fn get_point(&self, index: PointIndex) -> Option<Point3f> {
+        match index {
+            0 => Some(self.pt_1),
+            1 => Some(self.pt_2),
             2 => {
-                let third = Point3f::new(self.dir.geom.pt_2.x, self.dir.geom.pt_2.y, self.dir.geom.pt_2.z + self.height);
-                Some(Point3f::Rect{pt_1: self.dir.geom.pt_1, pt_2: self.dir.geom.pt_2, pt_3: third})
+                let third = Point3f::new(self.pt_2.x, self.pt_2.y, self.pt_2.z + self.height);
+                Some(third)
             }
             _ => None 
         }
@@ -107,44 +122,48 @@ impl ReferTo for Door {
 
     fn get_all_points(&self) -> Vec<Point3f> {
         let mut results = Vec::new();
-        results.push(Point3f::Point{pt: self.dir.geom.pt_1});
-        results.push(Point3f::Point{pt: self.dir.geom.pt_2});
-        let third = Point3f::new(self.dir.geom.pt_2.x, self.dir.geom.pt_2.y, self.dir.geom.pt_2.z + self.height);
-        results.push(Point3f::Rect{pt_1: self.dir.geom.pt_1, pt_2: self.dir.geom.pt_2, pt_3: third});
+        results.push(self.pt_1);
+        results.push(self.pt_2);
+        let third = Point3f::new(self.pt_2.x, self.pt_2.y, self.pt_2.z + self.height);
+        results.push(third);
         results
     }
 }
 
 impl UpdateFromRefs for Door {
     fn clear_refs(&mut self) {
-        self.dir.refer = None;
+        self.wall_pt_1.refer = None;
+        self.wall_pt_2.refer = None;
     }
 
     fn get_refs(&self) -> Vec<Option<Reference>> {
-        vec![self.dir.refer.clone()]
+        vec![self.wall_pt_1.refer.clone(), self.wall_pt_2.refer.clone()]
     }
 
-    fn set_ref(&mut self, index: PointIndex, result: &Point3f, other_ref: Reference, snap_pt: &Option<Point3f>) {
+    fn set_ref(&mut self, index: PointIndex, result: Point3f, other_ref: Reference) {
         match index {
-            0 => self.dir.set_reference(result, other_ref, snap_pt),
+            0 => self.wall_pt_1.set_reference(result, other_ref),
+            1 => self.wall_pt_2.set_reference(result, other_ref),
             _ => ()
         }
     }
 
-    fn add_ref(&mut self, _: &Point3f, _: Reference, _: &Option<Point3f>) -> bool {
+    fn add_ref(&mut self, _: Point3f, _: Reference) -> bool {
         return false;
     }
 
     fn delete_ref(&mut self, index: PointIndex) {
         match index {
-            0 => self.dir.refer = None,
+            0 => self.wall_pt_1.refer = None,
+            1 => self.wall_pt_2.refer = None,
             _ => ()
         }
     }
 
     fn get_associated_point(&self, index: PointIndex) -> Option<Point3f> {
         match index {
-            0 => Some(self.dir.pt),
+            0 => Some(self.wall_pt_1.pt),
+            1 => Some(self.wall_pt_2.pt),
             _ => {
                 None
             }
@@ -153,7 +172,8 @@ impl UpdateFromRefs for Door {
 
     fn set_associated_point(&mut self, index: PointIndex, geom: &Option<Point3f>) {
         match index {
-            0 => self.dir.update(geom),
+            0 => self.wall_pt_1.update(geom),
+            1 => self.wall_pt_2.update(geom),
             _ => ()
         }
     }
@@ -161,8 +181,8 @@ impl UpdateFromRefs for Door {
 
 impl Position for Door {
     fn move_obj(&mut self, delta: &Vector3f) {
-        self.dir.geom.pt_1 += *delta;
-        self.dir.geom.pt_2 += *delta;
+        self.pt_1 += *delta;
+        self.pt_2 += *delta;
     }
 }
 
