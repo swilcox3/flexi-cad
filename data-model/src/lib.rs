@@ -108,5 +108,5 @@ pub trait UpdateFromRefs {
     fn add_ref(&mut self, result: &RefGeometry, other_ref: Reference, snap_pt: &Option<Point3f>) -> bool;
     fn delete_ref(&mut self, index: ReferInd);
     fn get_associated_geom(&self, index: ReferInd) -> Option<RefGeometry>;
-    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>); 
+    fn set_associated_geom(&mut self, index: ReferInd, geom: &Option<RefGeometry>);
 }

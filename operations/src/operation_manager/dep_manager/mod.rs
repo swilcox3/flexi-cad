@@ -2,7 +2,7 @@ use crate::prelude::*;
 use ccl::dhashmap::DHashMap;
 
 pub struct DependencyManager {
-    pub_subs: DHashMap<RefID, HashSet<RefID>>
+    pub_subs: DHashMap<Reference, HashSet<Reference>>
 }
 
 impl DependencyManager {
@@ -13,7 +13,7 @@ impl DependencyManager {
     }
 
     //Breadth-first-search
-    fn get_deps(&self, obj: &RefID) -> Vec<HashSet<RefID>> {
+    fn get_deps(&self, obj: &Reference) -> Vec<HashSet<Reference>> {
         let mut processing = std::collections::VecDeque::new();
         let mut visited = HashSet::new();
         let mut result = Vec::new();
@@ -39,11 +39,11 @@ impl DependencyManager {
         result
     }
 
-    pub fn get_all_deps<T>(&self, objs: T) -> Vec<RefID> 
-        where T: IntoIterator<Item = RefID> 
+    pub fn get_all_deps<T>(&self, objs: T) -> Vec<Reference> 
+        where T: IntoIterator<Item = Reference> 
     {
         let mut results = Vec::new();
-        let mut levels: Vec<HashSet<RefID>> = Vec::new();
+        let mut levels: Vec<HashSet<Reference>> = Vec::new();
         for obj in objs.into_iter() {
             let mut i = 0;
             for level in self.get_deps(&obj) {
@@ -67,14 +67,14 @@ impl DependencyManager {
     pub fn debug_state(&self, output: &mut String) {
         output.push_str(&format!("{:?} Dependencies:\n", self.pub_subs.len()));
         for chunk in self.pub_subs.chunks() {
-            for (id, set) in chunk.iter() {
-                output.push_str(&format!("{:?} -> {:?}\n", id, set));
+            for (refer, set) in chunk.iter() {
+                output.push_str(&format!("{:?} -> {:?}\n", refer, set));
             }
         }
     }
 
-    pub fn register_sub(&self, publisher: &RefID, sub: RefID) {
-        if sub != RefID::nil() && *publisher != sub {
+    pub fn register_sub(&self, publisher: &Reference, sub: Reference) {
+        if sub.self_id != RefID::nil() && *publisher != sub {
             match self.pub_subs.get_mut(publisher) {
                 Some(mut set) => {
                     set.insert(sub);
@@ -88,13 +88,13 @@ impl DependencyManager {
         }
     }
 
-    pub fn delete_sub(&self, publisher: &RefID, sub: &RefID) {
+    pub fn delete_sub(&self, publisher: &Reference, sub: &Reference) {
         if let Some(mut set) = self.pub_subs.get_mut(publisher) {
             set.remove(sub);
         }
     }
 
-    pub fn delete_obj(&self, publisher: &RefID) {
+    pub fn delete_obj(&self, publisher: &Reference) {
         self.pub_subs.remove(publisher);
         self.pub_subs.alter(|(_, set)| {
             set.remove(publisher);

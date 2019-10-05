@@ -147,12 +147,11 @@ impl UpdateFromRefs for Dimension {
         }
     }
 
-    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>) {
-        if let Some(geom) = results.get(0) {
-            self.first.update(geom);
-        }
-        if let Some(geom) = results.get(1) {
-            self.second.update(geom);
+    fn set_associated_geom(&mut self, index: ReferInd, geom: &Option<RefGeometry>) {
+        match index.index {
+            0 => self.first.update(geom),
+            1 => self.second.update(geom),
+            _ => ()
         }
     }
 }

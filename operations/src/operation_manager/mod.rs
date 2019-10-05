@@ -181,7 +181,7 @@ impl OperationManager {
     }
 
     fn update_set_from_refs<T>(&self, deps: T) -> Result<(), DBError> 
-        where T: IntoIterator<Item = RefID> + std::fmt::Debug
+        where T: IntoIterator<Item = Reference> + std::fmt::Debug
     {
         println!("deps: {:?}", deps);
         for dep_id in deps.into_iter() {
@@ -212,7 +212,7 @@ impl OperationManager {
         self.update_set_from_refs(deps)
     }
 
-    pub fn add_dep(&self, publisher: &RefID, sub: RefID) {
+    pub fn add_dep(&self, publisher: &Reference, sub: Reference) {
         self.deps.register_sub(publisher, sub);
     }
 

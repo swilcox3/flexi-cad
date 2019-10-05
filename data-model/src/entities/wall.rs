@@ -54,6 +54,7 @@ impl Data for Wall {
             metadata: Some(to_json("Wall", &self))
         };
         let self_length = (self.second_pt.geom.pt - self.first_pt.geom.pt).magnitude();
+        self.openings.retain(|open| open.refer != None);
         let mut sorted: Vec<PrismOpening> = self.openings.iter().map(|val| {
             let position = (val.geom.pt_1 - self.first_pt.geom.pt).magnitude();
             let interp = Interp::new(position / self_length);
@@ -206,27 +207,17 @@ impl UpdateFromRefs for Wall {
         }
     }
 
-    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>) {
-        if let Some(geom) = results.get(0) {
-            self.first_pt.update(geom);
-        }
-        if let Some(geom) = results.get(1) {
-            self.second_pt.update(geom);
-        }
-        let mut to_remove = Vec::new();
-        for i in 2..results.len() {
-            if let Some(geom) = results.get(i) {
-                if let Some(open) = self.openings.get_mut(i - 2) {
+    fn set_associated_geom(&mut self, index: ReferInd, geom: &Option<RefGeometry>) {
+        match index.index {
+            0 => self.first_pt.update(geom),
+            1 => self.second_pt.update(geom),
+            _ => {
+                if let Some(open) = self.openings.get_mut(index.index - 2) {
                     open.update(geom);
-                    if open.refer == None {
-                        to_remove.push(i - 2);
-                    }
                 }
             }
         }
-        for index in to_remove.iter().rev() {
-            self.openings.remove(*index);
-        }
+
     }
 }
 

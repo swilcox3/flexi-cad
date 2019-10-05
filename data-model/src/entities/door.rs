@@ -151,9 +151,10 @@ impl UpdateFromRefs for Door {
         }
     }
 
-    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>) {
-        if let Some(geom) = results.get(0) {
-            self.dir.update(geom);
+    fn set_associated_geom(&mut self, index: ReferInd, geom: &Option<RefGeometry>) {
+        match index.index {
+            0 => self.dir.update(geom),
+            _ => ()
         }
     }
 }
