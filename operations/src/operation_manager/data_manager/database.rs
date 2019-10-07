@@ -204,7 +204,7 @@ impl FileDatabase {
     }
 }
 
-#[cfg(test)]
+/*#[cfg(test)]
 mod tests {
     use super::*;
     use crate::tests::*;
@@ -299,3 +299,4 @@ mod tests {
 
 
 }
+*/

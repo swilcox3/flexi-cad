@@ -25,19 +25,26 @@ pub struct Rect {
     pub pt_3: Point3f,
 }
 
-
-///The operations kernel will look up another object by RefID, then index into its geometry vector to update the original object with a Option<Point3f>
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd, Hash, Eq)]
-pub struct Reference {
-    pub id: RefID,
+pub struct GeometryId {
+    pub obj: RefID,
     pub index: PointIndex,
 }
 
 ///The other object that is looking at the piece of geometry this is attached to
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd, Hash, Eq)]
-pub struct RefSource {
-    pub other_id: RefID,
-    pub ref_index: PointIndex,
+pub struct Reference {
+    pub owner: GeometryId,
+    pub other: GeometryId
+}
+
+impl Reference {
+    pub fn new(owner: GeometryId, other: GeometryId) -> Reference {
+        Reference{
+            owner,
+            other
+        }
+    }
 }
 
 /*impl Point3f {
@@ -52,35 +59,6 @@ pub struct RefSource {
         }
     }
 }*/
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct ParametricPoint {
-    pub refer: Option<Reference>,
-    pub pt: Point3f
-}
-
-impl ParametricPoint {
-    pub fn new(pt: Point3f) -> ParametricPoint {
-        ParametricPoint {
-            refer: None,
-            pt: pt
-        }
-    }
-
-    pub fn update(&mut self, ref_geom: &Option<Point3f>) {
-        if let Some(pt) = ref_geom {
-            self.pt = *pt;
-        }
-        else {
-            self.refer = None;
-        }
-    }
-
-    pub fn set_reference(&mut self, result: Point3f, refer: Reference) {
-        self.refer = Some(refer);
-        self.pt = result;
-    }
-}
 
 /*impl RefLineSeg {
     pub fn new(pt_1: Point3f, pt_2: Point3f) -> RefLineSeg {

@@ -1,5 +1,5 @@
-#[cfg(test)]
-mod tests;
+/*#[cfg(test)]
+mod tests;*/
 mod snapping;
 pub use snapping::*;
 
@@ -36,7 +36,7 @@ pub fn set_obj_data(file: &PathBuf, event: &UndoEventID, id: &RefID, data: &serd
     })
 }
 
-pub fn copy_objs(file: &PathBuf, event: &UndoEventID, ids: HashSet<RefID>) -> Result<(Vec<RefID>, HashMap<RefID, RefID>), DBError> {
+/*pub fn copy_objs(file: &PathBuf, event: &UndoEventID, ids: HashSet<RefID>) -> Result<(Vec<RefID>, HashMap<RefID, RefID>), DBError> {
     let mut orig_to_copy = HashMap::new();
     for id in &ids {
         let copy_id = app_state::copy_obj(&file, &event, id)?;
@@ -51,7 +51,7 @@ pub fn copy_objs(file: &PathBuf, event: &UndoEventID, ids: HashSet<RefID>) -> Re
                 let mut index = 0;
                 for ref_opt in has_ref.get_refs() {
                     if let Some(this_ref) = ref_opt {
-                        if let Some(ref_copy_id) = orig_to_copy.get(&this_ref.id) {
+                        if let Some(ref_copy_id) = orig_to_copy.get(&this_ref.obj) {
                             if let Some(has_ref_res) = obj.query_ref::<dyn ReferTo>() {
                                 if let Some(res) = has_ref_res.get_result(this_ref.index) {
                                     let ref_index = ReferInd{index: index};
@@ -85,4 +85,4 @@ pub fn copy_objs(file: &PathBuf, event: &UndoEventID, ids: HashSet<RefID>) -> Re
         to_update.push(id);
     }
     Ok((to_update, orig_to_copy))
-}
+}*/

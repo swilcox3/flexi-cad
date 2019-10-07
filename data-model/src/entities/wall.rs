@@ -3,6 +3,35 @@ use primitives::PrismOpening;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ParametricPoint {
+    pub pt: Point3f,
+    pub refer: Option<GeometryId>
+}
+
+impl ParametricPoint {
+    pub fn new(pt: Point3f) -> ParametricPoint {
+        ParametricPoint {
+            pt,
+            refer: None
+        }
+    }
+
+    pub fn set_reference(&mut self, pt: Point3f, other_ref: GeometryId) {
+        self.pt = pt;
+        self.refer = Some(other_ref); 
+    }
+
+    pub fn update(&mut self, geom: Option<Point3f>) {
+        if let Some(pt) = geom {
+            self.pt = pt;
+        }
+        else {
+            self.refer = None;
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Wall {
     pub first_pt: ParametricPoint,
     pub second_pt: ParametricPoint,
@@ -137,7 +166,14 @@ impl ReferTo for Wall {
         match result {
             0 => Some(self.first_pt.pt),
             1 => Some(self.second_pt.pt),
-            _ => None 
+            _ => {
+                if let Some(pt) = self.openings.get(result - 2) {
+                    Some(pt.pt)
+                }
+                else {
+                    None
+                }
+            }
         }
     }
 
@@ -145,7 +181,14 @@ impl ReferTo for Wall {
         let mut results = Vec::new();
         results.push(self.first_pt.pt);
         results.push(self.second_pt.pt);
+        for pt in &self.openings {
+            results.push(pt.pt);
+        }
         results
+    }
+
+    fn get_num_points(&self) -> usize {
+        2 + self.openings.len()
     }
 
 }
@@ -159,7 +202,7 @@ impl UpdateFromRefs for Wall {
         }
     }
 
-    fn get_refs(&self) -> Vec<Option<Reference>> {
+    fn get_refs(&self) -> Vec<Option<GeometryId>> {
         let mut results = Vec::new();
         results.push(self.first_pt.refer.clone());
         results.push(self.second_pt.refer.clone());
@@ -169,7 +212,11 @@ impl UpdateFromRefs for Wall {
         results
     }
 
-    fn set_ref(&mut self, index: PointIndex, result: Point3f, other_ref: Reference) {
+    fn get_num_refs(&self) -> usize {
+        2 + self.openings.len()
+    }
+
+    fn set_ref(&mut self, index: PointIndex, result: Point3f, other_ref: GeometryId) {
         match index {
             0 => self.first_pt.set_reference(result, other_ref),
             1 => self.second_pt.set_reference(result, other_ref),
@@ -181,7 +228,7 @@ impl UpdateFromRefs for Wall {
         }
     }
 
-    fn add_ref(&mut self, result: Point3f, other_ref: Reference) -> bool {
+    fn add_ref(&mut self, result: Point3f, other_ref: GeometryId) -> bool {
         let mut new_open = ParametricPoint::new(result);
         new_open.set_reference(new_open.pt, other_ref);
         self.openings.push(new_open);
@@ -215,7 +262,7 @@ impl UpdateFromRefs for Wall {
         }
     }
 
-    fn set_associated_point(&mut self, index: PointIndex, geom: &Option<Point3f>) {
+    fn set_associated_point(&mut self, index: PointIndex, geom: Option<Point3f>) {
         match index {
             0 => self.first_pt.update(geom),
             1 => self.second_pt.update(geom),

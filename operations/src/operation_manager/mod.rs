@@ -1,7 +1,7 @@
 mod data_manager;
 mod dep_manager;
-#[cfg(test)]
-mod tests;
+/*#[cfg(test)]
+mod tests;*/
 
 use crate::prelude::*;
 use data_manager::*;
@@ -37,10 +37,12 @@ impl OperationManager {
         ops.data.iterate_all_mut(&mut |obj: &mut DataObject| {
             if let Some(dep_obj) = obj.query_ref::<dyn UpdateFromRefs>() {
                 let refs = dep_obj.get_refs();
+                let mut i = 0;
                 for ref_opt in refs {
                     if let Some(refer) = ref_opt {
-                        ops.deps.register_sub(&refer.id, obj.get_id().clone());
+                        ops.deps.register_sub(&refer, GeometryId{obj: obj.get_id().clone(), index: i});
                     }
+                    i += 1;
                 }
             }
             let msg = obj.update()?;
@@ -133,90 +135,99 @@ impl OperationManager {
         Ok(())
     }
 
-    fn get_ref_result(&self, refer_opt: &Option<Reference>) -> Option<RefGeometry> {
-        match refer_opt {
-            Some(refer) => {
-                let mut result = None;
-                match self.get_obj(&refer.id, |obj| {
-                    match obj.query_ref::<dyn ReferTo>() {
-                        Some(update_from) => {
-                            result = update_from.get_result(refer.index);
-                            Ok(())
-                        }
-                        None => Err(DBError::ObjLacksTrait)
-                    }
-                }) {
-                    Ok(()) => result,
-                    Err(_) => None,
-                }
-            }
-            None => None,
-        }
-    }
-
-    fn update_from_refs(&self, obj_id: &RefID) -> Result<UpdateMsg, DBError> {
-        let mut refs = Vec::new();
-        self.get_obj(obj_id, &mut |obj: &DataObject| {
-            if let Some(updatable) = obj.query_ref::<dyn UpdateFromRefs>() {
-                refs = updatable.get_refs();
-            }
-            Ok(())
-        })?;
-        let mut results = Vec::new();
-        for refer in refs {
-            results.push(self.get_ref_result(&refer));
-        }
-        let mut msg = UpdateMsg::Empty;
-        self.data.get_mut_obj_no_undo(obj_id, |obj| {
-            match obj.query_mut::<dyn UpdateFromRefs>() {
-                Some(updatable) => {
-                    updatable.update_from_refs(&results);
-                    msg = obj.update()?;
+    fn get_ref_result(&self, refer: &GeometryId) -> Option<Point3f> {
+        let mut result = None;
+        match self.get_obj(&refer.obj, |obj| {
+            match obj.query_ref::<dyn ReferTo>() {
+                Some(update_from) => {
+                    result = update_from.get_point(refer.index);
                     Ok(())
                 }
                 None => Err(DBError::ObjLacksTrait)
             }
-        })?;
-        Ok(msg)
+        }) {
+            Ok(()) => result,
+            Err(_) => None,
+        }
+    }
+
+    fn update_reference(&self, refer: &Reference) -> Result<(), DBError> {
+        let result = self.get_ref_result(&refer.other);
+        self.data.get_mut_obj_no_undo(&refer.owner.obj, |obj| {
+            match obj.query_mut::<dyn UpdateFromRefs>() {
+                Some(updatable) => {
+                    updatable.set_associated_point(refer.owner.index, result);
+                    Ok(())
+                }
+                None => Err(DBError::ObjLacksTrait)
+            }
+        })
+    }
+
+    fn update_reference_set<T>(&self, refers: T) -> Result<(), DBError> 
+        where T: IntoIterator<Item = Reference>
+    {
+        for refer in refers {
+            self.update_reference(&refer)?;
+        }
+        Ok(())
     }
 
     fn update_set_from_refs<T>(&self, deps: T) -> Result<(), DBError> 
-        where T: IntoIterator<Item = RefID> + std::fmt::Debug
+        where T: IntoIterator<Item = RefID> + Clone
     {
-        println!("deps: {:?}", deps);
+        let mut geom_ids = Vec::new();
+        for dep_id in deps.clone().into_iter() {
+            self.data.get_mut_obj_no_undo(&dep_id, |obj| {
+                match obj.query_mut::<dyn UpdateFromRefs>() {
+                    Some(updatable) => {
+                        for geom_opt in updatable.get_refs() {
+                            if let Some(geom) = geom_opt {
+                                geom_ids.push(geom);
+                            }
+                        }
+                        Ok(())
+                    }
+                    None => Err(DBError::ObjLacksTrait)
+                }
+            })?;
+        }
+        let refers = self.deps.get_all_deps(geom_ids);
+        self.update_reference_set(refers)?;
         for dep_id in deps.into_iter() {
-            match self.update_from_refs(&dep_id) {
-                Ok(msg) => {
-                    self.send(msg, None)?;
+            self.data.get_mut_obj_no_undo(&dep_id, |obj| {
+                let update_msg = obj.update();
+                match update_msg {
+                    Ok(msg) => {
+                        self.send(msg, None)
+                    }
+                    Err(DBError::ObjNotFound) => {
+                        self.send(UpdateMsg::Delete{key: dep_id.clone()}, None)
+                    }
+                    Err(e) => {
+                        Err(e)
+                    }
                 }
-                Err(DBError::ObjNotFound) => {
-                    self.send(UpdateMsg::Delete{key: dep_id.clone()}, None)?;
-                }
-                Err(e) => {
-                    return Err(e);
-                }
-            }
+            })?;
         }
         Ok(())
     }
 
     pub fn update_deps(&self, id: &RefID) -> Result<(), DBError> {
-        let deps = self.deps.get_all_deps(vec![id.clone()]);
-        self.update_set_from_refs(deps)
+        self.update_set_from_refs(vec![id.clone()])
     }
 
     pub fn update_all_deps<T>(&self, ids: T) -> Result<(), DBError>
-        where T: IntoIterator<Item = RefID>
+        where T: IntoIterator<Item = RefID> + Clone
     {
-        let deps = self.deps.get_all_deps(ids);
-        self.update_set_from_refs(deps)
+        self.update_set_from_refs(ids)
     }
 
-    pub fn add_dep(&self, publisher: &RefID, sub: RefID) {
+    pub fn add_dep(&self, publisher: &GeometryId, sub: GeometryId) {
         self.deps.register_sub(publisher, sub);
     }
 
-    pub fn remove_dep(&self, publisher: &RefID, sub: &RefID) {
+    pub fn remove_dep(&self, publisher: &GeometryId, sub: &GeometryId) {
         self.deps.delete_sub(publisher, sub);
     }
 
@@ -240,10 +251,12 @@ impl OperationManager {
     pub fn add_object(&self, event: &UndoEventID, mut obj: DataObject) -> Result<(), DBError> {
         if let Some(dep_obj) = obj.query_ref::<dyn UpdateFromRefs>() {
             let refs = dep_obj.get_refs();
+            let mut i = 0;
             for ref_opt in refs {
                 if let Some(refer) = ref_opt {
-                    self.deps.register_sub(&refer.id, obj.get_id().clone());
+                    self.deps.register_sub(&refer, GeometryId{obj: obj.get_id().clone(), index: i});
                 }
+                i += 1;
             }
         }
         let msg = obj.update()?;
@@ -255,7 +268,12 @@ impl OperationManager {
         let obj = self.data.delete_obj(event, id)?;
         self.send(UpdateMsg::Delete{key: *id}, None)?;
         self.update_deps(id)?;
-        self.deps.delete_obj(id);
+        if let Some(refer_obj) = obj.query_ref::<dyn ReferTo>() {
+            let num_pts = refer_obj.get_num_points();
+            for i in 0..num_pts {
+                self.deps.delete_obj(&GeometryId{obj: id.clone(), index: i});
+            }
+        }
         Ok(obj)
     }
 

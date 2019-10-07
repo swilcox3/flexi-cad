@@ -1,11 +1,11 @@
 use crate::prelude::*;
 
-fn get_result(file: &PathBuf, obj: &RefID, index: ResultInd) -> Result<Option<RefGeometry>, DBError> {
+fn get_result(file: &PathBuf, obj: &RefID, index: PointIndex) -> Result<Option<Point3f>, DBError> {
     let mut res_opt = None;
     app_state::get_obj(file, obj, |read| {
         match read.query_ref::<dyn ReferTo>() {
             Some(refer) => {
-                res_opt = refer.get_result(index);
+                res_opt = refer.get_point(index);
                 Ok(())
             }
             None => Err(DBError::ObjLacksTrait)
@@ -25,7 +25,7 @@ pub fn can_refer_to(file: &PathBuf, obj: &RefID) -> Result<bool, DBError> {
     Ok(result)
 }
 
-pub fn get_closest_result(file: &PathBuf, obj: &RefID, only_match: &RefType, guess: &Point3f) -> Result<Option<(Reference, RefGeometry)>, DBError> {
+/*pub fn get_closest_result(file: &PathBuf, obj: &RefID, only_match: &RefType, guess: &Point3f) -> Result<Option<(Reference, RefGeometry)>, DBError> {
     let mut result = None;
     app_state::get_obj(file, obj, |refer_obj| {
         match refer_obj.query_ref::<dyn ReferTo>() {
@@ -107,4 +107,4 @@ pub fn join_refs(file: &PathBuf, event: &UndoEventID, first: &RefID, second: &Re
     snap_to_ref(file, event, second, first, second_wants, guess)?;
     snap_to_ref(file, event, first, second, first_wants, guess)?;
     Ok(())
-}
+}*/

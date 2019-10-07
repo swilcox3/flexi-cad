@@ -1,8 +1,8 @@
 use std::sync::{Mutex};
 use crate::prelude::*;
 
-#[cfg(test)]
-mod tests;
+/*#[cfg(test)]
+mod tests;*/
 
 mod database;
 mod undo;

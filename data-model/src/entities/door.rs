@@ -4,12 +4,12 @@ use serde::{Serialize, Deserialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Door {
     id: RefID,
-    wall_pt_1: ParametricPoint,
-    wall_pt_2: ParametricPoint,
     interp: Interp,
     length: WorldCoord,
     pt_1: Point3f,
+    pt_1_ref: Option<GeometryId>,
     pt_2: Point3f,
+    pt_2_ref: Option<GeometryId>,
     width: WorldCoord,
     height: WorldCoord,
 }
@@ -20,12 +20,12 @@ impl Door {
         let length = (first - second).magnitude();
         Door {
             id: id,
-            wall_pt_1: ParametricPoint::new(Point3f::new(0.0, 0.0, 0.0)),
-            wall_pt_2: ParametricPoint::new(Point3f::new(0.0, 0.0, 0.0)),
             interp: Interp::new(0.0),
             length,
             pt_1: first,
+            pt_1_ref: None,
             pt_2: second,
+            pt_2_ref: None,
             width,
             height,
         }
@@ -128,52 +128,80 @@ impl ReferTo for Door {
         results.push(third);
         results
     }
+
+    fn get_num_points(&self) -> usize {
+        3
+    }
 }
 
 impl UpdateFromRefs for Door {
     fn clear_refs(&mut self) {
-        self.wall_pt_1.refer = None;
-        self.wall_pt_2.refer = None;
+        self.pt_1_ref = None;
+        self.pt_2_ref = None;
     }
 
-    fn get_refs(&self) -> Vec<Option<Reference>> {
-        vec![self.wall_pt_1.refer.clone(), self.wall_pt_2.refer.clone()]
+    fn get_refs(&self) -> Vec<Option<GeometryId>> {
+        vec![self.pt_1_ref.clone(), self.pt_2_ref.clone(), None]
     }
 
-    fn set_ref(&mut self, index: PointIndex, result: Point3f, other_ref: Reference) {
+    fn get_num_refs(&self) -> usize {
+        3
+    }
+
+    fn set_ref(&mut self, index: PointIndex, result: Point3f, other_ref: GeometryId) {
         match index {
-            0 => self.wall_pt_1.set_reference(result, other_ref),
-            1 => self.wall_pt_2.set_reference(result, other_ref),
+            0 => {
+                self.pt_1 = result;
+                self.pt_1_ref = Some(other_ref);
+            }
+            1 => {
+                self.pt_2 = result;
+                self.pt_2_ref = Some(other_ref);
+            }
             _ => ()
         }
     }
 
-    fn add_ref(&mut self, _: Point3f, _: Reference) -> bool {
+    fn add_ref(&mut self, _: Point3f, _: GeometryId) -> bool {
         return false;
     }
 
     fn delete_ref(&mut self, index: PointIndex) {
         match index {
-            0 => self.wall_pt_1.refer = None,
-            1 => self.wall_pt_2.refer = None,
+            0 => self.pt_1_ref = None,
+            1 => self.pt_2_ref = None,
             _ => ()
         }
     }
 
     fn get_associated_point(&self, index: PointIndex) -> Option<Point3f> {
         match index {
-            0 => Some(self.wall_pt_1.pt),
-            1 => Some(self.wall_pt_2.pt),
+            0 => Some(self.pt_1),
+            1 => Some(self.pt_2),
             _ => {
                 None
             }
         }
     }
 
-    fn set_associated_point(&mut self, index: PointIndex, geom: &Option<Point3f>) {
+    fn set_associated_point(&mut self, index: PointIndex, geom: Option<Point3f>) {
         match index {
-            0 => self.wall_pt_1.update(geom),
-            1 => self.wall_pt_2.update(geom),
+            0 => {
+                if let Some(pt) = geom {
+                    self.pt_1 = pt;
+                }
+                else {
+                    self.pt_1_ref = None;
+                }
+            }
+            1 => {
+                if let Some(pt) = geom {
+                    self.pt_2 = pt;
+                }
+                else {
+                    self.pt_2_ref = None;
+                }
+            }
             _ => ()
         }
     }

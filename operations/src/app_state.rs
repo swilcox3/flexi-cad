@@ -164,11 +164,13 @@ pub fn delete_obj(file: &PathBuf, event: &UndoEventID, id: &RefID) -> Result<Dat
     }
 }
 
-pub fn add_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, result: &RefGeometry, refer: Reference, snap_pt: &Option<Point3f>) -> Result<(), DBError> {
+pub fn add_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, result: Point3f, refer: GeometryId) -> Result<(), DBError> {
+    let mut index = 0;
     modify_obj(&file, &event, &obj, |owner| {
         match owner.query_mut::<dyn UpdateFromRefs>() {
             Some(joinable) => {
-                if joinable.add_ref(result, refer.clone(), snap_pt) {
+                if joinable.add_ref(result, refer.clone()) {
+                    index = joinable.get_num_refs();
                     Ok(())
                 }
                 else {
@@ -178,20 +180,20 @@ pub fn add_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, result: &RefGeo
             None => Err(DBError::ObjLacksTrait)
         }
     })?;
-    add_dep(&file, &refer.id, obj.clone())
+    add_dep(&file, &refer, GeometryId{obj: obj.clone(), index})
 }
 
-pub fn set_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, index: ReferInd, result: &RefGeometry, refer: Reference, snap_pt: &Option<Point3f>) -> Result<(), DBError> {
+pub fn set_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, index: PointIndex, result: Point3f, refer: GeometryId) -> Result<(), DBError> {
     modify_obj(&file, &event, &obj, |owner| {
         match owner.query_mut::<dyn UpdateFromRefs>() {
             Some(joinable) => {
-                joinable.set_ref(index, result, refer.clone(), snap_pt);
+                joinable.set_ref(index, result, refer.clone());
                 Ok(())
             }
             None => Err(DBError::ObjLacksTrait)
         }
     })?;
-    add_dep(&file, &refer.id, obj.clone())
+    add_dep(&file, &refer, GeometryId{obj: obj.clone(), index})
 }
 
 pub fn update_deps(file: PathBuf, id: RefID) {
@@ -210,14 +212,14 @@ pub fn update_all_deps(file: PathBuf, ids: Vec<RefID>) {
     });
 }
 
-pub fn add_dep(file: &PathBuf, publisher: &RefID, subscriber: RefID) -> Result<(), DBError> {
+pub fn add_dep(file: &PathBuf, publisher: &GeometryId, subscriber: GeometryId) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => Ok(ops.add_dep(publisher, subscriber)),
         None => Err(DBError::FileNotFound)
     }
 }
 
-pub fn remove_dep(file: &PathBuf, publisher: &RefID, subscriber: &RefID) -> Result<(), DBError> {
+pub fn remove_dep(file: &PathBuf, publisher: &GeometryId, subscriber: &GeometryId) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => Ok(ops.remove_dep(publisher, subscriber)),
         None => Err(DBError::FileNotFound)
