@@ -104,11 +104,11 @@ impl UpdateFromRefs for TestObj {
         self.point_2.refer = None;
     }
 
-    fn add_ref(&mut self, _: Point3f, _: GeometryId) -> bool {
+    fn add_ref(&mut self, _: Point3f, _: GeometryId, _: &Option<Point3f>) -> bool {
         false
     }
 
-    fn set_ref(&mut self, index: PointIndex, result: Point3f, other_ref: GeometryId) {
+    fn set_ref(&mut self, index: PointIndex, result: Point3f, other_ref: GeometryId, _: &Option<Point3f>) {
         match index {
             0 => self.point.set_reference(result, other_ref),
             1 => self.point_2.set_reference(result, other_ref),

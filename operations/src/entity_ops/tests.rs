@@ -31,6 +31,7 @@ fn test_copy_objs() {
            Point3f::new(1.0, 2.0, 3.0), 
             GeometryId{obj: id_1.clone(), 
                     index: 0},
+            &None
         );
 
         let event = UndoEventID::new_v4();

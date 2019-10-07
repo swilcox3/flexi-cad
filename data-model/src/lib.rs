@@ -101,8 +101,8 @@ pub trait UpdateFromRefs {
     fn clear_refs(&mut self);
     fn get_refs(&self) -> Vec<Option<GeometryId>>;
     fn get_num_refs(&self) -> usize;
-    fn set_ref(&mut self, index: PointIndex, result: Point3f, other_ref: GeometryId);
-    fn add_ref(&mut self, result: Point3f, other_ref: GeometryId) -> bool;
+    fn set_ref(&mut self, index: PointIndex, result: Point3f, other_ref: GeometryId, snap_pt: &Option<Point3f>);
+    fn add_ref(&mut self, result: Point3f, other_ref: GeometryId, snap_pt: &Option<Point3f>) -> bool;
     fn delete_ref(&mut self, index: PointIndex);
     fn get_associated_point(&self, index: PointIndex) -> Option<Point3f>;
     fn set_associated_point(&mut self, index: PointIndex, geom: Option<Point3f>);

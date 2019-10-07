@@ -164,12 +164,12 @@ pub fn delete_obj(file: &PathBuf, event: &UndoEventID, id: &RefID) -> Result<Dat
     }
 }
 
-pub fn add_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, result: Point3f, refer: GeometryId) -> Result<(), DBError> {
+pub fn add_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, result: Point3f, refer: GeometryId, snap_pt: &Option<Point3f>) -> Result<(), DBError> {
     let mut index = 0;
     modify_obj(&file, &event, &obj, |owner| {
         match owner.query_mut::<dyn UpdateFromRefs>() {
             Some(joinable) => {
-                if joinable.add_ref(result, refer.clone()) {
+                if joinable.add_ref(result, refer.clone(), snap_pt) {
                     index = joinable.get_num_refs();
                     Ok(())
                 }
@@ -183,11 +183,11 @@ pub fn add_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, result: Point3f
     add_dep(&file, &refer, GeometryId{obj: obj.clone(), index})
 }
 
-pub fn set_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, index: PointIndex, result: Point3f, refer: GeometryId) -> Result<(), DBError> {
+pub fn set_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, index: PointIndex, result: Point3f, refer: GeometryId, snap_pt: &Option<Point3f>) -> Result<(), DBError> {
     modify_obj(&file, &event, &obj, |owner| {
         match owner.query_mut::<dyn UpdateFromRefs>() {
             Some(joinable) => {
-                joinable.set_ref(index, result, refer.clone());
+                joinable.set_ref(index, result, refer.clone(), snap_pt);
                 Ok(())
             }
             None => Err(DBError::ObjLacksTrait)

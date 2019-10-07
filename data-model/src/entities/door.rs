@@ -7,9 +7,10 @@ pub struct Door {
     interp: Interp,
     length: WorldCoord,
     pt_1: Point3f,
-    pt_1_ref: Option<GeometryId>,
+    wall_pt_1: Option<ParametricPoint>,
     pt_2: Point3f,
-    pt_2_ref: Option<GeometryId>,
+    wall_pt_2: Option<ParametricPoint>,
+    snap_pt: Option<Point3f>,
     width: WorldCoord,
     height: WorldCoord,
 }
@@ -23,9 +24,10 @@ impl Door {
             interp: Interp::new(0.0),
             length,
             pt_1: first,
-            pt_1_ref: None,
+            wall_pt_1: None,
             pt_2: second,
-            pt_2_ref: None,
+            wall_pt_2: None,
+            snap_pt: None,
             width,
             height,
         }
@@ -49,6 +51,18 @@ impl Data for Door {
     }
 
     fn update(&mut self) -> Result<UpdateMsg, DBError> {
+        if let Some(pt_1) = &self.wall_pt_1 {
+            if let Some(pt_2) = &self.wall_pt_2 {
+                if let Some(snap) = self.snap_pt {
+                    self.interp = get_interp_along_line(&pt_1.pt, &pt_2.pt, &snap);
+                    self.snap_pt = None;
+                }
+                let dir = pt_2.pt - pt_1.pt;
+                let norm = dir.normalize();
+                self.pt_1 = pt_1.pt + dir * self.interp.val();
+                self.pt_2 = self.pt_1 + norm * self.length;
+            }
+        }
         let mut data = MeshData {
             id: self.get_id().clone(),
             positions: Vec::with_capacity(24),
@@ -136,51 +150,74 @@ impl ReferTo for Door {
 
 impl UpdateFromRefs for Door {
     fn clear_refs(&mut self) {
-        self.pt_1_ref = None;
-        self.pt_2_ref = None;
+        self.wall_pt_1 = None;
+        self.wall_pt_2 = None;
     }
 
     fn get_refs(&self) -> Vec<Option<GeometryId>> {
-        vec![self.pt_1_ref.clone(), self.pt_2_ref.clone(), None]
+        let mut results = Vec::new();
+        if let Some(pt_1) = &self.wall_pt_1 {
+            results.push(pt_1.refer.clone());
+        }
+        if let Some(pt_2) = &self.wall_pt_2 {
+            results.push(pt_2.refer.clone());
+        }
+        results
     }
 
     fn get_num_refs(&self) -> usize {
         3
     }
 
-    fn set_ref(&mut self, index: PointIndex, result: Point3f, other_ref: GeometryId) {
+    fn set_ref(&mut self, index: PointIndex, result: Point3f, other_ref: GeometryId, snap_pt: &Option<Point3f>) {
         match index {
             0 => {
-                self.pt_1 = result;
-                self.pt_1_ref = Some(other_ref);
+                let mut pt = ParametricPoint::new(result);
+                pt.refer = Some(other_ref);
+                self.wall_pt_1 = Some(pt);
+                self.snap_pt = snap_pt.clone();
             }
             1 => {
-                self.pt_2 = result;
-                self.pt_2_ref = Some(other_ref);
+                let mut pt = ParametricPoint::new(result);
+                pt.refer = Some(other_ref);
+                self.wall_pt_2 = Some(pt);
+                self.snap_pt = snap_pt.clone();
             }
             _ => ()
         }
     }
 
-    fn add_ref(&mut self, _: Point3f, _: GeometryId) -> bool {
+    fn add_ref(&mut self, _: Point3f, _: GeometryId, _: &Option<Point3f>) -> bool {
         return false;
     }
 
     fn delete_ref(&mut self, index: PointIndex) {
         match index {
-            0 => self.pt_1_ref = None,
-            1 => self.pt_2_ref = None,
+            0 => self.wall_pt_1 = None,
+            1 => self.wall_pt_2 = None,
             _ => ()
         }
     }
 
     fn get_associated_point(&self, index: PointIndex) -> Option<Point3f> {
         match index {
-            0 => Some(self.pt_1),
-            1 => Some(self.pt_2),
-            _ => {
-                None
+            0 => {
+                if let Some(pt_1) = &self.wall_pt_1 {
+                    Some(pt_1.pt)
+                }
+                else {
+                    None
+                }
             }
+            1 => {
+                if let Some(pt_2) = &self.wall_pt_2 {
+                    Some(pt_2.pt)
+                }
+                else {
+                    None
+                }
+            }
+            _ => None
         }
     }
 
@@ -188,18 +225,22 @@ impl UpdateFromRefs for Door {
         match index {
             0 => {
                 if let Some(pt) = geom {
-                    self.pt_1 = pt;
+                    if let Some(pt_1) = &mut self.wall_pt_1 {
+                        pt_1.pt = pt;
+                    }
                 }
                 else {
-                    self.pt_1_ref = None;
+                    self.wall_pt_1 = None;
                 }
             }
             1 => {
                 if let Some(pt) = geom {
-                    self.pt_2 = pt;
+                    if let Some(pt_2) = &mut self.wall_pt_2 {
+                        pt_2.pt = pt;
+                    }
                 }
                 else {
-                    self.pt_2_ref = None;
+                    self.wall_pt_2 = None;
                 }
             }
             _ => ()

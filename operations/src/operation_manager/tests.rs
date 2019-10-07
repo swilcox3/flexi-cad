@@ -24,8 +24,8 @@ fn test_dep_update() {
         let id_2 = obj_2.get_id().clone();
         let ref_1 = GeometryId{obj: id_1.clone(), index: 0};
         let ref_2 = GeometryId{obj: id_2.clone(), index: 0};
-        obj_1.set_ref(0, Point3f::new(0.0, 1.0, 2.0), ref_2);
-        obj_2.set_ref(0, Point3f::new(2.0, 1.0, 0.0), ref_1);
+        obj_1.set_ref(0, Point3f::new(0.0, 1.0, 2.0), ref_2, &None);
+        obj_2.set_ref(0, Point3f::new(2.0, 1.0, 0.0), ref_1, &None);
         ops.add_object(&event, Box::new(obj_1)).unwrap();
         ops.add_object(&event, Box::new(obj_2)).unwrap();
         ops.modify_obj(&event, &id_1, &mut |write_1: &mut DataObject| {
@@ -64,8 +64,8 @@ fn test_dep_undo() {
         let id_2 = obj_2.get_id().clone();
         let ref_1 = GeometryId{obj: id_1.clone(), index: 0};
         let ref_2 = GeometryId{obj: id_2.clone(), index: 0};
-        obj_1.set_ref(0, Point3f::new(0.0, 1.0, 2.0), ref_2);
-        obj_2.set_ref(0, Point3f::new(2.0, 1.0, 0.0), ref_1);
+        obj_1.set_ref(0, Point3f::new(0.0, 1.0, 2.0), ref_2, &None);
+        obj_2.set_ref(0, Point3f::new(2.0, 1.0, 0.0), ref_1, &None);
         ops.add_object(&event, Box::new(obj_1)).unwrap();
         ops.add_object(&event, Box::new(obj_2)).unwrap();
         ops.end_undo_event(event).unwrap();
@@ -103,8 +103,8 @@ fn test_dep_redo() {
         let id_2 = obj_2.get_id().clone();
         let ref_1 = GeometryId{obj: id_1.clone(), index: 0};
         let ref_2 = GeometryId{obj: id_2.clone(), index: 0};
-        obj_1.set_ref(0, Point3f::new(0.0, 1.0, 2.0), ref_2);
-        obj_2.set_ref(0, Point3f::new(2.0, 1.0, 0.0), ref_1);
+        obj_1.set_ref(0, Point3f::new(0.0, 1.0, 2.0), ref_2, &None);
+        obj_2.set_ref(0, Point3f::new(2.0, 1.0, 0.0), ref_1, &None);
         ops.add_object(&event, Box::new(obj_1)).unwrap();
         ops.add_object(&event, Box::new(obj_2)).unwrap();
         ops.end_undo_event(event).unwrap();

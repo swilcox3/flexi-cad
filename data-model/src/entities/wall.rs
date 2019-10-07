@@ -187,7 +187,7 @@ impl UpdateFromRefs for Wall {
         2 + self.openings.len()
     }
 
-    fn set_ref(&mut self, index: PointIndex, result: Point3f, other_ref: GeometryId) {
+    fn set_ref(&mut self, index: PointIndex, result: Point3f, other_ref: GeometryId, _: &Option<Point3f>) {
         match index {
             0 => self.first_pt.set_reference(result, other_ref),
             1 => self.second_pt.set_reference(result, other_ref),
@@ -199,7 +199,7 @@ impl UpdateFromRefs for Wall {
         }
     }
 
-    fn add_ref(&mut self, result: Point3f, other_ref: GeometryId) -> bool {
+    fn add_ref(&mut self, result: Point3f, other_ref: GeometryId, _: &Option<Point3f>) -> bool {
         let mut new_open = ParametricPoint::new(result);
         new_open.set_reference(new_open.pt, other_ref);
         self.openings.push(new_open);

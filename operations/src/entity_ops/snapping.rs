@@ -89,8 +89,8 @@ pub fn snap_to_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, other_obj: 
     if let Some((which, calc_res)) = res_opt {
         let which_opt = get_closest_ref(file, obj, other_obj, guess)?;
         match which_opt {
-            Some(index) => app_state::set_ref(file, event, obj, index, calc_res, which)?,
-            None => app_state::add_ref(file, event, obj, calc_res, which)?
+            Some(index) => app_state::set_ref(file, event, obj, index, calc_res, which, &Some(*guess))?,
+            None => app_state::add_ref(file, event, obj, calc_res, which, &Some(*guess))?
         }
         Ok(())
     }
