@@ -80,21 +80,21 @@ pub fn set_objs_data(file: PathBuf, event: &UndoEventID, data: Vec<(RefID, serde
     Ok(())
 }
 
-/*pub fn copy_objs(file: PathBuf, event: &UndoEventID, ids: HashSet<RefID>, query_id: QueryID, user_id: &UserID) -> LibResult {
+pub fn copy_objs(file: PathBuf, event: &UndoEventID, ids: HashSet<RefID>, query_id: QueryID, user_id: &UserID) -> LibResult {
     let (to_update, copied) = entity_ops::copy_objs(&file, event, ids)?;
     app_state::send_read_result(&file, query_id, user_id, json!(copied))?;
     app_state::update_all_deps(file, to_update);
     Ok(())
 }
 
-pub fn snap_obj_to_other(file: PathBuf, event: &UndoEventID, obj: RefID, other_obj: &RefID, only_match: &RefType, guess: &Point3f) -> LibResult {
-    entity_ops::snap_to_ref(&file, event, &obj, other_obj, only_match, guess)?;
+pub fn snap_obj_to_other(file: PathBuf, event: &UndoEventID, obj: RefID, other_obj: &RefID, guess: &Point3f) -> LibResult {
+    entity_ops::snap_to_ref(&file, event, &obj, other_obj, guess)?;
     app_state::update_deps(file, obj);
     Ok(())
 }
 
-pub fn join_objs(file: PathBuf, event: &UndoEventID, first: RefID, second: RefID, first_wants: &RefType, second_wants: &RefType, guess: &Point3f) -> LibResult {
-    entity_ops::join_refs(&file, event, &first, &second, first_wants, second_wants, guess)?;
+pub fn join_objs(file: PathBuf, event: &UndoEventID, first: RefID, second: RefID, guess: &Point3f) -> LibResult {
+    entity_ops::join_refs(&file, event, &first, &second, guess)?;
     app_state::update_all_deps(file, vec![first, second]);
     Ok(())
 }
@@ -104,8 +104,8 @@ pub fn can_refer_to(file: &PathBuf, obj_id: &RefID, query_id: QueryID, user_id: 
     app_state::send_read_result(file, query_id, user_id, json!(can_refer))
 }
 
-pub fn get_closest_result(file: &PathBuf, obj_id: &RefID, only_match: &RefType, guess: &Point3f, query_id: QueryID, user_id: &UserID) -> LibResult {
-    let res = entity_ops::get_closest_result(file, obj_id, only_match, guess)?;
+pub fn get_closest_point(file: &PathBuf, obj_id: &RefID, guess: &Point3f, query_id: QueryID, user_id: &UserID) -> LibResult {
+    let res = entity_ops::get_closest_point(file, obj_id, guess)?;
     app_state::send_read_result(file, query_id, user_id, json!(res))
 }
 
@@ -130,15 +130,15 @@ pub fn demo(file: &PathBuf, user: &UserID, position: &Point3f) -> Result<(), DBE
     app_state::add_obj(file, &event, Box::new(wall_2))?;
     app_state::add_obj(file, &event, Box::new(wall_3))?;
     app_state::add_obj(file, &event, Box::new(wall_4))?;
-    entity_ops::join_refs(file, &event, &id_1, &id_2, &RefType::Point, &RefType::Point, &position_2)?;
-    entity_ops::join_refs(file, &event, &id_2, &id_3, &RefType::Point, &RefType::Point, &position_3)?;
-    entity_ops::join_refs(file, &event, &id_3, &id_4, &RefType::Point, &RefType::Point, &position_4)?;
-    entity_ops::join_refs(file, &event, &id_4, &id_1, &RefType::Point, &RefType::Point, position)?;
+    entity_ops::join_refs(file, &event, &id_1, &id_2, &position_2)?;
+    entity_ops::join_refs(file, &event, &id_2, &id_3, &position_3)?;
+    entity_ops::join_refs(file, &event, &id_3, &id_4, &position_4)?;
+    entity_ops::join_refs(file, &event, &id_4, &id_1, position)?;
     let door_pos = position + Vector3f::new(side_length / 2.0, 0.0, 0.0);
     let door = Door::new(door_pos, door_pos + Vector3f::new(5.0, 0.0, 0.0), width / 2.0, height - 1.0);
     let door_id = door.get_id().clone();
     app_state::add_obj(file, &event, Box::new(door))?;
-    entity_ops::join_refs(file, &event, &door_id, &id_1, &RefType::Line, &RefType::Rect, &door_pos)?;
+    entity_ops::join_refs(file, &event, &door_id, &id_1, &door_pos)?;
     /*let offset = 5.0;
     let dim_1 = Dimension::new(position.clone(), position_2.clone(), offset);
     let dim_2 = Dimension::new(position_2.clone(), position_3.clone(), offset);
@@ -177,4 +177,4 @@ pub fn demo_100(file: PathBuf, user: UserID, position: Point3f) {
         });
         println!("Done!");
     });
-}*/
+}

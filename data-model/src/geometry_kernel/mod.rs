@@ -76,19 +76,6 @@ impl ParametricPoint {
     }
 }
 
-/*impl Point3f {
-    pub fn distance2(&self, in_pt: &Point3f) -> WorldCoord {
-        match *self {
-            Point3f::Point{pt} => pt.distance2(*in_pt),
-            Point3f::Line{pt_1, pt_2} => {
-                let projected = project_on_line(&pt_1, &pt_2, in_pt);
-                projected.distance2(*in_pt)
-            }
-            Point3f::Rect{pt_1, ..} => pt_1.distance2(*in_pt)
-        }
-    }
-}*/
-
 /*impl RefLineSeg {
     pub fn new(pt_1: Point3f, pt_2: Point3f) -> RefLineSeg {
         let length = (pt_2 - pt_1).magnitude();

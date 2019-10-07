@@ -25,22 +25,20 @@ pub fn can_refer_to(file: &PathBuf, obj: &RefID) -> Result<bool, DBError> {
     Ok(result)
 }
 
-/*pub fn get_closest_result(file: &PathBuf, obj: &RefID, only_match: &RefType, guess: &Point3f) -> Result<Option<(Reference, RefGeometry)>, DBError> {
+pub fn get_closest_point(file: &PathBuf, obj: &RefID, guess: &Point3f) -> Result<Option<(GeometryId, Point3f)>, DBError> {
     let mut result = None;
     app_state::get_obj(file, obj, |refer_obj| {
         match refer_obj.query_ref::<dyn ReferTo>() {
             Some(joinable) => {
-                let results = joinable.get_all_results();
+                let results = joinable.get_all_points();
                 let mut dist = std::f64::MAX;
                 let mut index = 0;
                 for ref_res in results {
-                    if only_match.type_equals(&ref_res) {
-                        let cur_dist = ref_res.distance2(&guess);
-                        if cur_dist < dist {
-                            let which = Reference{id: *obj, index: ResultInd{index: index}};
-                            result = Some((which, ref_res));
-                            dist = cur_dist;
-                        }
+                    let cur_dist = ref_res.distance2(*guess);
+                    if cur_dist < dist {
+                        let which = GeometryId{obj: *obj, index: index};
+                        result = Some((which, ref_res));
+                        dist = cur_dist;
                     }
                     index += 1;
                 }
@@ -52,7 +50,7 @@ pub fn can_refer_to(file: &PathBuf, obj: &RefID) -> Result<bool, DBError> {
     Ok(result)
 }
 
-fn get_closest_ref(file: &PathBuf, obj: &RefID, ref_obj: &RefID, only_match: &RefType, guess: &Point3f) -> Result<(Option<ReferInd>), DBError> {
+fn get_closest_ref(file: &PathBuf, obj: &RefID, ref_obj: &RefID, guess: &Point3f) -> Result<(Option<PointIndex>), DBError> {
     let mut refer_ind = None;
     app_state::get_obj(file, obj, |refer_obj| {
         match refer_obj.query_ref::<dyn UpdateFromRefs>() {
@@ -63,18 +61,16 @@ fn get_closest_ref(file: &PathBuf, obj: &RefID, ref_obj: &RefID, only_match: &Re
                 for ref_opt in refs {
                     let mut should_check = true;
                     if let Some(refer) = ref_opt {
-                        if refer.id != *ref_obj {
+                        if refer.obj != *ref_obj {
                             should_check = false;
                         }
                     }
                     if should_check {
-                        if let Some(ref_geom) = joinable.get_associated_geom(ReferInd{index: index}) {
-                            if only_match.type_equals(&ref_geom) {
-                                let cur_dist = ref_geom.distance2(&guess);
-                                if cur_dist < dist {
-                                    refer_ind = Some(ReferInd{index: index});
-                                    dist = cur_dist;
-                                }
+                        if let Some(ref_geom) = joinable.get_associated_point(index) {
+                            let cur_dist = ref_geom.distance2(*guess);
+                            if cur_dist < dist {
+                                refer_ind = Some(index);
+                                dist = cur_dist;
                             }
                         }
                     }
@@ -88,13 +84,13 @@ fn get_closest_ref(file: &PathBuf, obj: &RefID, ref_obj: &RefID, only_match: &Re
     Ok(refer_ind)
 }
 
-pub fn snap_to_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, other_obj: &RefID, only_match: &RefType, guess: &Point3f) -> Result<(), DBError> {
-    let res_opt = get_closest_result(file, other_obj, only_match, guess)?;
+pub fn snap_to_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, other_obj: &RefID, guess: &Point3f) -> Result<(), DBError> {
+    let res_opt = get_closest_point(file, other_obj, guess)?;
     if let Some((which, calc_res)) = res_opt {
-        let which_opt = get_closest_ref(file, obj, other_obj, only_match, guess)?;
+        let which_opt = get_closest_ref(file, obj, other_obj, guess)?;
         match which_opt {
-            Some(index) => app_state::set_ref(file, event, obj, index, &calc_res, which, &Some(*guess))?,
-            None => app_state::add_ref(file, event, obj, &calc_res, which, &Some(*guess))?
+            Some(index) => app_state::set_ref(file, event, obj, index, calc_res, which)?,
+            None => app_state::add_ref(file, event, obj, calc_res, which)?
         }
         Ok(())
     }
@@ -103,8 +99,8 @@ pub fn snap_to_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, other_obj: 
     }
 }
 
-pub fn join_refs(file: &PathBuf, event: &UndoEventID, first: &RefID, second: &RefID, first_wants: &RefType, second_wants: &RefType, guess: &Point3f) -> Result<(), DBError> {
-    snap_to_ref(file, event, second, first, second_wants, guess)?;
-    snap_to_ref(file, event, first, second, first_wants, guess)?;
+pub fn join_refs(file: &PathBuf, event: &UndoEventID, first: &RefID, second: &RefID, guess: &Point3f) -> Result<(), DBError> {
+    snap_to_ref(file, event, second, first, guess)?;
+    snap_to_ref(file, event, first, second, guess)?;
     Ok(())
-}*/
+}

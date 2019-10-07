@@ -1,5 +1,5 @@
-/*#[cfg(test)]
-mod tests;*/
+#[cfg(test)]
+mod tests;
 mod snapping;
 pub use snapping::*;
 
@@ -36,7 +36,7 @@ pub fn set_obj_data(file: &PathBuf, event: &UndoEventID, id: &RefID, data: &serd
     })
 }
 
-/*pub fn copy_objs(file: &PathBuf, event: &UndoEventID, ids: HashSet<RefID>) -> Result<(Vec<RefID>, HashMap<RefID, RefID>), DBError> {
+pub fn copy_objs(file: &PathBuf, event: &UndoEventID, ids: HashSet<RefID>) -> Result<(Vec<RefID>, HashMap<RefID, RefID>), DBError> {
     let mut orig_to_copy = HashMap::new();
     for id in &ids {
         let copy_id = app_state::copy_obj(&file, &event, id)?;
@@ -53,10 +53,10 @@ pub fn set_obj_data(file: &PathBuf, event: &UndoEventID, id: &RefID, data: &serd
                     if let Some(this_ref) = ref_opt {
                         if let Some(ref_copy_id) = orig_to_copy.get(&this_ref.obj) {
                             if let Some(has_ref_res) = obj.query_ref::<dyn ReferTo>() {
-                                if let Some(res) = has_ref_res.get_result(this_ref.index) {
-                                    let ref_index = ReferInd{index: index};
-                                    let copy_ref = Reference {
-                                        id: *ref_copy_id,
+                                if let Some(res) = has_ref_res.get_point(this_ref.index) {
+                                    let ref_index = index;
+                                    let copy_ref = GeometryId {
+                                        obj: *ref_copy_id,
                                         index: this_ref.index,
                                     };
                                     refs_to_set.push((ref_index, res, copy_ref));
@@ -74,8 +74,8 @@ pub fn set_obj_data(file: &PathBuf, event: &UndoEventID, id: &RefID, data: &serd
                 app_state::modify_obj(&file, &event, copy_id, |obj| {
                     if let Some(has_ref) = obj.query_mut::<dyn UpdateFromRefs>() {
                         for (index, res, ref_to_set) in &refs_to_set {
-                            app_state::add_dep(&file, &ref_to_set.id, copy_id.clone())?;
-                            has_ref.set_ref(*index, res, ref_to_set.clone(), &None);
+                            app_state::add_dep(&file, &ref_to_set, GeometryId{obj: copy_id.clone(), index: *index})?;
+                            has_ref.set_ref(*index, *res, ref_to_set.clone());
                         }
                     }
                     Ok(())
@@ -85,4 +85,4 @@ pub fn set_obj_data(file: &PathBuf, event: &UndoEventID, id: &RefID, data: &serd
         to_update.push(id);
     }
     Ok((to_update, orig_to_copy))
-}*/
+}
