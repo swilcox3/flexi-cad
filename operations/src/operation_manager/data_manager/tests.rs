@@ -16,7 +16,7 @@ fn test_add() {
     let id = obj.get_id().clone();
     DB.add_obj(&event, obj).unwrap();
     DB.get_obj(&id, |read| {
-        let data = read.query_ref::<Store>().unwrap().get_store_data();
+        let data = read.query_ref::<dyn Store>().unwrap().get_store_data();
         assert_eq!(String::from("some data"), data);
         DB.end_undo_event(event).unwrap();
         Ok(())
@@ -45,11 +45,11 @@ fn test_modify() {
     let id = obj.get_id().clone();
     DB.add_obj(&event, obj).unwrap();
     DB.get_mut_obj(&event, &id, |write| {
-        write.query_mut::<Store>().unwrap().set_store_data(String::from("new data"));
+        write.query_mut::<dyn Store>().unwrap().set_store_data(String::from("new data"));
         Ok(())
     }).unwrap();
     DB.get_obj(&id, |read| {
-        let data = read.query_ref::<Store>().unwrap().get_store_data();
+        let data = read.query_ref::<dyn Store>().unwrap().get_store_data();
         assert_eq!(String::from("new data"), data);
         DB.end_undo_event(event).unwrap();
         Ok(())
@@ -84,7 +84,7 @@ fn test_delete_undo() {
     DB.end_undo_event(event2).unwrap();
     DB.undo_latest(&user).unwrap();
     DB.get_obj(&id, |read| {
-        let data = read.query_ref::<Store>().unwrap().get_store_data();
+        let data = read.query_ref::<dyn Store>().unwrap().get_store_data();
         assert_eq!(String::from("some data"), data);
         Ok(())
     }).unwrap();
@@ -102,13 +102,13 @@ fn test_modify_undo() {
     let event_2 = UndoEventID::new_v4();
     DB.begin_undo_event(&user, event_2.clone(), String::from("modify obj")).unwrap();
     DB.get_mut_obj(&event_2, &id, |write| {
-        write.query_mut::<Store>().unwrap().set_store_data(String::from("new data"));
+        write.query_mut::<dyn Store>().unwrap().set_store_data(String::from("new data"));
         Ok(())
     }).unwrap();
     DB.end_undo_event(event_2).unwrap();
     DB.undo_latest(&user).unwrap();
     DB.get_obj(&id, |read| {
-        let data = read.query_ref::<Store>().unwrap().get_store_data();
+        let data = read.query_ref::<dyn Store>().unwrap().get_store_data();
         assert_eq!(String::from("some data"), data);
         Ok(())
     }).unwrap();
@@ -126,14 +126,14 @@ fn test_modify_redo() {
     let event_2 = UndoEventID::new_v4();
     DB.begin_undo_event(&user, event_2.clone(), String::from("modify obj")).unwrap();
     DB.get_mut_obj(&event_2, &id, |write| {
-        write.query_mut::<Store>().unwrap().set_store_data(String::from("new data"));
+        write.query_mut::<dyn Store>().unwrap().set_store_data(String::from("new data"));
         Ok(())
     }).unwrap();
     DB.end_undo_event(event_2).unwrap();
     DB.undo_latest(&user).unwrap();
     DB.redo_latest(&user).unwrap();
     DB.get_obj(&id, |read| {
-        let data = read.query_ref::<Store>().unwrap().get_store_data();
+        let data = read.query_ref::<dyn Store>().unwrap().get_store_data();
         assert_eq!(String::from("new data"), data);
         Ok(())
     }).unwrap();

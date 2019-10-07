@@ -204,7 +204,7 @@ impl FileDatabase {
     }
 }
 
-/*#[cfg(test)]
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::tests::*;
@@ -216,7 +216,7 @@ mod tests {
         let id = obj.get_id().clone();
         db.add(obj).unwrap();
         db.get(&id, &mut|read:&DataObject| {
-            let data = read.query_ref::<Store>().unwrap().get_store_data();
+            let data = read.query_ref::<dyn Store>().unwrap().get_store_data();
             assert_eq!(String::from("some data"), data);
             Ok(())
         }).unwrap();
@@ -230,12 +230,12 @@ mod tests {
         db.add(obj).unwrap();
         {
             db.get_mut(&id, &mut|to_modify:&mut DataObject| {
-                to_modify.query_mut::<Store>().unwrap().set_store_data(String::from("new data"));
+                to_modify.query_mut::<dyn Store>().unwrap().set_store_data(String::from("new data"));
                 Ok(())
             }).unwrap();
         }
         db.get(&id, &mut|read:&DataObject| {
-            let data = read.query_ref::<Store>().unwrap().get_store_data();
+            let data = read.query_ref::<dyn Store>().unwrap().get_store_data();
             assert_eq!(String::from("new data"), data);
             Ok(())
         }).unwrap();
@@ -248,7 +248,7 @@ mod tests {
         let id = obj.get_id().clone();
         db.add(obj).unwrap();
         let removed = db.remove(&id).unwrap();
-        let data = removed.query_ref::<Store>().unwrap().get_store_data();
+        let data = removed.query_ref::<dyn Store>().unwrap().get_store_data();
         assert_eq!(String::from("some data"), data);
         assert!(db.get(&id, |_| {Ok(())}).is_err());
     }
@@ -280,17 +280,17 @@ mod tests {
         let db = FileDatabase::new();
         db.open(&path).unwrap();
         db.get(&id_1, &mut|obj:&DataObject| {
-            let data = obj.query_ref::<Store>().unwrap().get_store_data();
+            let data = obj.query_ref::<dyn Store>().unwrap().get_store_data();
             assert_eq!(String::from("first"), data);
             Ok(())
         }).unwrap();
         db.get(&id_2, &mut|obj:&DataObject| {
-            let data = obj.query_ref::<Store>().unwrap().get_store_data();
+            let data = obj.query_ref::<dyn Store>().unwrap().get_store_data();
             assert_eq!(String::from("second"), data);
             Ok(())
         }).unwrap();
         db.get(&id_3, &mut|obj:&DataObject| {
-            let data = obj.query_ref::<Store>().unwrap().get_store_data();
+            let data = obj.query_ref::<dyn Store>().unwrap().get_store_data();
             assert_eq!(String::from("third"), data);
             Ok(())
         }).unwrap();
@@ -299,4 +299,3 @@ mod tests {
 
 
 }
-*/

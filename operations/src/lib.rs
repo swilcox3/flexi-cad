@@ -10,8 +10,8 @@ extern crate query_interface;
 extern crate bincode;
 #[macro_use] extern crate log;
 
-/*#[cfg(test)]
-mod tests;*/
+#[cfg(test)]
+mod tests;
 
 mod operation_manager;
 pub mod app_state;

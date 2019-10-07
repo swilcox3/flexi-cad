@@ -1,7 +1,7 @@
 mod data_manager;
 mod dep_manager;
-/*#[cfg(test)]
-mod tests;*/
+#[cfg(test)]
+mod tests;
 
 use crate::prelude::*;
 use data_manager::*;
@@ -177,38 +177,49 @@ impl OperationManager {
         where T: IntoIterator<Item = RefID> + Clone
     {
         let mut geom_ids = Vec::new();
+        let mut to_remove = HashSet::new();
         for dep_id in deps.clone().into_iter() {
-            self.data.get_mut_obj_no_undo(&dep_id, |obj| {
-                match obj.query_mut::<dyn UpdateFromRefs>() {
-                    Some(updatable) => {
-                        for geom_opt in updatable.get_refs() {
-                            if let Some(geom) = geom_opt {
-                                geom_ids.push(geom);
-                            }
+            if let Err(e) = self.data.get_obj(&dep_id, |obj| {
+                match obj.query_ref::<dyn ReferTo>() {
+                    Some(referrable) => {
+                        for i in 0..referrable.get_num_points() {
+                            geom_ids.push(GeometryId{obj: dep_id.clone(), index: i });
                         }
                         Ok(())
                     }
                     None => Err(DBError::ObjLacksTrait)
                 }
-            })?;
-        }
-        let refers = self.deps.get_all_deps(geom_ids);
-        self.update_reference_set(refers)?;
-        for dep_id in deps.into_iter() {
-            self.data.get_mut_obj_no_undo(&dep_id, |obj| {
-                let update_msg = obj.update();
-                match update_msg {
-                    Ok(msg) => {
-                        self.send(msg, None)
+            }) {
+                match e {
+                    DBError::ObjNotFound => {
+                        to_remove.insert(dep_id);
                     }
-                    Err(DBError::ObjNotFound) => {
-                        self.send(UpdateMsg::Delete{key: dep_id.clone()}, None)
-                    }
-                    Err(e) => {
-                        Err(e)
+                    _ => {
+                        return Err(e);
                     }
                 }
-            })?;
+            }
+        }
+        self.deps.delete_objs(to_remove);
+        let refers = self.deps.get_all_deps(geom_ids);
+        if refers.len() > 0 {
+            self.update_reference_set(refers)?;
+            for dep_id in deps.into_iter() {
+                self.data.get_mut_obj_no_undo(&dep_id, |obj| {
+                    let update_msg = obj.update();
+                    match update_msg {
+                        Ok(msg) => {
+                            self.send(msg, None)
+                        }
+                        Err(DBError::ObjNotFound) => {
+                            self.send(UpdateMsg::Delete{key: dep_id.clone()}, None)
+                        }
+                        Err(e) => {
+                            Err(e)
+                        }
+                    }
+                })?;
+            }
         }
         Ok(())
     }

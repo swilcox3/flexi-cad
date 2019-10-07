@@ -3,35 +3,6 @@ use primitives::PrismOpening;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ParametricPoint {
-    pub pt: Point3f,
-    pub refer: Option<GeometryId>
-}
-
-impl ParametricPoint {
-    pub fn new(pt: Point3f) -> ParametricPoint {
-        ParametricPoint {
-            pt,
-            refer: None
-        }
-    }
-
-    pub fn set_reference(&mut self, pt: Point3f, other_ref: GeometryId) {
-        self.pt = pt;
-        self.refer = Some(other_ref); 
-    }
-
-    pub fn update(&mut self, geom: Option<Point3f>) {
-        if let Some(pt) = geom {
-            self.pt = pt;
-        }
-        else {
-            self.refer = None;
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Wall {
     pub first_pt: ParametricPoint,
     pub second_pt: ParametricPoint,

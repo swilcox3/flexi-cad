@@ -99,6 +99,10 @@ impl DependencyManager {
             set.remove(publisher);
         });
     }
+
+    pub fn delete_objs(&self, objs: HashSet<RefID>) {
+        self.pub_subs.retain(|key, _| !objs.contains(&key.obj));
+    }
 }
 
 #[cfg(test)]
