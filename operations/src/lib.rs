@@ -88,13 +88,13 @@ pub fn copy_objs(file: PathBuf, event: &UndoEventID, ids: HashSet<RefID>, query_
 }
 
 pub fn snap_obj_to_other(file: PathBuf, event: &UndoEventID, obj: RefID, other_obj: &RefID, guess: &Point3f) -> LibResult {
-    entity_ops::snap_to_ref(&file, event, &obj, other_obj, guess)?;
+    entity_ops::snap_to_point(&file, event, &obj, other_obj, guess)?;
     app_state::update_deps(file, obj);
     Ok(())
 }
 
 pub fn join_objs(file: PathBuf, event: &UndoEventID, first: RefID, second: RefID, guess: &Point3f) -> LibResult {
-    entity_ops::join_refs(&file, event, &first, &second, guess)?;
+    entity_ops::join_points(&file, event, &first, &second, guess)?;
     app_state::update_all_deps(file, vec![first, second]);
     Ok(())
 }
@@ -130,15 +130,15 @@ pub fn demo(file: &PathBuf, user: &UserID, position: &Point3f) -> Result<(), DBE
     app_state::add_obj(file, &event, Box::new(wall_2))?;
     app_state::add_obj(file, &event, Box::new(wall_3))?;
     app_state::add_obj(file, &event, Box::new(wall_4))?;
-    entity_ops::join_refs(file, &event, &id_1, &id_2, &position_2)?;
-    entity_ops::join_refs(file, &event, &id_2, &id_3, &position_3)?;
-    entity_ops::join_refs(file, &event, &id_3, &id_4, &position_4)?;
-    entity_ops::join_refs(file, &event, &id_4, &id_1, position)?;
+    entity_ops::join_points(file, &event, &id_1, &id_2, &position_2)?;
+    entity_ops::join_points(file, &event, &id_2, &id_3, &position_3)?;
+    entity_ops::join_points(file, &event, &id_3, &id_4, &position_4)?;
+    entity_ops::join_points(file, &event, &id_4, &id_1, position)?;
     let door_pos = position + Vector3f::new(side_length / 2.0, 0.0, 0.0);
     let door = Door::new(door_pos, door_pos + Vector3f::new(5.0, 0.0, 0.0), width / 2.0, height - 1.0);
     let door_id = door.get_id().clone();
     app_state::add_obj(file, &event, Box::new(door))?;
-    entity_ops::join_refs(file, &event, &door_id, &id_1, &door_pos)?;
+    entity_ops::join_points(file, &event, &door_id, &id_1, &door_pos)?;
     /*let offset = 5.0;
     let dim_1 = Dimension::new(position.clone(), position_2.clone(), offset);
     let dim_2 = Dimension::new(position_2.clone(), position_3.clone(), offset);
@@ -152,14 +152,14 @@ pub fn demo(file: &PathBuf, user: &UserID, position: &Point3f) -> Result<(), DBE
     app_state::add_obj(file, &event, Box::new(dim_2))?;
     app_state::add_obj(file, &event, Box::new(dim_3))?;
     app_state::add_obj(file, &event, Box::new(dim_4))?;
-    entity_ops::snap_to_ref(file, &event, &dim_id_1, &id_1, &RefType::Point, position)?;
-    entity_ops::snap_to_ref(file, &event, &dim_id_1, &id_1, &RefType::Point, &position_2)?;
-    entity_ops::snap_to_ref(file, &event, &dim_id_2, &id_2, &RefType::Point, &position_2)?;
-    entity_ops::snap_to_ref(file, &event, &dim_id_2, &id_2, &RefType::Point, &position_3)?;
-    entity_ops::snap_to_ref(file, &event, &dim_id_3, &id_3, &RefType::Point, &position_3)?;
-    entity_ops::snap_to_ref(file, &event, &dim_id_3, &id_3, &RefType::Point, &position_4)?;
-    entity_ops::snap_to_ref(file, &event, &dim_id_4, &id_4, &RefType::Point, &position_4)?;
-    entity_ops::snap_to_ref(file, &event, &dim_id_4, &id_4, &RefType::Point, position)?;*/
+    entity_ops::snap_to_point(file, &event, &dim_id_1, &id_1, &RefType::Point, position)?;
+    entity_ops::snap_to_point(file, &event, &dim_id_1, &id_1, &RefType::Point, &position_2)?;
+    entity_ops::snap_to_point(file, &event, &dim_id_2, &id_2, &RefType::Point, &position_2)?;
+    entity_ops::snap_to_point(file, &event, &dim_id_2, &id_2, &RefType::Point, &position_3)?;
+    entity_ops::snap_to_point(file, &event, &dim_id_3, &id_3, &RefType::Point, &position_3)?;
+    entity_ops::snap_to_point(file, &event, &dim_id_3, &id_3, &RefType::Point, &position_4)?;
+    entity_ops::snap_to_point(file, &event, &dim_id_4, &id_4, &RefType::Point, &position_4)?;
+    entity_ops::snap_to_point(file, &event, &dim_id_4, &id_4, &RefType::Point, position)?;*/
     app_state::end_undo_event(file, event)?;
     app_state::update_all_deps(file.clone(), vec![id_1, id_2, id_3, id_4, door_id, /*dim_id_1, dim_id_2, dim_id_3, dim_id_4*/]);
     Ok(())

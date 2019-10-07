@@ -50,6 +50,36 @@ pub fn get_closest_point(file: &PathBuf, obj: &RefID, guess: &Point3f) -> Result
     Ok(result)
 }
 
+pub fn get_closest_line(file: &PathBuf, obj: &RefID, guess: &Point3f) -> Result<Option<(GeometryId, (Point3f, Point3f))>, DBError> {
+    let mut result = None;
+    app_state::get_obj(file, obj, |refer_obj| {
+        match refer_obj.query_ref::<dyn ReferTo>() {
+            Some(joinable) => {
+                let results = joinable.get_all_points();
+                let mut dist = std::f64::MAX;
+                for index in 0..results.len() {
+                    if let Some(pt_1) = results.get(index) {
+                        let pt_2 = match results.get(index + 1) {
+                            Some(pt) => pt,
+                            None => &results[0]
+                        };
+                        let projected = project_on_line(pt_1, pt_2, guess);
+                        let cur_dist = projected.distance2(*guess);
+                        if cur_dist < dist {
+                            let which = GeometryId{obj: *obj, index: index};
+                            result = Some((which, (pt_1.clone(), pt_2.clone())));
+                            dist = cur_dist;
+                        }
+                    }
+                }
+                Ok(())
+            }
+            None => Err(DBError::ObjLacksTrait)
+        }
+    })?;
+    Ok(result)
+}
+
 fn get_closest_ref(file: &PathBuf, obj: &RefID, ref_obj: &RefID, guess: &Point3f) -> Result<(Option<PointIndex>), DBError> {
     let mut refer_ind = None;
     app_state::get_obj(file, obj, |refer_obj| {
@@ -84,7 +114,7 @@ fn get_closest_ref(file: &PathBuf, obj: &RefID, ref_obj: &RefID, guess: &Point3f
     Ok(refer_ind)
 }
 
-pub fn snap_to_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, other_obj: &RefID, guess: &Point3f) -> Result<(), DBError> {
+pub fn snap_to_point(file: &PathBuf, event: &UndoEventID, obj: &RefID, other_obj: &RefID, guess: &Point3f) -> Result<(), DBError> {
     let res_opt = get_closest_point(file, other_obj, guess)?;
     if let Some((which, calc_res)) = res_opt {
         let which_opt = get_closest_ref(file, obj, other_obj, guess)?;
@@ -99,8 +129,21 @@ pub fn snap_to_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, other_obj: 
     }
 }
 
-pub fn join_refs(file: &PathBuf, event: &UndoEventID, first: &RefID, second: &RefID, guess: &Point3f) -> Result<(), DBError> {
-    snap_to_ref(file, event, second, first, guess)?;
-    snap_to_ref(file, event, first, second, guess)?;
+pub fn join_points(file: &PathBuf, event: &UndoEventID, first: &RefID, second: &RefID, guess: &Point3f) -> Result<(), DBError> {
+    snap_to_point(file, event, second, first, guess)?;
+    snap_to_point(file, event, first, second, guess)?;
     Ok(())
+}
+
+pub fn snap_to_line(file: &PathBuf, event: &UndoEventID, obj: &RefID, other_obj: &RefID, guess: &Point3f) -> Result<(), DBError> {
+    let res_opt = get_closest_line(file, other_obj, guess)?;
+    if let Some((which, (calc_first, calc_second))) = res_opt {
+        
+
+
+        Ok(())
+    }
+    else {
+        Err(DBError::NotFound(String::from("Nothing to snap to")))
+    }
 }
