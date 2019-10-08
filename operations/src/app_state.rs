@@ -180,7 +180,7 @@ pub fn add_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, result: Point3f
             None => Err(DBError::ObjLacksTrait)
         }
     })?;
-    add_dep(&file, &refer, GeometryId{obj: obj.clone(), index})
+    add_deps(&file, obj)
 }
 
 pub fn set_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, index: PointIndex, result: Point3f, refer: GeometryId, snap_pt: &Option<Point3f>) -> Result<(), DBError> {
@@ -193,7 +193,7 @@ pub fn set_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, index: PointInd
             None => Err(DBError::ObjLacksTrait)
         }
     })?;
-    add_dep(&file, &refer, GeometryId{obj: obj.clone(), index})
+    add_deps(&file, obj)
 }
 
 pub fn update_deps(file: PathBuf, id: RefID) {
@@ -212,9 +212,9 @@ pub fn update_all_deps(file: PathBuf, ids: Vec<RefID>) {
     });
 }
 
-pub fn add_dep(file: &PathBuf, publisher: &GeometryId, subscriber: GeometryId) -> Result<(), DBError> {
+pub fn add_deps(file: &PathBuf, id: &RefID) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
-        Some(ops) => Ok(ops.add_dep(publisher, subscriber)),
+        Some(ops) => ops.add_deps(id),
         None => Err(DBError::FileNotFound)
     }
 }

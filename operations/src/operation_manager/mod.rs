@@ -35,16 +35,7 @@ impl OperationManager {
         };
         ops.updates.insert(user.clone(), sender);
         ops.data.iterate_all_mut(&mut |obj: &mut DataObject| {
-            if let Some(dep_obj) = obj.query_ref::<dyn UpdateFromRefs>() {
-                let refs = dep_obj.get_refs();
-                let mut i = 0;
-                for ref_opt in refs {
-                    if let Some(refer) = ref_opt {
-                        ops.deps.register_sub(&refer, GeometryId{obj: obj.get_id().clone(), index: i});
-                    }
-                    i += 1;
-                }
-            }
+            ops.register_deps(&obj);
             let msg = obj.update()?;
             ops.send(msg, Some(&user))
         })?;
@@ -153,27 +144,32 @@ impl OperationManager {
 
     fn update_reference(&self, refer: &Reference) -> Result<(), DBError> {
         println!("Updating ref: {:?}\n", refer);
-        let result = self.get_ref_result(&refer.other);
-        self.data.get_mut_obj_no_undo(&refer.owner.obj, |obj| {
-            match obj.query_mut::<dyn UpdateFromRefs>() {
-                Some(updatable) => {
-                    updatable.set_associated_point(refer.owner.index, result);
-                    let update_msg = obj.update();
-                    match update_msg {
-                        Ok(msg) => {
-                            self.send(msg, None)
-                        }
-                        Err(DBError::ObjNotFound) => {
-                            self.send(UpdateMsg::Delete{key: obj.get_id().clone()}, None)
-                        }
-                        Err(e) => {
-                            Err(e)
+        if refer.owner.obj != refer.other.obj {
+            let result = self.get_ref_result(&refer.other);
+            self.data.get_mut_obj_no_undo(&refer.owner.obj, |obj| {
+                match obj.query_mut::<dyn UpdateFromRefs>() {
+                    Some(updatable) => {
+                        updatable.set_associated_point(refer.owner.index, result);
+                        let update_msg = obj.update();
+                        match update_msg {
+                            Ok(msg) => {
+                                self.send(msg, None)
+                            }
+                            Err(DBError::ObjNotFound) => {
+                                self.send(UpdateMsg::Delete{key: obj.get_id().clone()}, None)
+                            }
+                            Err(e) => {
+                                Err(e)
+                            }
                         }
                     }
+                    None => Err(DBError::ObjLacksTrait)
                 }
-                None => Err(DBError::ObjLacksTrait)
-            }
-        })
+            })
+        }
+        else {
+            Ok(())
+        }
     }
 
     fn update_reference_set<T>(&self, refers: T) -> Result<(), DBError> 
@@ -213,9 +209,7 @@ impl OperationManager {
             }
         }
         self.deps.delete_objs(to_remove);
-        println!("geom_ids: {:?}", geom_ids);
         let refers = self.deps.get_all_deps(geom_ids);
-        println!("refers: {:#?}", refers);
         if refers.len() > 0 {
             self.update_reference_set(refers)?;
         }
@@ -232,8 +226,22 @@ impl OperationManager {
         self.update_set_from_refs(ids)
     }
 
-    pub fn add_dep(&self, publisher: &GeometryId, sub: GeometryId) {
-        self.deps.register_sub(publisher, sub);
+    pub fn register_deps(&self, obj: &DataObject) {
+        if let Some(dep_obj) = obj.query_ref::<dyn UpdateFromRefs>() {
+            let refs = dep_obj.get_refs();
+            for ref_opt in refs {
+                if let Some(refer) = ref_opt {
+                    self.deps.register_sub(&refer.other, refer.owner);
+                }
+            }
+        }
+    }
+
+    pub fn add_deps(&self, id: &RefID) -> Result<(), DBError> {
+        self.get_obj(&id, |obj| {
+            self.register_deps(obj);
+            Ok(())
+        })
     }
 
     pub fn remove_dep(&self, publisher: &GeometryId, sub: &GeometryId) {
@@ -258,16 +266,7 @@ impl OperationManager {
     }
 
     pub fn add_object(&self, event: &UndoEventID, mut obj: DataObject) -> Result<(), DBError> {
-        if let Some(dep_obj) = obj.query_ref::<dyn UpdateFromRefs>() {
-            let refs = dep_obj.get_refs();
-            let mut i = 0;
-            for ref_opt in refs {
-                if let Some(refer) = ref_opt {
-                    self.deps.register_sub(&refer, GeometryId{obj: obj.get_id().clone(), index: i});
-                }
-                i += 1;
-            }
-        }
+        self.register_deps(&obj);
         let msg = obj.update()?;
         self.data.add_obj(event, obj)?;
         self.send(msg, None)

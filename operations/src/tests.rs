@@ -88,10 +88,20 @@ impl ReferTo for TestObj {
 }
 
 impl UpdateFromRefs for TestObj {
-    fn get_refs(&self) -> Vec<Option<GeometryId>> {
+    fn get_refs(&self) -> Vec<Option<Reference>> {
         let mut results = Vec::new();
-        results.push(self.point.refer.clone());
-        results.push(self.point_2.refer.clone());
+        if let Some(id) = &self.point.refer {
+            results.push(Some(Reference::new(GeometryId{obj: self.id.clone(), index: 0}, id.clone())));
+        }
+        else {
+            results.push(None);
+        }
+        if let Some(id) = &self.point_2.refer {
+            results.push(Some(Reference::new(GeometryId{obj: self.id.clone(), index: 0}, id.clone())));
+        }
+        else {
+            results.push(None);
+        }
         results
     }
 

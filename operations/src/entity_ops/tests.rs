@@ -149,3 +149,108 @@ fn test_join_door_and_wall() {
         }).unwrap();
     });
 }
+
+#[test]
+fn test_walls_and_doors() {
+    test_setup("walls and doors", |file, user, rcv| {
+        let first = Box::new(Wall::new(Point3f::new(0.0, 0.0, 0.0), Point3f::new(1.0, 0.0, 0.0), 0.5, 1.0));
+        let wall_1_id = first.get_id().clone();
+        let second = Box::new(Wall::new(Point3f::new(1.0, 0.0, 0.0), Point3f::new(1.0, 1.0, 0.0), 0.5, 1.0));
+        let wall_2_id = second.get_id().clone();
+        let third = Box::new(Wall::new(Point3f::new(1.0, 1.0, 0.0), Point3f::new(0.0, 1.0, 0.0), 0.5, 1.0));
+        let wall_3_id = third.get_id().clone();
+
+        let door_1 = Box::new(Door::new(Point3f::new(0.25, 0.0, 0.0), Point3f::new(0.75, 0.0, 0.0), 0.25, 0.75));
+        let door_1_id = door_1.get_id().clone();
+        let door_2 = Box::new(Door::new(Point3f::new(1.0, 0.25, 0.0), Point3f::new(1.0, 0.75, 0.0), 0.25, 0.75));
+        let door_2_id = door_2.get_id().clone();
+        let door_3 = Box::new(Door::new(Point3f::new(0.75, 1.0, 0.0), Point3f::new(0.25, 1.0, 0.0), 0.25, 0.75));
+        let door_3_id = door_3.get_id().clone();
+
+        println!("wall_1: {:?}", wall_1_id);
+        println!("wall_2: {:?}", wall_2_id);
+        println!("wall_3: {:?}", wall_3_id);
+        println!("door_1: {:?}", door_1_id);
+        println!("door_2: {:?}", door_2_id);
+        println!("door_3: {:?}", door_3_id);
+
+        let event = UndoEventID::new_v4();
+        app_state::begin_undo_event(&file, &user, event.clone(), String::from("add objs")).unwrap();
+        app_state::add_obj(&file, &event, first).unwrap();
+        app_state::add_obj(&file, &event, second).unwrap();
+        app_state::add_obj(&file, &event, third).unwrap();
+        app_state::add_obj(&file, &event, door_1).unwrap();
+        app_state::add_obj(&file, &event, door_2).unwrap();
+        app_state::add_obj(&file, &event, door_3).unwrap();
+        app_state::end_undo_event(&file, event).unwrap();
+
+        let event = UndoEventID::new_v4();
+        app_state::begin_undo_event(&file, &user, event.clone(), String::from("snap objs")).unwrap();
+        join_points(&file, &event, &wall_1_id, &wall_2_id, &Point3f::new(1.0, 0.0, 0.0), false).unwrap();
+        join_points(&file, &event, &wall_2_id, &wall_3_id, &Point3f::new(1.0, 1.0, 0.0), false).unwrap();
+        snap_to_line(&file, &event, &door_1_id, &wall_1_id, &Point3f::new(0.25, 0.0, 0.0), false).unwrap();
+        snap_to_rect(&file, &event, &wall_1_id, &door_1_id, &Point3f::new(0.25, 0.0, 0.0), true).unwrap();
+        snap_to_line(&file, &event, &door_2_id, &wall_2_id, &Point3f::new(1.0, 0.25, 0.0), false).unwrap();
+        snap_to_rect(&file, &event, &wall_2_id, &door_2_id, &Point3f::new(1.0, 0.25, 0.0), true).unwrap();
+        snap_to_line(&file, &event, &door_3_id, &wall_3_id, &Point3f::new(0.75, 1.0, 0.0), false).unwrap();
+        snap_to_rect(&file, &event, &wall_3_id, &door_3_id, &Point3f::new(0.75, 1.0, 0.0), true).unwrap();
+        app_state::end_undo_event(&file, event).unwrap();
+        empty_receiver(&rcv);
+        let event = UndoEventID::new_v4();
+        app_state::begin_undo_event(&file, &user, event.clone(), String::from("move obj")).unwrap();
+        crate::move_obj(file.clone(), &event, wall_2_id.clone(), &Vector3f::new(1.0, 0.0, 0.0)).unwrap();
+        app_state::end_undo_event(&file, event).unwrap();
+        empty_receiver(&rcv);
+        app_state::get_obj(&file, &wall_2_id, |second| {
+            let read = second.query_ref::<dyn ReferTo>().unwrap();
+            let pts = read.get_all_points();
+            assert_eq!(pts[0], Point3f::new(2.0, 0.0, 0.0));
+            assert_eq!(pts[1], Point3f::new(2.0, 1.0, 0.0));
+            assert_eq!(pts[2], Point3f::new(2.0, 0.25, 0.0));
+            assert_eq!(pts[3], Point3f::new(2.0, 0.75, 0.0));
+            assert_eq!(pts[4], Point3f::new(2.0, 0.75, 0.75));
+            Ok(())
+        }).unwrap();    
+        app_state::get_obj(&file, &door_2_id, |second| {
+            let read = second.query_ref::<dyn ReferTo>().unwrap();
+            let pts = read.get_all_points();
+            assert_eq!(pts[0], Point3f::new(2.0, 0.25, 0.0));
+            assert_eq!(pts[1], Point3f::new(2.0, 0.75, 0.0));
+            Ok(())
+        }).unwrap();    
+        app_state::get_obj(&file, &door_1_id, |wall| {
+            let read = wall.query_ref::<dyn ReferTo>().unwrap();
+            let pts = read.get_all_points();
+            assert_eq!(pts[0], Point3f::new(0.25, 0.0, 0.0));
+            assert_eq!(pts[1], Point3f::new(0.75, 0.0, 0.0));
+            Ok(())
+        }).unwrap();
+        app_state::get_obj(&file, &door_3_id, |wall| {
+            let read = wall.query_ref::<dyn ReferTo>().unwrap();
+            let pts = read.get_all_points();
+            assert_eq!(pts[0], Point3f::new(1.75, 1.0, 0.0));
+            assert_eq!(pts[1], Point3f::new(1.25, 1.0, 0.0));
+            Ok(())
+        }).unwrap();
+        app_state::get_obj(&file, &wall_1_id, |wall| {
+            let read = wall.query_ref::<dyn ReferTo>().unwrap();
+            let pts = read.get_all_points();
+            assert_eq!(pts[0], Point3f::new(0.0, 0.0, 0.0));
+            assert_eq!(pts[1], Point3f::new(2.0, 0.0, 0.0));
+            assert_eq!(pts[2], Point3f::new(0.25, 0.0, 0.0));
+            assert_eq!(pts[3], Point3f::new(0.75, 0.0, 0.0));
+            assert_eq!(pts[4], Point3f::new(0.75, 0.0, 0.75));
+            Ok(())
+        }).unwrap();
+        app_state::get_obj(&file, &wall_3_id, |wall| {
+            let read = wall.query_ref::<dyn ReferTo>().unwrap();
+            let pts = read.get_all_points();
+            assert_eq!(pts[0], Point3f::new(2.0, 1.0, 0.0));
+            assert_eq!(pts[1], Point3f::new(0.0, 1.0, 0.0));
+            assert_eq!(pts[2], Point3f::new(1.75, 1.0, 0.0));
+            assert_eq!(pts[3], Point3f::new(1.25, 1.0, 0.0));
+            assert_eq!(pts[4], Point3f::new(1.25, 1.0, 0.75));
+            Ok(())
+        }).unwrap();
+    });
+}

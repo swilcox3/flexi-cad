@@ -54,8 +54,7 @@ impl Data for Wall {
             metadata: Some(to_json("Wall", &self))
         };
         let self_length = (self.second_pt.pt - self.first_pt.pt).magnitude();
-        //self.openings.retain(|open| open.refer != None);
-        println!("Update Wall: {:?}", self.openings);
+        self.openings.retain(|open| open.refer != None);
         let mut sorted = Vec::new();
         for i in (0..self.openings.len()).step_by(3) {
             if let Some(pt_1) = self.openings.get(i) {
@@ -174,12 +173,45 @@ impl UpdateFromRefs for Wall {
         }
     }
 
-    fn get_refs(&self) -> Vec<Option<GeometryId>> {
+    fn get_refs(&self) -> Vec<Option<Reference>> {
         let mut results = Vec::new();
-        results.push(self.first_pt.refer.clone());
-        results.push(self.second_pt.refer.clone());
-        for open in &self.openings {
-            results.push(open.refer.clone());
+        if let Some(id) = &self.first_pt.refer {
+            results.push(Some(Reference::new(GeometryId{obj: self.id.clone(), index: 0}, id.clone())));
+        }
+        else {
+            results.push(None);
+        }
+        if let Some(id) = &self.second_pt.refer {
+            results.push(Some(Reference::new(GeometryId{obj: self.id.clone(), index: 1}, id.clone())));
+        }
+        else {
+            results.push(None);
+        }
+        for i in (0..self.openings.len()).step_by(3) {
+            if let Some(pt_1) = self.openings.get(i) {
+                if let Some(pt_2) = self.openings.get(i+1) {
+                    if let Some(pt_3) = self.openings.get(i+2) {
+                        if let Some(id_1) = &pt_1.refer {
+                            if let Some(id_2) = &pt_2.refer {
+                                if let Some(id_3) = &pt_3.refer {
+                                    let refer_1 = GeometryId{obj: self.id.clone(), index:i + 2};
+                                    let refer_2 = GeometryId{obj: self.id.clone(), index:i + 3};
+                                    let refer_3 = GeometryId{obj: self.id.clone(), index:i + 4};
+                                    results.push(Some(Reference::new(refer_1.clone(), id_1.clone())));
+                                    results.push(Some(Reference::new(refer_2.clone(), id_2.clone())));
+                                    results.push(Some(Reference::new(refer_3.clone(), id_3.clone())));
+                                    results.push(Some(Reference::new(refer_1.clone(), refer_2.clone())));
+                                    results.push(Some(Reference::new(refer_1.clone(), refer_3.clone())));
+                                    results.push(Some(Reference::new(refer_2.clone(), refer_1.clone())));
+                                    results.push(Some(Reference::new(refer_2.clone(), refer_3.clone())));
+                                    results.push(Some(Reference::new(refer_3.clone(), refer_1.clone())));
+                                    results.push(Some(Reference::new(refer_3.clone(), refer_2.clone())));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
         results
     }
@@ -205,7 +237,6 @@ impl UpdateFromRefs for Wall {
             1 => self.second_pt.set_reference(result, other_ref),
             _ => {
                 if let Some(open) = self.openings.get_mut(index - 2) {
-                    println!("set_ref: {:?}", open);
                     open.set_reference(result, other_ref);
                 }
             }
@@ -214,7 +245,6 @@ impl UpdateFromRefs for Wall {
 
     fn add_ref(&mut self, result: Point3f, other_ref: GeometryId, _: &Option<Point3f>) -> bool {
         let mut new_open = ParametricPoint::new(result);
-        println!("add_ref: {:?}", new_open);
         new_open.set_reference(new_open.pt, other_ref);
         self.openings.push(new_open);
         true
@@ -253,7 +283,6 @@ impl UpdateFromRefs for Wall {
             1 => self.second_pt.update(geom),
             _ => {
                 if let Some(open) = self.openings.get_mut(index - 2) {
-                    println!("set associated {:?}", open);
                     open.update(geom);
                 }
             }

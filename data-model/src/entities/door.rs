@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Door {
     id: RefID,
-    interp: Interp,
+    dist_from_wall_pt_1: WorldCoord,
     length: WorldCoord,
     pt_1: Point3f,
     wall_pt_1: Option<ParametricPoint>,
@@ -21,7 +21,7 @@ impl Door {
         let length = (first - second).magnitude();
         Door {
             id: id,
-            interp: Interp::new(0.0),
+            dist_from_wall_pt_1: 0.0,
             length,
             pt_1: first,
             wall_pt_1: None,
@@ -53,15 +53,15 @@ impl Data for Door {
     fn update(&mut self) -> Result<UpdateMsg, DBError> {
         if let Some(pt_1) = &self.wall_pt_1 {
             if let Some(pt_2) = &self.wall_pt_2 {
+                let dir = pt_2.pt - pt_1.pt;
                 if let Some(snap) = self.snap_pt {
-                    self.interp = get_interp_along_line(&pt_1.pt, &pt_2.pt, &snap);
+                    let interp = get_interp_along_line(&pt_1.pt, &pt_2.pt, &snap);
+                    self.dist_from_wall_pt_1 = (dir * interp.val()).magnitude();
                     self.snap_pt = None;
                 }
-                let dir = pt_2.pt - pt_1.pt;
                 let norm = dir.normalize();
-                self.pt_1 = pt_1.pt + dir * self.interp.val();
+                self.pt_1 = pt_1.pt + norm * self.dist_from_wall_pt_1;
                 self.pt_2 = self.pt_1 + norm * self.length;
-                println!("UPDATE door: {:?}", self);
             }
         }
         let mut data = MeshData {
@@ -155,21 +155,23 @@ impl UpdateFromRefs for Door {
         self.wall_pt_2 = None;
     }
 
-    fn get_refs(&self) -> Vec<Option<GeometryId>> {
+    fn get_refs(&self) -> Vec<Option<Reference>> {
         let mut results = Vec::new();
         if let Some(pt_1) = &self.wall_pt_1 {
-            results.push(pt_1.refer.clone());
+            if let Some(id_1) = &pt_1.refer {
+                if let Some(pt_2) = &self.wall_pt_2 {
+                    if let Some(id_2) = &pt_2.refer {
+                        results.push(Some(Reference::new(GeometryId{obj: self.id.clone(), index: 0}, id_1.clone())));
+                        results.push(Some(Reference::new(GeometryId{obj: self.id.clone(), index: 1}, id_2.clone())));
+                    }
+                }
+            }
         }
-        else {
+        if results.len() == 0 {
+            results.push(None);
             results.push(None);
         }
-        if let Some(pt_2) = &self.wall_pt_2 {
-            results.push(pt_2.refer.clone());
-        }
-        else {
-            results.push(None);
-        }
-        results.push(Some(GeometryId{obj: self.id.clone(), index: 0}));
+        results.push(Some(Reference::new(GeometryId{obj: self.id.clone(), index: 2}, GeometryId{obj: self.id.clone(), index: 1})));
         results
     }
 

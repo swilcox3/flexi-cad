@@ -48,23 +48,20 @@ pub fn copy_objs(file: &PathBuf, event: &UndoEventID, ids: HashSet<RefID>) -> Re
         let mut refs_to_set = Vec::new();
         app_state::get_obj(&file, &id, |obj| {
             if let Some(has_ref) = obj.query_ref::<dyn UpdateFromRefs>() {
-                let mut index = 0;
                 for ref_opt in has_ref.get_refs() {
                     if let Some(this_ref) = ref_opt {
-                        if let Some(ref_copy_id) = orig_to_copy.get(&this_ref.obj) {
+                        if let Some(ref_copy_id) = orig_to_copy.get(&this_ref.other.obj) {
                             if let Some(has_ref_res) = obj.query_ref::<dyn ReferTo>() {
-                                if let Some(res) = has_ref_res.get_point(this_ref.index) {
-                                    let ref_index = index;
+                                if let Some(res) = has_ref_res.get_point(this_ref.other.index) {
                                     let copy_ref = GeometryId {
                                         obj: *ref_copy_id,
-                                        index: this_ref.index,
+                                        index: this_ref.other.index,
                                     };
-                                    refs_to_set.push((ref_index, res, copy_ref));
+                                    refs_to_set.push((this_ref.owner.index, res, copy_ref));
                                 }
                             }
                         }
                     }
-                    index += 1;
                 }
             }
             Ok(())
@@ -74,12 +71,12 @@ pub fn copy_objs(file: &PathBuf, event: &UndoEventID, ids: HashSet<RefID>) -> Re
                 app_state::modify_obj(&file, &event, copy_id, |obj| {
                     if let Some(has_ref) = obj.query_mut::<dyn UpdateFromRefs>() {
                         for (index, res, ref_to_set) in &refs_to_set {
-                            app_state::add_dep(&file, &ref_to_set, GeometryId{obj: copy_id.clone(), index: *index})?;
                             has_ref.set_ref(*index, *res, ref_to_set.clone(), &None);
                         }
                     }
                     Ok(())
                 })?;
+                app_state::add_deps(&file, copy_id)?;
             }
         }
         to_update.push(id);

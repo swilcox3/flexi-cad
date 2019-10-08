@@ -99,7 +99,7 @@ pub trait ReferTo {
 
 pub trait UpdateFromRefs {
     fn clear_refs(&mut self);
-    fn get_refs(&self) -> Vec<Option<GeometryId>>;
+    fn get_refs(&self) -> Vec<Option<Reference>>;
     fn get_available_refs(&self) -> Vec<PointIndex>;
     fn get_num_refs(&self) -> usize;
     fn set_ref(&mut self, index: PointIndex, result: Point3f, other_ref: GeometryId, snap_pt: &Option<Point3f>);
