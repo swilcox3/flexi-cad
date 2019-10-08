@@ -169,8 +169,8 @@ pub fn add_ref(file: &PathBuf, event: &UndoEventID, obj: &RefID, result: Point3f
     modify_obj(&file, &event, &obj, |owner| {
         match owner.query_mut::<dyn UpdateFromRefs>() {
             Some(joinable) => {
+                index = joinable.get_num_refs();
                 if joinable.add_ref(result, refer.clone(), snap_pt) {
-                    index = joinable.get_num_refs();
                     Ok(())
                 }
                 else {

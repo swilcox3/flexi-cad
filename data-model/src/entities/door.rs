@@ -61,6 +61,7 @@ impl Data for Door {
                 let norm = dir.normalize();
                 self.pt_1 = pt_1.pt + dir * self.interp.val();
                 self.pt_2 = self.pt_1 + norm * self.length;
+                println!("UPDATE door: {:?}", self);
             }
         }
         let mut data = MeshData {
@@ -159,8 +160,26 @@ impl UpdateFromRefs for Door {
         if let Some(pt_1) = &self.wall_pt_1 {
             results.push(pt_1.refer.clone());
         }
+        else {
+            results.push(None);
+        }
         if let Some(pt_2) = &self.wall_pt_2 {
             results.push(pt_2.refer.clone());
+        }
+        else {
+            results.push(None);
+        }
+        results.push(Some(GeometryId{obj: self.id.clone(), index: 0}));
+        results
+    }
+
+    fn get_available_refs(&self) -> Vec<PointIndex> {
+        let mut results = Vec::new();
+        if let None = self.wall_pt_1 {
+            results.push(0);
+        }
+        if let None = self.wall_pt_2 {
+            results.push(1);
         }
         results
     }
@@ -202,20 +221,10 @@ impl UpdateFromRefs for Door {
     fn get_associated_point(&self, index: PointIndex) -> Option<Point3f> {
         match index {
             0 => {
-                if let Some(pt_1) = &self.wall_pt_1 {
-                    Some(pt_1.pt)
-                }
-                else {
-                    None
-                }
+                Some(self.pt_1)
             }
             1 => {
-                if let Some(pt_2) = &self.wall_pt_2 {
-                    Some(pt_2.pt)
-                }
-                else {
-                    None
-                }
+                Some(self.pt_2)
             }
             _ => None
         }

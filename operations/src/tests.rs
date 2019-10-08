@@ -95,6 +95,17 @@ impl UpdateFromRefs for TestObj {
         results
     }
 
+    fn get_available_refs(&self) -> Vec<PointIndex> {
+        let mut results = Vec::new();
+        if let None = self.point.refer {
+            results.push(0);
+        }
+        if let None = self.point_2.refer {
+            results.push(1);
+        }
+        results
+    }
+
     fn get_num_refs(&self) -> usize {
         2
     }

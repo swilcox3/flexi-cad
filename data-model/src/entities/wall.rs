@@ -54,7 +54,8 @@ impl Data for Wall {
             metadata: Some(to_json("Wall", &self))
         };
         let self_length = (self.second_pt.pt - self.first_pt.pt).magnitude();
-        self.openings.retain(|open| open.refer != None);
+        //self.openings.retain(|open| open.refer != None);
+        println!("Update Wall: {:?}", self.openings);
         let mut sorted = Vec::new();
         for i in (0..self.openings.len()).step_by(3) {
             if let Some(pt_1) = self.openings.get(i) {
@@ -183,6 +184,17 @@ impl UpdateFromRefs for Wall {
         results
     }
 
+    fn get_available_refs(&self) -> Vec<PointIndex> {
+        let mut results = Vec::new();
+        if let None = self.first_pt.refer {
+            results.push(0);
+        }
+        if let None = self.second_pt.refer {
+            results.push(1);
+        }
+        results
+    }
+
     fn get_num_refs(&self) -> usize {
         2 + self.openings.len()
     }
@@ -193,6 +205,7 @@ impl UpdateFromRefs for Wall {
             1 => self.second_pt.set_reference(result, other_ref),
             _ => {
                 if let Some(open) = self.openings.get_mut(index - 2) {
+                    println!("set_ref: {:?}", open);
                     open.set_reference(result, other_ref);
                 }
             }
@@ -201,6 +214,7 @@ impl UpdateFromRefs for Wall {
 
     fn add_ref(&mut self, result: Point3f, other_ref: GeometryId, _: &Option<Point3f>) -> bool {
         let mut new_open = ParametricPoint::new(result);
+        println!("add_ref: {:?}", new_open);
         new_open.set_reference(new_open.pt, other_ref);
         self.openings.push(new_open);
         true
@@ -239,6 +253,7 @@ impl UpdateFromRefs for Wall {
             1 => self.second_pt.update(geom),
             _ => {
                 if let Some(open) = self.openings.get_mut(index - 2) {
+                    println!("set associated {:?}", open);
                     open.update(geom);
                 }
             }
@@ -250,11 +265,6 @@ impl Position for Wall {
     fn move_obj(&mut self, delta: &Vector3f) {
         self.first_pt.pt += *delta;
         self.second_pt.pt += *delta;
-        for open in &mut self.openings {
-            open.pt += *delta;
-            open.pt += *delta;
-            open.pt += *delta;
-        }
     }
 }
 

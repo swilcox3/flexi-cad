@@ -1,7 +1,6 @@
 use super::*;
 use crate::prelude::*;
 use crate::tests::*;
-use crate::{join_objs};
 use crossbeam_channel::{Receiver};
 
 fn test_setup(desc: &str, callback: impl Fn(PathBuf, UserID, Receiver<UpdateMsg>)) {
@@ -78,7 +77,7 @@ fn test_join_walls() {
 
         let event = UndoEventID::new_v4();
         app_state::begin_undo_event(&file, &user, event.clone(), String::from("snap objs")).unwrap();
-        join_objs(file.clone(), &event, id_1.clone(), id_2.clone(), &Point3f::new(2.0, 4.0, 3.0)).unwrap();
+        crate::join_points(file.clone(), &event, id_1.clone(), id_2.clone(), &Point3f::new(2.0, 4.0, 3.0), false).unwrap();
         empty_receiver(&rcv);
         crate::move_obj(file.clone(), &event, id_1.clone(), &Vector3f::new(0.0, 1.0, 0.0)).unwrap();
         app_state::end_undo_event(&file, event).unwrap();
@@ -104,9 +103,9 @@ fn test_join_walls() {
 fn test_join_door_and_wall() {
     test_setup("snap door to wall", |file, user, rcv| {
         let first = Box::new(Wall::new(Point3f::new(0.0, 0.0, 0.0), Point3f::new(1.0, 0.0, 0.0), 1.0, 1.0));
-        let id_1 = first.get_id().clone();
+        let wall_id = first.get_id().clone();
         let second = Box::new(Door::new(Point3f::new(1.0, 2.0, 3.0), Point3f::new(1.0, 2.5, 3.0), 1.0, 1.0));
-        let id_2 = second.get_id().clone();
+        let door_id = second.get_id().clone();
 
         let event = UndoEventID::new_v4();
         app_state::begin_undo_event(&file, &user, event.clone(), String::from("add objs")).unwrap();
@@ -116,10 +115,12 @@ fn test_join_door_and_wall() {
 
         let event = UndoEventID::new_v4();
         app_state::begin_undo_event(&file, &user, event.clone(), String::from("snap objs")).unwrap();
-        join_objs(file.clone(), &event, id_1.clone(), id_2.clone(), &Point3f::new(0.25, 1.0, 0.0)).unwrap();
+        snap_to_line(&file, &event, &door_id, &wall_id, &Point3f::new(0.25, 1.0, 0.0), false).unwrap();
+        snap_to_rect(&file, &event, &wall_id, &door_id, &Point3f::new(0.25, 1.0, 0.0), true).unwrap();
+        app_state::update_all_deps(file.clone(), vec![wall_id, door_id]);
         app_state::end_undo_event(&file, event).unwrap();
         empty_receiver(&rcv);
-        app_state::get_obj(&file, &id_2, |second| {
+        app_state::get_obj(&file, &door_id, |second| {
             let read = second.query_ref::<dyn ReferTo>().unwrap();
             let pts = read.get_all_points();
             assert_eq!(pts[0], Point3f::new(0.25, 0.0, 0.0));
@@ -128,14 +129,22 @@ fn test_join_door_and_wall() {
         }).unwrap();
         let event = UndoEventID::new_v4();
         app_state::begin_undo_event(&file, &user, event.clone(), String::from("move obj")).unwrap();
-        crate::move_obj(file.clone(), &event, id_1.clone(), &Vector3f::new(0.0, 1.0, 0.0)).unwrap();
+        crate::move_obj(file.clone(), &event, wall_id.clone(), &Vector3f::new(0.0, 1.0, 0.0)).unwrap();
         app_state::end_undo_event(&file, event).unwrap();
         empty_receiver(&rcv);
-        app_state::get_obj(&file, &id_2, |second| {
+        app_state::get_obj(&file, &door_id, |second| {
             let read = second.query_ref::<dyn ReferTo>().unwrap();
             let pts = read.get_all_points();
             assert_eq!(pts[0], Point3f::new(0.25, 1.0, 0.0));
             assert_eq!(pts[1], Point3f::new(0.75, 1.0, 0.0));
+            Ok(())
+        }).unwrap();    
+        app_state::get_obj(&file, &wall_id, |wall| {
+            let read = wall.query_ref::<dyn ReferTo>().unwrap();
+            let pts = read.get_all_points();
+            assert_eq!(pts[2], Point3f::new(0.25, 1.0, 0.0));
+            assert_eq!(pts[3], Point3f::new(0.75, 1.0, 0.0));
+            assert_eq!(pts[4], Point3f::new(0.75, 1.0, 1.0));
             Ok(())
         }).unwrap();
     });

@@ -87,17 +87,30 @@ pub fn copy_objs(file: PathBuf, event: &UndoEventID, ids: HashSet<RefID>, query_
     Ok(())
 }
 
-pub fn snap_obj_to_other(file: PathBuf, event: &UndoEventID, obj: RefID, other_obj: &RefID, guess: &Point3f) -> LibResult {
-    entity_ops::snap_to_point(&file, event, &obj, other_obj, guess)?;
+pub fn snap_to_point(file: PathBuf, event: &UndoEventID, obj: RefID, other_obj: &RefID, guess: &Point3f, add: bool) -> LibResult {
+    entity_ops::snap_to_point(&file, event, &obj, other_obj, guess, add)?;
     app_state::update_deps(file, obj);
     Ok(())
 }
 
-pub fn join_objs(file: PathBuf, event: &UndoEventID, first: RefID, second: RefID, guess: &Point3f) -> LibResult {
-    entity_ops::join_points(&file, event, &first, &second, guess)?;
+pub fn snap_to_line(file: PathBuf, event: &UndoEventID, first: RefID, second: RefID, guess: &Point3f, add: bool) -> LibResult {
+    entity_ops::snap_to_line(&file, event, &first, &second, guess, add)?;
     app_state::update_all_deps(file, vec![first, second]);
     Ok(())
 }
+
+pub fn snap_to_rect(file: PathBuf, event: &UndoEventID, first: RefID, second: RefID, guess: &Point3f, add: bool) -> LibResult {
+    entity_ops::snap_to_rect(&file, event, &first, &second, guess, add)?;
+    app_state::update_all_deps(file, vec![first, second]);
+    Ok(())
+}
+
+pub fn join_points(file: PathBuf, event: &UndoEventID, first: RefID, second: RefID, guess: &Point3f, add: bool) -> LibResult {
+    entity_ops::join_points(&file, event, &first, &second, guess, add)?;
+    app_state::update_all_deps(file, vec![first, second]);
+    Ok(())
+}
+
 
 pub fn can_refer_to(file: &PathBuf, obj_id: &RefID, query_id: QueryID, user_id: &UserID) -> LibResult {
     let can_refer = entity_ops::can_refer_to(file, obj_id)?;
@@ -130,15 +143,16 @@ pub fn demo(file: &PathBuf, user: &UserID, position: &Point3f) -> Result<(), DBE
     app_state::add_obj(file, &event, Box::new(wall_2))?;
     app_state::add_obj(file, &event, Box::new(wall_3))?;
     app_state::add_obj(file, &event, Box::new(wall_4))?;
-    entity_ops::join_points(file, &event, &id_1, &id_2, &position_2)?;
-    entity_ops::join_points(file, &event, &id_2, &id_3, &position_3)?;
-    entity_ops::join_points(file, &event, &id_3, &id_4, &position_4)?;
-    entity_ops::join_points(file, &event, &id_4, &id_1, position)?;
+    entity_ops::join_points(file, &event, &id_1, &id_2, &position_2, false)?;
+    entity_ops::join_points(file, &event, &id_2, &id_3, &position_3, false)?;
+    entity_ops::join_points(file, &event, &id_3, &id_4, &position_4, false)?;
+    entity_ops::join_points(file, &event, &id_4, &id_1, position, false)?;
     let door_pos = position + Vector3f::new(side_length / 2.0, 0.0, 0.0);
     let door = Door::new(door_pos, door_pos + Vector3f::new(5.0, 0.0, 0.0), width / 2.0, height - 1.0);
     let door_id = door.get_id().clone();
     app_state::add_obj(file, &event, Box::new(door))?;
-    entity_ops::join_points(file, &event, &door_id, &id_1, &door_pos)?;
+    entity_ops::snap_to_line(file, &event, &door_id, &id_1, &door_pos, false)?;
+    entity_ops::snap_to_rect(file, &event, &id_1, &door_id, &door_pos, true)?;
     /*let offset = 5.0;
     let dim_1 = Dimension::new(position.clone(), position_2.clone(), offset);
     let dim_2 = Dimension::new(position_2.clone(), position_3.clone(), offset);

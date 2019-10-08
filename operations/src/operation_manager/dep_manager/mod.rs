@@ -41,6 +41,9 @@ impl DependencyManager {
     pub fn get_all_deps<T>(&self, objs: T) -> Vec<Reference> 
         where T: IntoIterator<Item = GeometryId> 
     {
+        let mut debug = String::new();
+        self.debug_state(&mut debug);
+        println!("Dep table: {}", debug);
         let mut levels: Vec<HashSet<Reference>> = Vec::new();
         for obj in objs.into_iter() {
             let mut i = 0;
@@ -73,7 +76,8 @@ impl DependencyManager {
     }
 
     pub fn register_sub(&self, publisher: &GeometryId, sub: GeometryId) {
-        if sub.obj != RefID::nil() && *publisher != sub && publisher.obj != sub.obj {
+        println!("registering: {:?} -> {:?}", publisher, sub);
+        if sub.obj != RefID::nil() && *publisher != sub {
             match self.pub_subs.get_mut(publisher) {
                 Some(mut set) => {
                     set.insert(sub);
