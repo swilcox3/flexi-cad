@@ -94,7 +94,7 @@ impl Data for Door {
 
 impl ReferTo for Door {
     fn get_result(&self, res: ResultInd) -> Option<RefGeometry> {
-        match res.index {
+        match res {
             0 => Some(RefGeometry::Point{pt: self.dir.geom.pt_1}),
             1 => Some(RefGeometry::Point{pt: self.dir.geom.pt_2}),
             2 => {
@@ -113,6 +113,10 @@ impl ReferTo for Door {
         results.push(RefGeometry::Rect{pt_1: self.dir.geom.pt_1, pt_2: self.dir.geom.pt_2, pt_3: third});
         results
     }
+
+    fn get_num_results(&self) -> usize {
+        3
+    }
 }
 
 impl UpdateFromRefs for Door {
@@ -121,29 +125,53 @@ impl UpdateFromRefs for Door {
     }
 
     fn get_refs(&self) -> Vec<Option<Reference>> {
-        vec![self.dir.refer.clone()]
+        let mut results = Vec::new();
+        if let Some(id) = &self.dir.refer {
+            results.push(Some(Reference::new(self.id.clone(), 0, id.clone())));
+        }
+        else {
+            results.push(None);
+        }
+        let self_id_0 = GeometryId::new(self.id.clone(), 0);
+        let self_id_1 = GeometryId::new(self.id.clone(), 1);
+        let self_id_2 = GeometryId::new(self.id.clone(), 2);
+        results.push(Some(Reference{owner:self_id_2.clone(), other: self_id_0}));
+        results.push(Some(Reference{owner:self_id_2, other: self_id_1}));
+        results
     }
 
-    fn set_ref(&mut self, index: ReferInd, result: &RefGeometry, other_ref: Reference, snap_pt: &Option<Point3f>) {
-        match index.index {
+    fn get_available_refs(&self) -> Vec<ReferInd> {
+        let mut results = Vec::new();
+        if let None = self.dir.refer {
+            results.push(0);
+        }
+        results
+    }
+
+    fn get_num_refs(&self) -> usize {
+        1
+    }
+
+    fn set_ref(&mut self, index: ReferInd, result: &RefGeometry, other_ref: GeometryId, snap_pt: &Option<Point3f>) {
+        match index {
             0 => self.dir.set_reference(result, other_ref, snap_pt),
             _ => ()
         }
     }
 
-    fn add_ref(&mut self, _: &RefGeometry, _: Reference, _: &Option<Point3f>) -> bool {
+    fn add_ref(&mut self, _: &RefGeometry, _: GeometryId, _: &Option<Point3f>) -> bool {
         return false;
     }
 
     fn delete_ref(&mut self, index: ReferInd) {
-        match index.index {
+        match index {
             0 => self.dir.refer = None,
             _ => ()
         }
     }
 
     fn get_associated_geom(&self, index: ReferInd) -> Option<RefGeometry> {
-        match index.index {
+        match index {
             0 => Some(self.dir.geom.get_geom()),
             _ => {
                 None
@@ -152,7 +180,7 @@ impl UpdateFromRefs for Door {
     }
 
     fn set_associated_geom(&mut self, index: ReferInd, geom: &Option<RefGeometry>) {
-        match index.index {
+        match index {
             0 => self.dir.update(geom),
             _ => ()
         }

@@ -14,7 +14,7 @@ use serde::{Serialize, Deserialize};
 pub use geometry_kernel::*;
 pub use entities::wall::Wall;
 pub use entities::door::Door;
-pub use entities::dimension::Dimension;
+//pub use entities::dimension::Dimension;
 pub use cgmath::prelude::*;
 
 #[derive(Debug, PartialEq)]
@@ -70,10 +70,10 @@ pub fn from_json(type_str: &str, obj: serde_json::Value) -> Result<DataObject, D
             let val: Door = serde_json::from_value(obj).map_err(error_other)?;
             Ok(Box::new(val))
         }
-        "Dimension" => {
+        /*"Dimension" => {
             let val: Dimension = serde_json::from_value(obj).map_err(error_other)?;
             Ok(Box::new(val))
-        }
+        }*/
         _ => Err(DBError::ObjNotFound)
     }
 }
@@ -99,13 +99,16 @@ pub type QueryID = Uuid;
 pub trait ReferTo {
     fn get_result(&self, index: ResultInd) -> Option<RefGeometry>;
     fn get_all_results(&self) -> Vec<RefGeometry>;
+    fn get_num_results(&self) -> usize;
 }
 
 pub trait UpdateFromRefs {
     fn clear_refs(&mut self);
     fn get_refs(&self) -> Vec<Option<Reference>>;
-    fn set_ref(&mut self, index: ReferInd, result: &RefGeometry, other_ref: Reference, snap_pt: &Option<Point3f>);
-    fn add_ref(&mut self, result: &RefGeometry, other_ref: Reference, snap_pt: &Option<Point3f>) -> bool;
+    fn get_available_refs(&self) -> Vec<ReferInd>;
+    fn get_num_refs(&self) -> usize;
+    fn set_ref(&mut self, index: ReferInd, result: &RefGeometry, other_ref: GeometryId, snap_pt: &Option<Point3f>);
+    fn add_ref(&mut self, result: &RefGeometry, other_ref: GeometryId, snap_pt: &Option<Point3f>) -> bool;
     fn delete_ref(&mut self, index: ReferInd);
     fn get_associated_geom(&self, index: ReferInd) -> Option<RefGeometry>;
     fn set_associated_geom(&mut self, index: ReferInd, geom: &Option<RefGeometry>);

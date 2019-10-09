@@ -120,7 +120,7 @@ impl Data for Wall {
 
 impl ReferTo for Wall {
     fn get_result(&self, result: ResultInd) -> Option<RefGeometry> {
-        match result.index {
+        match result {
             0 => Some(RefGeometry::Point{pt: self.first_pt.geom.pt}),
             1 => Some(RefGeometry::Point{pt: self.second_pt.geom.pt}),
             2 => Some(RefGeometry::Line{pt_1: self.first_pt.geom.pt, pt_2: self.second_pt.geom.pt}),
@@ -135,6 +135,10 @@ impl ReferTo for Wall {
         results.push(RefGeometry::Line{pt_1: self.first_pt.geom.pt, pt_2: self.second_pt.geom.pt});
         results
     }
+
+    fn get_num_results(&self) -> usize {
+        2 + self.openings.len()
+    }
 }
 
 impl UpdateFromRefs for Wall {
@@ -148,27 +152,61 @@ impl UpdateFromRefs for Wall {
 
     fn get_refs(&self) -> Vec<Option<Reference>> {
         let mut results = Vec::new();
-        results.push(self.first_pt.refer.clone());
-        results.push(self.second_pt.refer.clone());
+        if let Some(id) = &self.first_pt.refer {
+            results.push(Some(Reference::new(self.id.clone(), 0, id.clone())));
+        }
+        else {
+            results.push(None);
+        }
+        if let Some(id) = &self.second_pt.refer {
+            results.push(Some(Reference::new(self.id.clone(), 1, id.clone())));
+        }
+        else {
+            results.push(None);
+        }
+        let self_id_0 = GeometryId::new(self.id.clone(), 0);
+        let self_id_1 = GeometryId::new(self.id.clone(), 1);
+        let self_id_2 = GeometryId::new(self.id.clone(), 2);
+        results.push(Some(Reference{owner:self_id_2.clone(), other: self_id_0}));
+        results.push(Some(Reference{owner:self_id_2, other: self_id_1}));
+        let mut index = 0;
         for open in &self.openings {
-            results.push(open.refer.clone());
+            if let Some(id) = &open.refer {
+                results.push(Some(Reference::new(self.id.clone(), index, id.clone())));
+                index += 1;
+            }
         }
         results
     }
 
-    fn set_ref(&mut self, index: ReferInd, result: &RefGeometry, other_ref: Reference, snap_pt: &Option<Point3f>) {
-        match index.index {
+    fn get_num_refs(&self) -> usize {
+        2 + self.openings.len()
+    }
+
+    fn get_available_refs(&self) -> Vec<ReferInd> {
+        let mut results = Vec::new();
+        if let None = self.first_pt.refer {
+            results.push(0);
+        }
+        if let None = self.second_pt.refer {
+            results.push(1);
+        }
+        results
+    }
+
+    fn set_ref(&mut self, index: ReferInd, result: &RefGeometry, other_ref: GeometryId, snap_pt: &Option<Point3f>) {
+        match index {
             0 => self.first_pt.set_reference(result, other_ref, snap_pt),
             1 => self.second_pt.set_reference(result, other_ref, snap_pt),
             _ => {
-                if let Some(open) = self.openings.get_mut(index.index - 2) {
+                if let Some(open) = self.openings.get_mut(index - 2) {
                     open.set_reference(result, other_ref, snap_pt);
                 }
             }
         }
     }
 
-    fn add_ref(&mut self, result: &RefGeometry, other_ref: Reference, snap_pt: &Option<Point3f>) -> bool {
+    fn add_ref(&mut self, result: &RefGeometry, other_ref: GeometryId, snap_pt: &Option<Point3f>) -> bool {
         if let RefGeometry::Rect{pt_1, pt_2, pt_3} = result {
             let mut new_open = UpdatableGeometry::new(RefRect::new(*pt_1, *pt_2, *pt_3));
             new_open.set_reference(result, other_ref, snap_pt);
@@ -181,23 +219,23 @@ impl UpdateFromRefs for Wall {
     }
 
     fn delete_ref(&mut self, index: ReferInd) {
-        match index.index {
+        match index {
             0 => self.first_pt.refer = None,
             1 => self.second_pt.refer = None,
             _ => {
-                if self.openings.len() > (index.index - 2) {
-                    self.openings.remove(index.index - 2);
+                if self.openings.len() > (index - 2) {
+                    self.openings.remove(index - 2);
                 }
             }
         }
     }
 
     fn get_associated_geom(&self, index: ReferInd) -> Option<RefGeometry> {
-        match index.index {
+        match index {
             0 => Some(self.first_pt.geom.get_geom()),
             1 => Some(self.second_pt.geom.get_geom()),
             _ => {
-                if let Some(open) = self.openings.get(index.index - 2) {
+                if let Some(open) = self.openings.get(index - 2) {
                     Some(open.geom.get_geom())
                 }
                 else {
@@ -208,11 +246,11 @@ impl UpdateFromRefs for Wall {
     }
 
     fn set_associated_geom(&mut self, index: ReferInd, geom: &Option<RefGeometry>) {
-        match index.index {
+        match index {
             0 => self.first_pt.update(geom),
             1 => self.second_pt.update(geom),
             _ => {
-                if let Some(open) = self.openings.get_mut(index.index - 2) {
+                if let Some(open) = self.openings.get_mut(index - 2) {
                     open.update(geom);
                 }
             }

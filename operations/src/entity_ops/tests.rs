@@ -27,10 +27,10 @@ fn test_copy_objs() {
         first.move_obj(&Vector3f::new(1.0, 2.0, 3.0));
         let mut second = Box::new(TestObj::new("second"));
         let id_2 = second.get_id().clone();
-        second.set_ref(ReferInd{index:0}, 
+        second.set_ref(0, 
            &RefGeometry::Point{pt:Point3f::new(1.0, 2.0, 3.0)}, 
-            Reference{id: id_1.clone(), 
-                    index: ResultInd{index:0}},
+            GeometryId{id: id_1.clone(), 
+                    index: 0},
             &None
         );
 
@@ -51,13 +51,13 @@ fn test_copy_objs() {
         crate::move_obj(file.clone(), &event, copy_id_1.clone(), &Vector3f::new(0.0, 0.0, 1.0)).unwrap();
         empty_receiver(&rcv);
         app_state::get_obj(&file, &copy_id_1, |obj| {
-            let point_ref = obj.query_ref::<ReferTo>().unwrap();
-            assert_eq!(point_ref.get_result(ResultInd{index:0}), Some(RefGeometry::Point{pt: Point3f::new(1.0, 2.0, 4.0)}));
+            let point_ref = obj.query_ref::<dyn ReferTo>().unwrap();
+            assert_eq!(point_ref.get_result(0), Some(RefGeometry::Point{pt: Point3f::new(1.0, 2.0, 4.0)}));
             Ok(())
         }).unwrap();
         app_state::get_obj(&file, &copy_id_2, |obj| {
-            let point_ref = obj.query_ref::<ReferTo>().unwrap();
-            assert_eq!(point_ref.get_result(ResultInd{index:0}), Some(RefGeometry::Point{pt: Point3f::new(1.0, 2.0, 4.0)}));
+            let point_ref = obj.query_ref::<dyn ReferTo>().unwrap();
+            assert_eq!(point_ref.get_result(0), Some(RefGeometry::Point{pt: Point3f::new(1.0, 2.0, 4.0)}));
             Ok(())
         }).unwrap();
     });
@@ -84,14 +84,14 @@ fn test_join_walls() {
         app_state::end_undo_event(&file, event).unwrap();
         empty_receiver(&rcv);
         app_state::get_obj(&file, &id_1, |first| {
-            let read = first.query_ref::<ReferTo>().unwrap();
+            let read = first.query_ref::<dyn ReferTo>().unwrap();
             let pts = read.get_all_results();
             assert_eq!(pts[0], RefGeometry::Point{pt: Point3f::new(1.0, 3.0, 3.0)});
             assert_eq!(pts[1], RefGeometry::Point{pt: Point3f::new(2.0, 3.0, 3.0)});
             Ok(())
         }).unwrap();
         app_state::get_obj(&file, &id_2, |second| {
-            let read = second.query_ref::<ReferTo>().unwrap();
+            let read = second.query_ref::<dyn ReferTo>().unwrap();
             let pts = read.get_all_results();
             assert_eq!(pts[0], RefGeometry::Point{pt: Point3f::new(2.0, 3.0, 3.0)});
             assert_eq!(pts[1], RefGeometry::Point{pt: Point3f::new(4.0, 5.0, 6.0)});
@@ -108,6 +108,9 @@ fn test_join_door_and_wall() {
         let second = Box::new(Door::new(Point3f::new(1.0, 2.0, 3.0), Point3f::new(1.0, 2.5, 3.0), 1.0, 1.0));
         let id_2 = second.get_id().clone();
 
+        println!("wall: {:?}", id_1);
+        println!("door: {:?}", id_2);
+
         let event = UndoEventID::new_v4();
         app_state::begin_undo_event(&file, &user, event.clone(), String::from("add objs")).unwrap();
         app_state::add_obj(&file, &event, first).unwrap();
@@ -120,7 +123,7 @@ fn test_join_door_and_wall() {
         app_state::end_undo_event(&file, event).unwrap();
         empty_receiver(&rcv);
         app_state::get_obj(&file, &id_2, |second| {
-            let read = second.query_ref::<ReferTo>().unwrap();
+            let read = second.query_ref::<dyn ReferTo>().unwrap();
             let pts = read.get_all_results();
             assert_eq!(pts[0], RefGeometry::Point{pt: Point3f::new(0.25, 0.0, 0.0)});
             assert_eq!(pts[1], RefGeometry::Point{pt: Point3f::new(0.75, 0.0, 0.0)});
@@ -132,7 +135,7 @@ fn test_join_door_and_wall() {
         app_state::end_undo_event(&file, event).unwrap();
         empty_receiver(&rcv);
         app_state::get_obj(&file, &id_2, |second| {
-            let read = second.query_ref::<ReferTo>().unwrap();
+            let read = second.query_ref::<dyn ReferTo>().unwrap();
             let pts = read.get_all_results();
             assert_eq!(pts[0], RefGeometry::Point{pt: Point3f::new(0.25, 1.0, 0.0)});
             assert_eq!(pts[1], RefGeometry::Point{pt: Point3f::new(0.75, 1.0, 0.0)});
