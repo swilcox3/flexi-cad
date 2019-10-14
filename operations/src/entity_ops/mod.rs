@@ -1,19 +1,17 @@
+mod snapping;
 #[cfg(test)]
 mod tests;
-mod snapping;
 pub use snapping::*;
 
 use crate::prelude::*;
 
 pub fn move_obj(file: &PathBuf, event: &UndoEventID, id: &RefID, delta: &Vector3f) -> Result<(), DBError> {
-    app_state::modify_obj(file, event, id, |obj| {
-        match obj.query_mut::<dyn Position>() {
-            Some(movable) => {
-                movable.move_obj(delta);
-                Ok(())
-            }
-            None => Err(DBError::ObjLacksTrait)
+    app_state::modify_obj(file, event, id, |obj| match obj.query_mut::<dyn Position>() {
+        Some(movable) => {
+            movable.move_obj(delta);
+            Ok(())
         }
+        None => Err(DBError::ObjLacksTrait),
     })
 }
 
@@ -26,14 +24,12 @@ pub fn get_obj_data(file: &PathBuf, id: &RefID, prop_name: &str) -> Result<serde
     })?;
     match val {
         Some(data) => Ok(data),
-        None => Err(DBError::PropertyNotFound)
+        None => Err(DBError::PropertyNotFound),
     }
 }
 
 pub fn set_obj_data(file: &PathBuf, event: &UndoEventID, id: &RefID, data: &serde_json::Value) -> Result<(), DBError> {
-    app_state::modify_obj(file, event, id, |obj| {
-        obj.set_data(data)
-    })
+    app_state::modify_obj(file, event, id, |obj| obj.set_data(data))
 }
 
 pub fn copy_objs(file: &PathBuf, event: &UndoEventID, ids: HashSet<RefID>) -> Result<(Vec<RefID>, HashMap<RefID, RefID>), DBError> {
@@ -48,23 +44,20 @@ pub fn copy_objs(file: &PathBuf, event: &UndoEventID, ids: HashSet<RefID>) -> Re
         let mut refs_to_set = Vec::new();
         app_state::get_obj(&file, &id, |obj| {
             if let Some(has_ref) = obj.query_ref::<dyn UpdateFromRefs>() {
-                let mut index = 0;
                 for ref_opt in has_ref.get_refs() {
                     if let Some(this_ref) = ref_opt {
-                        if let Some(ref_copy_id) = orig_to_copy.get(&this_ref.id) {
+                        if let Some(ref_copy_id) = orig_to_copy.get(&this_ref.other.id) {
                             if let Some(has_ref_res) = obj.query_ref::<dyn ReferTo>() {
-                                if let Some(res) = has_ref_res.get_result(this_ref.index) {
-                                    let ref_index = ReferInd{index: index};
-                                    let copy_ref = Reference {
+                                if let Some(res) = has_ref_res.get_result(this_ref.other.index) {
+                                    let copy_ref = GeometryId {
                                         id: *ref_copy_id,
-                                        index: this_ref.index,
+                                        index: this_ref.other.index,
                                     };
-                                    refs_to_set.push((ref_index, res, copy_ref));
+                                    refs_to_set.push((this_ref.owner.index, res, copy_ref));
                                 }
                             }
                         }
                     }
-                    index += 1;
                 }
             }
             Ok(())
@@ -74,12 +67,12 @@ pub fn copy_objs(file: &PathBuf, event: &UndoEventID, ids: HashSet<RefID>) -> Re
                 app_state::modify_obj(&file, &event, copy_id, |obj| {
                     if let Some(has_ref) = obj.query_mut::<dyn UpdateFromRefs>() {
                         for (index, res, ref_to_set) in &refs_to_set {
-                            app_state::add_dep(&file, &ref_to_set.id, copy_id.clone())?;
                             has_ref.set_ref(*index, res, ref_to_set.clone(), &None);
                         }
                     }
                     Ok(())
                 })?;
+                app_state::add_deps(&file, &copy_id)?;
             }
         }
         to_update.push(id);

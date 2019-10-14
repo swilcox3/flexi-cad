@@ -1,25 +1,26 @@
-extern crate uuid;
 pub extern crate cgmath;
-#[macro_use] extern crate query_interface;
-#[macro_use] pub extern crate serde_json;
+extern crate uuid;
+#[macro_use]
+extern crate query_interface;
+#[macro_use]
+pub extern crate serde_json;
 pub extern crate typetag;
 
-mod geometry_kernel;
 mod entities;
+mod geometry_kernel;
 
-use uuid::Uuid;
 use query_interface::Object;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
-pub use geometry_kernel::*;
-pub use entities::wall::Wall;
 pub use entities::door::Door;
-pub use entities::dimension::Dimension;
+pub use entities::wall::Wall;
+pub use geometry_kernel::*;
+//pub use entities::dimension::Dimension;
 pub use cgmath::prelude::*;
 
 #[derive(Debug, PartialEq)]
-pub enum DBError
-{
+pub enum DBError {
     NotFound(String),
     Locked(String),
     Overwrite,
@@ -30,7 +31,7 @@ pub enum DBError
     UserNotFound,
     ObjLacksTrait,
     TimedOut,
-    Other(String)
+    Other(String),
 }
 
 pub fn error_other<T: std::fmt::Debug>(err: T) -> DBError {
@@ -40,20 +41,32 @@ pub fn error_other<T: std::fmt::Debug>(err: T) -> DBError {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum UpdateMsg {
     Empty,
-    Delete{key: RefID},
-    Mesh{data: MeshData},
-    Read{query_id: QueryID, user: UserID, data: serde_json::Value},
-    Other{data: serde_json::Value},
-    Error{msg: String}
+    Delete {
+        key: RefID,
+    },
+    Mesh {
+        data: MeshData,
+    },
+    Read {
+        query_id: QueryID,
+        user: UserID,
+        data: serde_json::Value,
+    },
+    Other {
+        data: serde_json::Value,
+    },
+    Error {
+        msg: String,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct CmdMsg {
     pub func_name: String,
-    pub params: Vec<serde_json::Value>
+    pub params: Vec<serde_json::Value>,
 }
 
-pub fn to_json<T : Serialize>(type_label: &str, obj: &T) -> serde_json::Value {
+pub fn to_json<T: Serialize>(type_label: &str, obj: &T) -> serde_json::Value {
     json!({
         "type": type_label,
         "obj": obj
@@ -70,16 +83,16 @@ pub fn from_json(type_str: &str, obj: serde_json::Value) -> Result<DataObject, D
             let val: Door = serde_json::from_value(obj).map_err(error_other)?;
             Ok(Box::new(val))
         }
-        "Dimension" => {
+        /*"Dimension" => {
             let val: Dimension = serde_json::from_value(obj).map_err(error_other)?;
             Ok(Box::new(val))
-        }
-        _ => Err(DBError::ObjNotFound)
+        }*/
+        _ => Err(DBError::ObjNotFound),
     }
 }
 
 #[typetag::serde]
-pub trait Data : Object + Send + Sync {
+pub trait Data: Object + Send + Sync {
     fn get_id(&self) -> &RefID;
     fn update(&mut self) -> Result<UpdateMsg, DBError>;
     fn get_temp_repr(&self) -> Result<UpdateMsg, DBError>;
@@ -99,14 +112,28 @@ pub type QueryID = Uuid;
 pub trait ReferTo {
     fn get_result(&self, index: ResultInd) -> Option<RefGeometry>;
     fn get_all_results(&self) -> Vec<RefGeometry>;
+    fn get_num_results(&self) -> usize;
 }
 
 pub trait UpdateFromRefs {
     fn clear_refs(&mut self);
     fn get_refs(&self) -> Vec<Option<Reference>>;
-    fn set_ref(&mut self, index: ReferInd, result: &RefGeometry, other_ref: Reference, snap_pt: &Option<Point3f>);
-    fn add_ref(&mut self, result: &RefGeometry, other_ref: Reference, snap_pt: &Option<Point3f>) -> bool;
+    fn get_available_refs(&self) -> Vec<ReferInd>;
+    fn get_num_refs(&self) -> usize;
+    fn set_ref(
+        &mut self,
+        index: ReferInd,
+        result: &RefGeometry,
+        other_ref: GeometryId,
+        snap_pt: &Option<Point3f>,
+    );
+    fn add_ref(
+        &mut self,
+        result: &RefGeometry,
+        other_ref: GeometryId,
+        snap_pt: &Option<Point3f>,
+    ) -> bool;
     fn delete_ref(&mut self, index: ReferInd);
     fn get_associated_geom(&self, index: ReferInd) -> Option<RefGeometry>;
-    fn update_from_refs(&mut self, results: &Vec<Option<RefGeometry>>); 
+    fn set_associated_geom(&mut self, index: ReferInd, geom: &Option<RefGeometry>);
 }

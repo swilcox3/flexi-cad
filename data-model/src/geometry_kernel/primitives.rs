@@ -5,10 +5,19 @@ use cgmath::InnerSpace;
 pub struct PrismOpening {
     pub interp: Interp,
     pub height: WorldCoord,
-    pub length: WorldCoord
+    pub length: WorldCoord,
 }
 
-fn prism_and_next_opening(first_pt: &Point3f, second_pt: &Point3f, third_pt: &Point3f, offset: &Vector3f, vert_offset: &Vector3f, hole_offset: &Vector3f, index: u64, results: &mut MeshData) -> u64 {
+fn prism_and_next_opening(
+    first_pt: &Point3f,
+    second_pt: &Point3f,
+    third_pt: &Point3f,
+    offset: &Vector3f,
+    vert_offset: &Vector3f,
+    hole_offset: &Vector3f,
+    index: u64,
+    results: &mut MeshData,
+) -> u64 {
     let zero = first_pt + offset;
     let first = first_pt - offset;
     let second = second_pt + offset;
@@ -60,7 +69,14 @@ fn prism_and_next_opening(first_pt: &Point3f, second_pt: &Point3f, third_pt: &Po
     index + 14
 }
 
-fn prism(first_pt: &Point3f, second_pt: &Point3f, offset: &Vector3f, vert_offset: &Vector3f, index: u64, results: &mut MeshData) -> u64 {
+fn prism(
+    first_pt: &Point3f,
+    second_pt: &Point3f,
+    offset: &Vector3f,
+    vert_offset: &Vector3f,
+    index: u64,
+    results: &mut MeshData,
+) -> u64 {
     let first = first_pt + offset;
     let second = first_pt - offset;
     let third = second_pt + offset;
@@ -92,7 +108,14 @@ fn prism(first_pt: &Point3f, second_pt: &Point3f, offset: &Vector3f, vert_offset
     index + 8
 }
 
-pub fn prism_with_openings(first_pt: &Point3f, second_pt: &Point3f, width: WorldCoord, height: WorldCoord, holes: Vec<PrismOpening>, results: &mut MeshData) {
+pub fn prism_with_openings(
+    first_pt: &Point3f,
+    second_pt: &Point3f,
+    width: WorldCoord,
+    height: WorldCoord,
+    holes: Vec<PrismOpening>,
+    results: &mut MeshData,
+) {
     let num_pts = 8 + 12 * holes.len();
     results.positions.reserve(num_pts * 3);
     let num_faces = 12 * (holes.len() + 1) + 8 * (holes.len());
@@ -107,13 +130,35 @@ pub fn prism_with_openings(first_pt: &Point3f, second_pt: &Point3f, width: World
         let cur_second = first_pt + dir * hole.interp.val;
         let cur_third = cur_second + dir.normalize() * hole.length;
         let hole_offset = Vector3f::new(0.0, 0.0, hole.height);
-        index = prism_and_next_opening(&cur_first, &cur_second, &cur_third, &offset, &vert_offset, &hole_offset, index, results);
+        index = prism_and_next_opening(
+            &cur_first,
+            &cur_second,
+            &cur_third,
+            &offset,
+            &vert_offset,
+            &hole_offset,
+            index,
+            results,
+        );
         cur_first = cur_third;
     }
-    prism(&cur_first, &second_pt, &offset, &vert_offset, index, results);
+    prism(
+        &cur_first,
+        &second_pt,
+        &offset,
+        &vert_offset,
+        index,
+        results,
+    );
 }
 
-pub fn rectangular_prism(first_pt: &Point3f, second_pt: &Point3f, width: WorldCoord, height: WorldCoord, results: &mut MeshData) {
+pub fn rectangular_prism(
+    first_pt: &Point3f,
+    second_pt: &Point3f,
+    width: WorldCoord,
+    height: WorldCoord,
+    results: &mut MeshData,
+) {
     let dir = second_pt - first_pt;
     let perp = dir.cross(Vector3f::unit_z()).normalize();
     let offset = perp * width;
@@ -135,11 +180,23 @@ mod tests {
             id: RefID::nil(),
             positions: Vec::new(),
             indices: Vec::new(),
-            metadata: None
+            metadata: None,
         };
         rectangular_prism(&first, &second, width, height, &mut results);
-        assert_eq!(results.positions, vec![0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 1.0, 1.0, 0.0, -1.0, 0.0, 1.0, 1.0, 0.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0]);
-        assert_eq!(results.indices, vec![0, 1, 2, 1, 2, 3, 0, 1, 5, 0, 5, 4, 4, 5, 7, 4, 7, 6, 1, 3, 7, 1, 7, 5, 2, 3, 7, 2, 7, 6, 2, 0, 4, 2, 4, 6]);
+        assert_eq!(
+            results.positions,
+            vec![
+                0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 1.0, 0.0, 1.0, 1.0, 0.0, -1.0, 0.0, 1.0, 1.0, 0.0,
+                1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0
+            ]
+        );
+        assert_eq!(
+            results.indices,
+            vec![
+                0, 1, 2, 1, 2, 3, 0, 1, 5, 0, 5, 4, 4, 5, 7, 4, 7, 6, 1, 3, 7, 1, 7, 5, 2, 3, 7, 2,
+                7, 6, 2, 0, 4, 2, 4, 6
+            ]
+        );
     }
 
     #[test]
@@ -157,16 +214,24 @@ mod tests {
             id: RefID::nil(),
             positions: Vec::new(),
             indices: Vec::new(),
-            metadata: None
+            metadata: None,
         };
         prism_with_openings(&first, &second, width, height, holes, &mut results);
         for i in 0..results.positions.len() / 3 {
-            println!("{:?}, {:?}, {:?}", results.positions[i * 3], results.positions[(i*3) + 1], results.positions[(i*3) + 2]);
+            println!(
+                "{:?}, {:?}, {:?}",
+                results.positions[i * 3],
+                results.positions[(i * 3) + 1],
+                results.positions[(i * 3) + 2]
+            );
         }
         for i in 0..results.indices.len() / 3 {
-            println!("{:?}, {:?}, {:?}", results.indices[i * 3], results.indices[(i*3) + 1], results.indices[(i*3) + 2]);
-        } 
+            println!(
+                "{:?}, {:?}, {:?}",
+                results.indices[i * 3],
+                results.indices[(i * 3) + 1],
+                results.indices[(i * 3) + 2]
+            );
+        }
     }
-
-
 }
