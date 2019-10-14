@@ -1,5 +1,5 @@
 use crate::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Door {
@@ -21,7 +21,14 @@ impl Door {
     }
 }
 
-interfaces!(Door: dyn query_interface::ObjectClone, dyn std::fmt::Debug, dyn Data, dyn ReferTo, dyn Position, dyn UpdateFromRefs);
+interfaces!(
+    Door: dyn query_interface::ObjectClone,
+    dyn std::fmt::Debug,
+    dyn Data,
+    dyn ReferTo,
+    dyn Position,
+    dyn UpdateFromRefs
+);
 
 #[typetag::serde]
 impl Data for Door {
@@ -38,24 +45,43 @@ impl Data for Door {
             id: self.get_id().clone(),
             positions: Vec::with_capacity(24),
             indices: Vec::with_capacity(36),
-            metadata: Some(to_json("Door", &self))
+            metadata: Some(to_json("Door", &self)),
         };
-        let rotated = rotate_point_through_angle_2d(&self.dir.geom.pt_1, &self.dir.geom.pt_2, cgmath::Rad(std::f64::consts::FRAC_PI_4));
-        primitives::rectangular_prism(&self.dir.geom.pt_1, &rotated, self.width, self.height, &mut data);
-        Ok(UpdateMsg::Mesh{data: data})
+        let rotated = rotate_point_through_angle_2d(
+            &self.dir.geom.pt_1,
+            &self.dir.geom.pt_2,
+            cgmath::Rad(std::f64::consts::FRAC_PI_4),
+        );
+        primitives::rectangular_prism(
+            &self.dir.geom.pt_1,
+            &rotated,
+            self.width,
+            self.height,
+            &mut data,
+        );
+        Ok(UpdateMsg::Mesh { data: data })
     }
-
 
     fn get_temp_repr(&self) -> Result<UpdateMsg, DBError> {
         let mut data = MeshData {
             id: self.get_id().clone(),
             positions: Vec::with_capacity(24),
             indices: Vec::with_capacity(36),
-            metadata: None
+            metadata: None,
         };
-        let rotated = rotate_point_through_angle_2d(&self.dir.geom.pt_1, &self.dir.geom.pt_2, cgmath::Rad(std::f64::consts::FRAC_PI_4));
-        primitives::rectangular_prism(&self.dir.geom.pt_1, &rotated, self.width, self.height, &mut data);
-        Ok(UpdateMsg::Mesh{data: data})
+        let rotated = rotate_point_through_angle_2d(
+            &self.dir.geom.pt_1,
+            &self.dir.geom.pt_2,
+            cgmath::Rad(std::f64::consts::FRAC_PI_4),
+        );
+        primitives::rectangular_prism(
+            &self.dir.geom.pt_1,
+            &rotated,
+            self.width,
+            self.height,
+            &mut data,
+        );
+        Ok(UpdateMsg::Mesh { data: data })
     }
 
     fn get_data(&self, prop_name: &str) -> Result<serde_json::Value, DBError> {
@@ -65,7 +91,7 @@ impl Data for Door {
             "Length" => Ok(json!(self.dir.geom.length)),
             "First" => serde_json::to_value(&self.dir.geom.pt_1).map_err(error_other),
             "Second" => serde_json::to_value(&self.dir.geom.pt_2).map_err(error_other),
-            _ => Err(DBError::PropertyNotFound)
+            _ => Err(DBError::PropertyNotFound),
         }
     }
 
@@ -85,8 +111,7 @@ impl Data for Door {
         }
         if changed {
             Ok(())
-        }
-        else {
+        } else {
             Err(DBError::PropertyNotFound)
         }
     }
@@ -95,22 +120,46 @@ impl Data for Door {
 impl ReferTo for Door {
     fn get_result(&self, res: ResultInd) -> Option<RefGeometry> {
         match res {
-            0 => Some(RefGeometry::Point{pt: self.dir.geom.pt_1}),
-            1 => Some(RefGeometry::Point{pt: self.dir.geom.pt_2}),
+            0 => Some(RefGeometry::Point {
+                pt: self.dir.geom.pt_1,
+            }),
+            1 => Some(RefGeometry::Point {
+                pt: self.dir.geom.pt_2,
+            }),
             2 => {
-                let third = Point3f::new(self.dir.geom.pt_2.x, self.dir.geom.pt_2.y, self.dir.geom.pt_2.z + self.height);
-                Some(RefGeometry::Rect{pt_1: self.dir.geom.pt_1, pt_2: self.dir.geom.pt_2, pt_3: third})
+                let third = Point3f::new(
+                    self.dir.geom.pt_2.x,
+                    self.dir.geom.pt_2.y,
+                    self.dir.geom.pt_2.z + self.height,
+                );
+                Some(RefGeometry::Rect {
+                    pt_1: self.dir.geom.pt_1,
+                    pt_2: self.dir.geom.pt_2,
+                    pt_3: third,
+                })
             }
-            _ => None 
+            _ => None,
         }
     }
 
     fn get_all_results(&self) -> Vec<RefGeometry> {
         let mut results = Vec::new();
-        results.push(RefGeometry::Point{pt: self.dir.geom.pt_1});
-        results.push(RefGeometry::Point{pt: self.dir.geom.pt_2});
-        let third = Point3f::new(self.dir.geom.pt_2.x, self.dir.geom.pt_2.y, self.dir.geom.pt_2.z + self.height);
-        results.push(RefGeometry::Rect{pt_1: self.dir.geom.pt_1, pt_2: self.dir.geom.pt_2, pt_3: third});
+        results.push(RefGeometry::Point {
+            pt: self.dir.geom.pt_1,
+        });
+        results.push(RefGeometry::Point {
+            pt: self.dir.geom.pt_2,
+        });
+        let third = Point3f::new(
+            self.dir.geom.pt_2.x,
+            self.dir.geom.pt_2.y,
+            self.dir.geom.pt_2.z + self.height,
+        );
+        results.push(RefGeometry::Rect {
+            pt_1: self.dir.geom.pt_1,
+            pt_2: self.dir.geom.pt_2,
+            pt_3: third,
+        });
         results
     }
 
@@ -128,15 +177,20 @@ impl UpdateFromRefs for Door {
         let mut results = Vec::new();
         if let Some(id) = &self.dir.refer {
             results.push(Some(Reference::new(self.id.clone(), 0, id.clone())));
-        }
-        else {
+        } else {
             results.push(None);
         }
         let self_id_0 = GeometryId::new(self.id.clone(), 0);
         let self_id_1 = GeometryId::new(self.id.clone(), 1);
         let self_id_2 = GeometryId::new(self.id.clone(), 2);
-        results.push(Some(Reference{owner:self_id_2.clone(), other: self_id_0}));
-        results.push(Some(Reference{owner:self_id_2, other: self_id_1}));
+        results.push(Some(Reference {
+            owner: self_id_2.clone(),
+            other: self_id_0,
+        }));
+        results.push(Some(Reference {
+            owner: self_id_2,
+            other: self_id_1,
+        }));
         results
     }
 
@@ -152,10 +206,16 @@ impl UpdateFromRefs for Door {
         1
     }
 
-    fn set_ref(&mut self, index: ReferInd, result: &RefGeometry, other_ref: GeometryId, snap_pt: &Option<Point3f>) {
+    fn set_ref(
+        &mut self,
+        index: ReferInd,
+        result: &RefGeometry,
+        other_ref: GeometryId,
+        snap_pt: &Option<Point3f>,
+    ) {
         match index {
             0 => self.dir.set_reference(result, other_ref, snap_pt),
-            _ => ()
+            _ => (),
         }
     }
 
@@ -166,23 +226,21 @@ impl UpdateFromRefs for Door {
     fn delete_ref(&mut self, index: ReferInd) {
         match index {
             0 => self.dir.refer = None,
-            _ => ()
+            _ => (),
         }
     }
 
     fn get_associated_geom(&self, index: ReferInd) -> Option<RefGeometry> {
         match index {
             0 => Some(self.dir.geom.get_geom()),
-            _ => {
-                None
-            }
+            _ => None,
         }
     }
 
     fn set_associated_geom(&mut self, index: ReferInd, geom: &Option<RefGeometry>) {
         match index {
             0 => self.dir.update(geom),
-            _ => ()
+            _ => (),
         }
     }
 }
@@ -193,6 +251,3 @@ impl Position for Door {
         self.dir.geom.pt_2 += *delta;
     }
 }
-
-
-

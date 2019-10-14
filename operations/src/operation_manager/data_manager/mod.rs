@@ -1,5 +1,5 @@
-use std::sync::{Mutex};
 use crate::prelude::*;
+use std::sync::Mutex;
 
 #[cfg(test)]
 mod tests;
@@ -15,10 +15,10 @@ pub struct DataManager {
 
 impl DataManager {
     pub fn new() -> DataManager {
-        DataManager { 
+        DataManager {
             db: database::FileDatabase::new(),
             pending: undo::PendingEvents::new(),
-            undo: Mutex::new(undo::UndoStack::new())
+            undo: Mutex::new(undo::UndoStack::new()),
         }
     }
 
@@ -28,7 +28,7 @@ impl DataManager {
         Ok(DataManager {
             db: db,
             pending: undo::PendingEvents::new(),
-            undo: Mutex::new(undo::UndoStack::new())
+            undo: Mutex::new(undo::UndoStack::new()),
         })
     }
 
@@ -65,7 +65,7 @@ impl DataManager {
         self.pending.delete_obj(&self.db, event_id, key)
     }
 
-    pub fn get_obj(&self, key: &RefID, callback: impl FnMut(&DataObject)->Result<(), DBError>) -> Result<(), DBError> {
+    pub fn get_obj(&self, key: &RefID, callback: impl FnMut(&DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
         self.db.get(key, callback)
     }
 
@@ -77,11 +77,16 @@ impl DataManager {
         self.db.iterate_all_mut(callback)
     }
 
-    pub fn get_mut_obj(&self, event_id: &UndoEventID, key: &RefID, callback: impl FnMut(&mut DataObject)->Result<(), DBError>) -> Result<(), DBError> {
+    pub fn get_mut_obj(
+        &self,
+        event_id: &UndoEventID,
+        key: &RefID,
+        callback: impl FnMut(&mut DataObject) -> Result<(), DBError>,
+    ) -> Result<(), DBError> {
         self.pending.get_mut_obj(&self.db, event_id, key, callback)
     }
 
-    pub fn get_mut_obj_no_undo(&self, key: &RefID, callback: impl FnMut(&mut DataObject)->Result<(), DBError>) -> Result<(), DBError> {
+    pub fn get_mut_obj_no_undo(&self, key: &RefID, callback: impl FnMut(&mut DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
         self.db.get_mut(key, callback)
     }
 
@@ -112,6 +117,3 @@ impl DataManager {
         output.push_str(&"\n");
     }
 }
-
-
-

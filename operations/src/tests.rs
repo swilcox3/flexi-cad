@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 pub trait Store: Send + Sync {
     fn set_store_data(&mut self, data: String);
@@ -14,15 +14,27 @@ pub struct TestObj {
     point_2: UpdatableGeometry<RefPoint>,
 }
 
-interfaces!(TestObj: dyn Store, dyn query_interface::ObjectClone, dyn std::fmt::Debug, dyn Data, dyn UpdateFromRefs, dyn Position, dyn ReferTo);
+interfaces!(
+    TestObj: dyn Store,
+    dyn query_interface::ObjectClone,
+    dyn std::fmt::Debug,
+    dyn Data,
+    dyn UpdateFromRefs,
+    dyn Position,
+    dyn ReferTo
+);
 
 impl TestObj {
     pub fn new(dat: &str) -> TestObj {
-        TestObj { 
-            id: RefID::new_v4(), 
-            data: String::from(dat), 
-            point: UpdatableGeometry::new(RefPoint{pt: Point3f::new(0.0, 0.0, 0.0)}),
-            point_2: UpdatableGeometry::new(RefPoint{pt: Point3f::new(1.0, 0.0, 0.0)}),
+        TestObj {
+            id: RefID::new_v4(),
+            data: String::from(dat),
+            point: UpdatableGeometry::new(RefPoint {
+                pt: Point3f::new(0.0, 0.0, 0.0),
+            }),
+            point_2: UpdatableGeometry::new(RefPoint {
+                pt: Point3f::new(1.0, 0.0, 0.0),
+            }),
         }
     }
 }
@@ -38,17 +50,21 @@ impl Data for TestObj {
     }
 
     fn update(&mut self) -> Result<UpdateMsg, DBError> {
-        Ok(UpdateMsg::Other{data: serde_json::to_value(&self).unwrap()})
+        Ok(UpdateMsg::Other {
+            data: serde_json::to_value(&self).unwrap(),
+        })
     }
 
     fn get_temp_repr(&self) -> Result<UpdateMsg, DBError> {
-        Ok(UpdateMsg::Other{data: serde_json::to_value(&self).unwrap()})
+        Ok(UpdateMsg::Other {
+            data: serde_json::to_value(&self).unwrap(),
+        })
     }
 
     fn get_data(&self, prop_name: &str) -> Result<serde_json::Value, DBError> {
         match prop_name {
             "data" => Ok(json!(self.data)),
-            _ => Err(DBError::PropertyNotFound)
+            _ => Err(DBError::PropertyNotFound),
         }
     }
 
@@ -71,16 +87,22 @@ impl ReferTo for TestObj {
         match index {
             0 => Some(self.point.geom.get_geom()),
             1 => Some(self.point_2.geom.get_geom()),
-            2 => Some(RefGeometry::Line{pt_1: self.point.geom.pt, pt_2: self.point_2.geom.pt}),
-            _ => None
+            2 => Some(RefGeometry::Line {
+                pt_1: self.point.geom.pt,
+                pt_2: self.point_2.geom.pt,
+            }),
+            _ => None,
         }
     }
 
     fn get_all_results(&self) -> Vec<RefGeometry> {
         let mut results = Vec::new();
-        results.push(RefGeometry::Point{pt: self.point.geom.pt});
-        results.push(RefGeometry::Point{pt: self.point_2.geom.pt});
-        results.push(RefGeometry::Line{pt_1: self.point.geom.pt, pt_2: self.point_2.geom.pt});
+        results.push(RefGeometry::Point { pt: self.point.geom.pt });
+        results.push(RefGeometry::Point { pt: self.point_2.geom.pt });
+        results.push(RefGeometry::Line {
+            pt_1: self.point.geom.pt,
+            pt_2: self.point_2.geom.pt,
+        });
         results
     }
 
@@ -94,14 +116,12 @@ impl UpdateFromRefs for TestObj {
         let mut results = Vec::new();
         if let Some(id) = &self.point.refer {
             results.push(Some(Reference::new(self.id.clone(), 0, id.clone())));
-        }
-        else {
+        } else {
             results.push(None);
         }
         if let Some(id) = &self.point_2.refer {
             results.push(Some(Reference::new(self.id.clone(), 1, id.clone())));
-        }
-        else {
+        } else {
             results.push(None);
         }
         results
@@ -122,7 +142,6 @@ impl UpdateFromRefs for TestObj {
         2
     }
 
-
     fn clear_refs(&mut self) {
         self.point.refer = None;
         self.point_2.refer = None;
@@ -136,7 +155,7 @@ impl UpdateFromRefs for TestObj {
         match index {
             0 => self.point.set_reference(result, other_ref, snap_pt),
             1 => self.point_2.set_reference(result, other_ref, snap_pt),
-            _ => ()
+            _ => (),
         }
     }
 
@@ -144,7 +163,7 @@ impl UpdateFromRefs for TestObj {
         match index {
             0 => self.point.refer = None,
             1 => self.point_2.refer = None,
-            _ => ()
+            _ => (),
         }
     }
 
@@ -152,7 +171,7 @@ impl UpdateFromRefs for TestObj {
         match index {
             0 => Some(self.point.geom.get_geom()),
             1 => Some(self.point_2.geom.get_geom()),
-            _ => None
+            _ => None,
         }
     }
 
@@ -160,10 +179,9 @@ impl UpdateFromRefs for TestObj {
         match index {
             0 => self.point.update(geom),
             1 => self.point_2.update(geom),
-            _ => ()
+            _ => (),
         }
     }
-
 }
 
 impl Position for TestObj {

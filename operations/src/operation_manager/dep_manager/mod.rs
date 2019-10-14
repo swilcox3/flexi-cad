@@ -1,36 +1,36 @@
 use crate::prelude::*;
 use ccl::dhashmap::DHashMap;
+use indexmap::IndexSet;
 
 pub struct DependencyManager {
-    pub_subs: DHashMap<GeometryId, HashSet<GeometryId>>
+    pub_subs: DHashMap<GeometryId, HashSet<GeometryId>>,
 }
 
 impl DependencyManager {
     pub fn new() -> DependencyManager {
         DependencyManager {
-            pub_subs: DHashMap::default()
+            pub_subs: DHashMap::default(),
         }
     }
 
-    fn breadth_first_search(&self, id: &GeometryId) -> Vec<HashSet<Reference>> {
+    fn breadth_first_search(&self, id: &GeometryId) -> IndexSet<Reference> {
         let mut processing = std::collections::VecDeque::new();
         let mut visited = HashSet::new();
-        let mut result = Vec::new();
+        let mut result = IndexSet::new();
         visited.insert(id.clone());
         processing.push_back(id.clone());
         while processing.len() > 0 {
             if let Some(current) = processing.pop_front() {
                 if let Some(sub_set) = self.pub_subs.get(&current) {
-                    let mut cur_level = HashSet::new();
                     for sub in &(*sub_set) {
                         if let None = visited.get(sub) {
                             visited.insert(sub.clone());
-                            cur_level.insert(Reference{owner: sub.clone(), other: current.clone()});
+                            result.insert(Reference {
+                                owner: sub.clone(),
+                                other: current.clone(),
+                            });
                             processing.push_back(sub.clone());
                         }
-                    }
-                    if cur_level.len() > 0 {
-                        result.push(cur_level);
                     }
                 }
             }
@@ -38,30 +38,16 @@ impl DependencyManager {
         result
     }
 
-    pub fn get_all_deps<T>(&self, ids: T) -> Vec<Reference> 
-        where T: IntoIterator<Item = GeometryId> 
+    pub fn get_all_deps<T>(&self, ids: T) -> IndexSet<Reference>
+    where
+        T: IntoIterator<Item = GeometryId>,
     {
-        let mut debug = String::new();
+        /*let mut debug = String::new();
         self.debug_state(&mut debug);
-        println!("{}", debug);
-        let mut levels: Vec<HashSet<Reference>> = Vec::new();
+        println!("{}", debug);*/
+        let mut results: IndexSet<Reference> = IndexSet::new();
         for id in ids.into_iter() {
-            let mut i = 0;
-            for level in self.breadth_first_search(&id) {
-                if let Some(exists) = levels.get_mut(i) {
-                    exists.extend(level);
-                }
-                else {
-                    levels.push(level);
-                }
-                i += 1;
-            }
-        }
-        let mut results = Vec::new();
-        for level in levels {
-            for id in level {
-                results.push(id);
-            }
+            results.extend(self.breadth_first_search(&id));
         }
         results
     }
@@ -110,7 +96,7 @@ impl DependencyManager {
 
 #[cfg(test)]
 mod tests {
-use super::*;
+    use super::*;
     macro_rules! set {
         ( $( $x:expr ),* ) => {  // Match zero or more comma delimited items
             {
@@ -124,17 +110,20 @@ use super::*;
     }
 
     fn get_ref(owner: &GeometryId, other: &GeometryId) -> Reference {
-        Reference{ owner: owner.clone(), other: other.clone()}
+        Reference {
+            owner: owner.clone(),
+            other: other.clone(),
+        }
     }
 
-    fn set_exists_within_range(mut set: HashSet<Reference>, base: &Vec<Reference>, index: usize, size: usize) -> bool {
+    fn set_exists_within_range(mut set: HashSet<Reference>, base: &IndexSet<Reference>, index: usize, size: usize) -> bool {
         for i in index..index + size {
-            set.remove(&base[i]);
+            set.remove(&base.get_index(i).unwrap());
         }
         set.len() == 0
     }
 
-    fn deps_equals(input: Vec<Reference>, answers: Vec<HashSet<Reference>>) -> bool {
+    fn deps_equals(input: IndexSet<Reference>, answers: Vec<HashSet<Reference>>) -> bool {
         let mut cur_index = 0;
         for set in answers {
             let size = set.len();
@@ -187,46 +176,23 @@ use super::*;
         deps.register_sub(&f_1, c_3.clone());
 
         let results = deps.get_all_deps(vec![a_1.clone()]);
-        let answer =
-            vec![
-                set![
-                    get_ref(&b_1, &a_1),
-                    get_ref(&d_1, &a_1)
-                ],
-                set![
-                    get_ref(&e_1, &b_1),
-                    get_ref(&a_3, &d_1)
-                ],
-                set![get_ref(&b_3, &e_1)]
-            ];
+        let answer = vec![
+            set![get_ref(&b_1, &a_1), get_ref(&d_1, &a_1)],
+            set![get_ref(&e_1, &b_1), get_ref(&a_3, &d_1)],
+            set![get_ref(&b_3, &e_1)],
+        ];
         assert!(deps_equals(results, answer));
 
         let results = deps.get_all_deps(vec![b_2.clone()]);
-        let answer = 
-            vec![
-                set![get_ref(&e_2, &b_2)],
-            ];
+        let answer = vec![set![get_ref(&e_2, &b_2)]];
         assert!(deps_equals(results, answer));
 
         let results = deps.get_all_deps(vec![a_1.clone(), a_2.clone()]);
-        let answer = 
-            vec![
-                set![
-                    get_ref(&b_1, &a_1),
-                    get_ref(&d_1, &a_1),
-                    get_ref(&c_2, &a_2),
-                    get_ref(&d_2, &a_2)
-                ],
-                set![
-                    get_ref(&e_1, &b_1),
-                    get_ref(&a_3, &d_1),
-                    get_ref(&f_2, &c_2)
-                ],
-                set![
-                    get_ref(&b_3, &e_1)
-                ]
-            ];
+        let answer = vec![
+            set![get_ref(&b_1, &a_1), get_ref(&d_1, &a_1), get_ref(&c_2, &a_2), get_ref(&d_2, &a_2)],
+            set![get_ref(&e_1, &b_1), get_ref(&a_3, &d_1), get_ref(&f_2, &c_2)],
+            set![get_ref(&b_3, &e_1)],
+        ];
         assert!(deps_equals(results, answer));
     }
 }
-

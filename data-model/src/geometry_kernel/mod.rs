@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
 use crate::RefID;
 use cgmath::prelude::*;
+use serde::{Deserialize, Serialize};
 
 pub mod primitives;
 
@@ -15,7 +15,7 @@ pub type ReferInd = usize;
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Line {
     pub pt_1: Point3f,
-    pub pt_2: Point3f
+    pub pt_2: Point3f,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -33,45 +33,48 @@ pub trait Updatable {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct UpdatableGeometry<T: Updatable> {
     pub refer: Option<GeometryId>,
-    pub geom: T
+    pub geom: T,
 }
 
 impl<T: Updatable> UpdatableGeometry<T> {
     pub fn new(geom: T) -> UpdatableGeometry<T> {
         UpdatableGeometry {
             refer: None,
-            geom: geom
+            geom: geom,
         }
     }
 
     pub fn update(&mut self, ref_geom: &Option<RefGeometry>) {
         if let Some(geom) = ref_geom {
             self.geom.update_geom(&geom, &None);
-        }
-        else {
+        } else {
             self.refer = None;
         }
     }
 
-    pub fn set_reference(&mut self, result: &RefGeometry, refer: GeometryId, snap_pt: &Option<Point3f>) {
+    pub fn set_reference(
+        &mut self,
+        result: &RefGeometry,
+        refer: GeometryId,
+        snap_pt: &Option<Point3f>,
+    ) {
         self.refer = Some(refer);
         self.geom.update_geom(&result, snap_pt);
     }
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RefPoint {
-    pub pt: Point3f
+    pub pt: Point3f,
 }
 
 impl Updatable for RefPoint {
     fn get_geom(&self) -> RefGeometry {
-        RefGeometry::Point{pt: self.pt}
+        RefGeometry::Point { pt: self.pt }
     }
-    
+
     fn update_geom(&mut self, geom: &RefGeometry, _: &Option<Point3f>) {
-        if let RefGeometry::Point{pt} = geom {
+        if let RefGeometry::Point { pt } = geom {
             self.pt = *pt;
         }
     }
@@ -82,32 +85,35 @@ pub struct RefLineSeg {
     pub pt_1: Point3f,
     pub pt_2: Point3f,
     pub length: WorldCoord,
-    pub interp: Interp
+    pub interp: Interp,
 }
 
 impl RefLineSeg {
     pub fn new(pt_1: Point3f, pt_2: Point3f) -> RefLineSeg {
         let length = (pt_2 - pt_1).magnitude();
         RefLineSeg {
-            pt_1: pt_1, 
+            pt_1: pt_1,
             pt_2: pt_2,
             length: length,
-            interp: Interp::new(0.0)
+            interp: Interp::new(0.0),
         }
     }
 
     pub fn set_dir(&mut self, dir: &Vector3f) {
-        self.pt_2 = self.pt_1 + dir.normalize()*self.length;
+        self.pt_2 = self.pt_1 + dir.normalize() * self.length;
     }
 }
 
 impl Updatable for RefLineSeg {
     fn get_geom(&self) -> RefGeometry {
-        RefGeometry::Line{pt_1: self.pt_1, pt_2: self.pt_2}
+        RefGeometry::Line {
+            pt_1: self.pt_1,
+            pt_2: self.pt_2,
+        }
     }
-    
+
     fn update_geom(&mut self, geom: &RefGeometry, snap_pt: &Option<Point3f>) {
-        if let RefGeometry::Line{pt_1, pt_2} = geom {
+        if let RefGeometry::Line { pt_1, pt_2 } = geom {
             if let Some(snap) = snap_pt {
                 self.interp = get_interp_along_line(pt_1, pt_2, snap);
             }
@@ -129,20 +135,24 @@ pub struct RefRect {
 impl RefRect {
     pub fn new(pt_1: Point3f, pt_2: Point3f, pt_3: Point3f) -> RefRect {
         RefRect {
-            pt_1: pt_1, 
+            pt_1: pt_1,
             pt_2: pt_2,
-            pt_3: pt_3
+            pt_3: pt_3,
         }
     }
 }
 
 impl Updatable for RefRect {
     fn get_geom(&self) -> RefGeometry {
-        RefGeometry::Rect{pt_1: self.pt_1, pt_2: self.pt_2, pt_3: self.pt_3}
+        RefGeometry::Rect {
+            pt_1: self.pt_1,
+            pt_2: self.pt_2,
+            pt_3: self.pt_3,
+        }
     }
-    
+
     fn update_geom(&mut self, geom: &RefGeometry, _: &Option<Point3f>) {
-        if let RefGeometry::Rect{pt_1, pt_2, pt_3} = geom {
+        if let RefGeometry::Rect { pt_1, pt_2, pt_3 } = geom {
             self.pt_1 = *pt_1;
             self.pt_2 = *pt_2;
             self.pt_3 = *pt_3;
@@ -153,15 +163,12 @@ impl Updatable for RefRect {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd, Eq, Hash)]
 pub struct GeometryId {
     pub id: RefID,
-    pub index: ResultInd
+    pub index: ResultInd,
 }
 
 impl GeometryId {
     pub fn new(id: RefID, index: usize) -> GeometryId {
-        GeometryId {
-            id,
-            index
-        }
+        GeometryId { id, index }
     }
 }
 
@@ -169,14 +176,14 @@ impl GeometryId {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd, Eq, Hash)]
 pub struct Reference {
     pub owner: GeometryId,
-    pub other: GeometryId
+    pub other: GeometryId,
 }
 
 impl Reference {
     pub fn new(owner_id: RefID, owner_index: usize, other: GeometryId) -> Reference {
         Reference {
             owner: GeometryId::new(owner_id, owner_index),
-            other
+            other,
         }
     }
 }
@@ -193,32 +200,27 @@ impl RefType {
     pub fn type_equals(&self, other: &RefGeometry) -> bool {
         match *self {
             RefType::Point => {
-                if let RefGeometry::Point{..} = other {
+                if let RefGeometry::Point { .. } = other {
                     true
-                }
-                else {
+                } else {
                     false
                 }
             }
             RefType::Line => {
-                if let RefGeometry::Line{..} = other {
+                if let RefGeometry::Line { .. } = other {
                     true
-                }
-                else {
+                } else {
                     false
                 }
             }
             RefType::Rect => {
-                if let RefGeometry::Rect{..} = other {
+                if let RefGeometry::Rect { .. } = other {
                     true
-                }
-                else {
+                } else {
                     false
                 }
             }
-            RefType::Any => {
-                true
-            }
+            RefType::Any => true,
         }
     }
 }
@@ -226,28 +228,37 @@ impl RefType {
 ///Specific geometry that can be referenced on the object that implements ReferTo.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum RefGeometry {
-    Point{pt: Point3f},
-    Line{pt_1: Point3f, pt_2: Point3f},
-    Rect{pt_1: Point3f, pt_2: Point3f, pt_3: Point3f}
+    Point {
+        pt: Point3f,
+    },
+    Line {
+        pt_1: Point3f,
+        pt_2: Point3f,
+    },
+    Rect {
+        pt_1: Point3f,
+        pt_2: Point3f,
+        pt_3: Point3f,
+    },
 }
 
 impl RefGeometry {
     pub fn distance2(&self, in_pt: &Point3f) -> WorldCoord {
         match *self {
-            RefGeometry::Point{pt} => pt.distance2(*in_pt),
-            RefGeometry::Line{pt_1, pt_2} => {
+            RefGeometry::Point { pt } => pt.distance2(*in_pt),
+            RefGeometry::Line { pt_1, pt_2 } => {
                 let projected = project_on_line(&pt_1, &pt_2, in_pt);
                 projected.distance2(*in_pt)
             }
-            RefGeometry::Rect{pt_1, ..} => pt_1.distance2(*in_pt)
+            RefGeometry::Rect { pt_1, .. } => pt_1.distance2(*in_pt),
         }
     }
 
     pub fn get_type(&self) -> RefType {
         match *self {
-            RefGeometry::Point{..} => RefType::Point,
-            RefGeometry::Line{..} => RefType::Line,
-            RefGeometry::Rect{..} => RefType::Rect
+            RefGeometry::Point { .. } => RefType::Point,
+            RefGeometry::Line { .. } => RefType::Line,
+            RefGeometry::Rect { .. } => RefType::Rect,
         }
     }
 }
@@ -257,7 +268,7 @@ pub struct MeshData {
     pub id: RefID,
     pub positions: Vec<WorldCoord>,
     pub indices: Vec<u64>,
-    pub metadata: Option<serde_json::Value>
+    pub metadata: Option<serde_json::Value>,
 }
 
 impl MeshData {
@@ -285,7 +296,11 @@ pub fn get_interp_along_line(first: &Point3f, second: &Point3f, project: &Point3
     Interp::new((proj_vec.magnitude2() / dir.magnitude2()).sqrt())
 }
 
-pub fn rotate_point_through_angle_2d(origin: &Point3f, point: &Point3f, angle: cgmath::Rad<f64>) -> Point3f {
+pub fn rotate_point_through_angle_2d(
+    origin: &Point3f,
+    point: &Point3f,
+    angle: cgmath::Rad<f64>,
+) -> Point3f {
     let dir = point - origin;
     let rot = cgmath::Matrix3::from_angle_z(angle);
     let rotated = rot * dir;
@@ -314,9 +329,7 @@ impl Interp {
         if in_val < 0.0 {
             in_val = 0.0;
         }
-        Interp {
-            val: in_val,
-        }
+        Interp { val: in_val }
     }
 
     pub fn val(&self) -> f64 {
@@ -333,21 +346,33 @@ mod tests {
         let first = Point3f::new(0.0, 0.0, 0.0);
         let second = Point3f::new(1.0, 0.0, 0.0);
         let project = Point3f::new(0.5, 1.0, 0.0);
-        assert_eq!(project_on_line(&first, &second, &project), Point3f::new(0.5, 0.0, 0.0));
+        assert_eq!(
+            project_on_line(&first, &second, &project),
+            Point3f::new(0.5, 0.0, 0.0)
+        );
 
         let first = Point3f::new(0.0, 0.0, 0.0);
         let second = Point3f::new(1.0, 0.0, 0.0);
         let project = Point3f::new(0.5, -1.0, 0.0);
-        assert_eq!(project_on_line(&first, &second, &project), Point3f::new(0.5, 0.0, 0.0));
+        assert_eq!(
+            project_on_line(&first, &second, &project),
+            Point3f::new(0.5, 0.0, 0.0)
+        );
 
         let first = Point3f::new(0.0, 0.0, 0.0);
         let second = Point3f::new(1.0, 0.0, 0.0);
         let project = Point3f::new(-1.0, -1.0, 1.0);
-        assert_eq!(project_on_line(&first, &second, &project), Point3f::new(-1.0, 0.0, 0.0));
+        assert_eq!(
+            project_on_line(&first, &second, &project),
+            Point3f::new(-1.0, 0.0, 0.0)
+        );
 
         let first = Point3f::new(-50.0, 20.0, 0.0);
         let second = Point3f::new(-40.0, 20.0, 0.0);
         let project = Point3f::new(-45.0, 19.0, 0.0);
-        assert_eq!(project_on_line(&first, &second, &project), Point3f::new(-45.0, 20.0, 0.0));
+        assert_eq!(
+            project_on_line(&first, &second, &project),
+            Point3f::new(-45.0, 20.0, 0.0)
+        );
     }
 }

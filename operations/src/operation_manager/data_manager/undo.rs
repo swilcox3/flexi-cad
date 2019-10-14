@@ -1,7 +1,7 @@
-use crate::prelude::*;
 use super::database::FileDatabase;
-use std::time::{SystemTime, UNIX_EPOCH};
+use crate::prelude::*;
 use ccl::dhashmap::DHashMap;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 fn get_time() -> u128 {
     SystemTime::now().duration_since(UNIX_EPOCH).expect("Backwards time?").as_millis()
@@ -9,9 +9,9 @@ fn get_time() -> u128 {
 
 #[derive(Debug, Clone)]
 pub enum Change {
-    Add{key: RefID},
-    Modify{obj: DataObject},
-    Delete{obj: DataObject}
+    Add { key: RefID },
+    Modify { obj: DataObject },
+    Delete { obj: DataObject },
 }
 
 #[derive(Debug, Clone)]
@@ -42,9 +42,9 @@ impl UndoEvent {
         let mut results = HashSet::new();
         for change in &self.changes {
             match change {
-                Change::Add{key} => results.insert(key.clone()),
-                Change::Modify{obj} => results.insert(obj.get_id().clone()),
-                Change::Delete{obj} => results.insert(obj.get_id().clone()),
+                Change::Add { key } => results.insert(key.clone()),
+                Change::Modify { obj } => results.insert(obj.get_id().clone()),
+                Change::Delete { obj } => results.insert(obj.get_id().clone()),
             };
         }
         results
@@ -53,14 +53,14 @@ impl UndoEvent {
 
 pub struct UndoStack {
     stack: VecDeque<UndoEvent>,
-    redo_stack: VecDeque<UndoEvent>
+    redo_stack: VecDeque<UndoEvent>,
 }
 
 impl UndoStack {
     pub fn new() -> UndoStack {
-        UndoStack{ 
+        UndoStack {
             stack: VecDeque::new(),
-            redo_stack: VecDeque::new()
+            redo_stack: VecDeque::new(),
         }
     }
 
@@ -110,7 +110,7 @@ pub struct PendingEvents {
 
 impl PendingEvents {
     pub fn new() -> PendingEvents {
-        PendingEvents{ events: DHashMap::default() }
+        PendingEvents { events: DHashMap::default() }
     }
 
     pub fn begin_event(&self, user: &UserID, event_id: UndoEventID, desc: String) -> Result<(), DBError> {
@@ -135,8 +135,7 @@ impl PendingEvents {
                 if event.nested > 0 {
                     event.nested = event.nested - 1;
                     return Ok(());
-                }
-                else {
+                } else {
                     remove = true;
                 }
             }
@@ -148,9 +147,9 @@ impl PendingEvents {
             match self.events.remove(event_id) {
                 Some(event) => {
                     undo_stack.stack.push_back(event.1);
-                    return Ok(())
+                    return Ok(());
                 }
-                None => return Err(DBError::NoUndoEvent)
+                None => return Err(DBError::NoUndoEvent),
             }
         }
         Ok(())
@@ -158,15 +157,13 @@ impl PendingEvents {
 
     pub fn take_snapshot(&self, db: &FileDatabase, event_id: &UndoEventID, obj_id: &RefID) -> Result<(), DBError> {
         match self.events.get_mut(event_id) {
-            Some(mut event) => {
-                db.get(obj_id, &mut |obj: &DataObject| {
-                    if event.suspended == 0 {
-                        event.changes.push(Change::Modify{obj: obj.clone()});
-                    }
-                    Ok(())
-                })
-            }
-            None => Err(DBError::NoUndoEvent)
+            Some(mut event) => db.get(obj_id, &mut |obj: &DataObject| {
+                if event.suspended == 0 {
+                    event.changes.push(Change::Modify { obj: obj.clone() });
+                }
+                Ok(())
+            }),
+            None => Err(DBError::NoUndoEvent),
         }
     }
 
@@ -176,7 +173,7 @@ impl PendingEvents {
                 event.suspended = event.suspended + 1;
                 Ok(())
             }
-            None => Err(DBError::NoUndoEvent)
+            None => Err(DBError::NoUndoEvent),
         }
     }
 
@@ -188,7 +185,7 @@ impl PendingEvents {
                 }
                 Ok(())
             }
-            None => Err(DBError::NoUndoEvent)
+            None => Err(DBError::NoUndoEvent),
         }
     }
 
@@ -198,7 +195,7 @@ impl PendingEvents {
                 let redo = db.undo(event)?;
                 Ok(redo.get_changed_objects())
             }
-            None => Err(DBError::NoUndoEvent)
+            None => Err(DBError::NoUndoEvent),
         }
     }
 
@@ -209,29 +206,26 @@ impl PendingEvents {
                 match db.add(obj) {
                     Ok(()) => {
                         if event.suspended == 0 {
-                            event.changes.push(Change::Add{key: key});
+                            event.changes.push(Change::Add { key: key });
                         }
                         Ok(())
                     }
                     Err(e) => Err(e),
                 }
             }
-            None => {
-                Err(DBError::NoUndoEvent)
-            }
+            None => Err(DBError::NoUndoEvent),
         }
     }
 
     pub fn delete_obj(&self, db: &FileDatabase, event_id: &UndoEventID, key: &RefID) -> Result<DataObject, DBError> {
         if !self.events.contains_key(event_id) {
             Err(DBError::NoUndoEvent)
-        }
-        else {
+        } else {
             let obj = db.remove(key)?;
             match self.events.get_mut(event_id) {
                 Some(mut event) => {
                     if event.suspended == 0 {
-                        event.changes.push(Change::Delete{obj: obj.clone()});
+                        event.changes.push(Change::Delete { obj: obj.clone() });
                     }
                     Ok(obj)
                 }
@@ -240,12 +234,18 @@ impl PendingEvents {
         }
     }
 
-    pub fn get_mut_obj(&self, db: &FileDatabase, event_id: &UndoEventID, key: &RefID, callback: impl FnMut(&mut DataObject)->Result<(), DBError>) -> Result<(), DBError> {
+    pub fn get_mut_obj(
+        &self,
+        db: &FileDatabase,
+        event_id: &UndoEventID,
+        key: &RefID,
+        callback: impl FnMut(&mut DataObject) -> Result<(), DBError>,
+    ) -> Result<(), DBError> {
         match self.events.get_mut(&event_id) {
             Some(mut event) => {
                 db.get(key, &mut |obj: &DataObject| {
                     if event.suspended == 0 {
-                        event.changes.push(Change::Modify{obj: obj.clone()});
+                        event.changes.push(Change::Modify { obj: obj.clone() });
                     }
                     Ok(())
                 })?;
@@ -264,11 +264,3 @@ impl PendingEvents {
         }
     }
 }
-
-
-
-
-
-
-
-

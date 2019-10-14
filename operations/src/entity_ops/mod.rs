@@ -1,19 +1,17 @@
+mod snapping;
 #[cfg(test)]
 mod tests;
-mod snapping;
 pub use snapping::*;
 
 use crate::prelude::*;
 
 pub fn move_obj(file: &PathBuf, event: &UndoEventID, id: &RefID, delta: &Vector3f) -> Result<(), DBError> {
-    app_state::modify_obj(file, event, id, |obj| {
-        match obj.query_mut::<dyn Position>() {
-            Some(movable) => {
-                movable.move_obj(delta);
-                Ok(())
-            }
-            None => Err(DBError::ObjLacksTrait)
+    app_state::modify_obj(file, event, id, |obj| match obj.query_mut::<dyn Position>() {
+        Some(movable) => {
+            movable.move_obj(delta);
+            Ok(())
         }
+        None => Err(DBError::ObjLacksTrait),
     })
 }
 
@@ -26,14 +24,12 @@ pub fn get_obj_data(file: &PathBuf, id: &RefID, prop_name: &str) -> Result<serde
     })?;
     match val {
         Some(data) => Ok(data),
-        None => Err(DBError::PropertyNotFound)
+        None => Err(DBError::PropertyNotFound),
     }
 }
 
 pub fn set_obj_data(file: &PathBuf, event: &UndoEventID, id: &RefID, data: &serde_json::Value) -> Result<(), DBError> {
-    app_state::modify_obj(file, event, id, |obj| {
-        obj.set_data(data)
-    })
+    app_state::modify_obj(file, event, id, |obj| obj.set_data(data))
 }
 
 pub fn copy_objs(file: &PathBuf, event: &UndoEventID, ids: HashSet<RefID>) -> Result<(Vec<RefID>, HashMap<RefID, RefID>), DBError> {

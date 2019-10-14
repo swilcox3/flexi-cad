@@ -1,6 +1,6 @@
-use ccl::dhashmap::{DHashMap, TryGetError};
+use super::undo::{Change, UndoEvent};
 use crate::prelude::*;
-use super::undo::{UndoEvent, Change};
+use ccl::dhashmap::{DHashMap, TryGetError};
 use std::io::{Read, Write};
 use std::time::Duration;
 
@@ -45,9 +45,7 @@ pub struct FileDatabase {
 
 impl FileDatabase {
     pub fn new() -> FileDatabase {
-        FileDatabase{ 
-            db: DHashMap::default(),
-        }
+        FileDatabase { db: DHashMap::default() }
     }
 
     pub fn add(&self, obj: DataObject) -> Result<(), DBError> {
@@ -56,8 +54,7 @@ impl FileDatabase {
             trace!("Adding to object {:?} database with key: {:?}", obj, key);
             self.db.insert(key.clone(), obj);
             Ok(())
-        }
-        else {
+        } else {
             Err(DBError::Overwrite)
         }
     }
@@ -66,15 +63,13 @@ impl FileDatabase {
         if *key == RefID::nil() {
             return Err(DBError::ObjNotFound);
         }
-        let try_get = || {
-            match self.db.try_get(key) {
-                Ok(obj) => {
-                    trace!("Getting object {:?} for read from database ", *obj);
-                    callback(&(*obj))
-                }
-                Err(TryGetError::WouldBlock) => Err(DBError::TimedOut),
-                _ => Err(DBError::ObjNotFound),
+        let try_get = || match self.db.try_get(key) {
+            Ok(obj) => {
+                trace!("Getting object {:?} for read from database ", *obj);
+                callback(&(*obj))
             }
+            Err(TryGetError::WouldBlock) => Err(DBError::TimedOut),
+            _ => Err(DBError::ObjNotFound),
         };
         run_timeout(try_get)
     }
@@ -111,15 +106,13 @@ impl FileDatabase {
         if *key == RefID::nil() {
             return Err(DBError::ObjNotFound);
         }
-        let try_get = || {
-            match self.db.try_get_mut(key) {
-                Ok(mut obj) => {
-                    trace!("Getting obj {:?} for write from database", *obj);
-                    callback(&mut (*obj))
-                }
-                Err(TryGetError::WouldBlock) => Err(DBError::TimedOut),
-                _ => Err(DBError::ObjNotFound),
+        let try_get = || match self.db.try_get_mut(key) {
+            Ok(mut obj) => {
+                trace!("Getting obj {:?} for write from database", *obj);
+                callback(&mut (*obj))
             }
+            Err(TryGetError::WouldBlock) => Err(DBError::TimedOut),
+            _ => Err(DBError::ObjNotFound),
         };
         run_timeout(try_get)
     }
@@ -136,7 +129,7 @@ impl FileDatabase {
                 copy.set_id(id);
                 Ok(copy)
             }
-            None => Err(DBError::ObjNotFound)
+            None => Err(DBError::ObjNotFound),
         }
     }
 
@@ -146,23 +139,21 @@ impl FileDatabase {
         redo.changes.clear();
         for change in event.changes.iter().rev() {
             match change {
-                Change::Add{key} => {
-                    match self.db.remove(&key) {
-                        Some(val) => redo.changes.push(Change::Delete{obj: val.1}),
-                        None => return Err(DBError::ObjNotFound),
-                    }
-                }
-                Change::Modify{obj} => {
+                Change::Add { key } => match self.db.remove(&key) {
+                    Some(val) => redo.changes.push(Change::Delete { obj: val.1 }),
+                    None => return Err(DBError::ObjNotFound),
+                },
+                Change::Modify { obj } => {
                     match self.db.remove(obj.get_id()) {
                         Some(val) => {
-                            redo.changes.push(Change::Modify{obj: val.1});
+                            redo.changes.push(Change::Modify { obj: val.1 });
                         }
                         None => return Err(DBError::ObjNotFound),
                     }
                     self.db.insert(obj.get_id().clone(), obj.clone());
                 }
-                Change::Delete{obj} => {
-                    redo.changes.push(Change::Add{key: obj.get_id().clone()});
+                Change::Delete { obj } => {
+                    redo.changes.push(Change::Add { key: obj.get_id().clone() });
                     self.db.insert(obj.get_id().clone(), obj.clone());
                 }
             }
@@ -215,11 +206,12 @@ mod tests {
         let obj = Box::new(TestObj::new("some data"));
         let id = obj.get_id().clone();
         db.add(obj).unwrap();
-        db.get(&id, &mut|read:&DataObject| {
+        db.get(&id, &mut |read: &DataObject| {
             let data = read.query_ref::<dyn Store>().unwrap().get_store_data();
             assert_eq!(String::from("some data"), data);
             Ok(())
-        }).unwrap();
+        })
+        .unwrap();
     }
 
     #[test]
@@ -229,16 +221,18 @@ mod tests {
         let id = obj.get_id().clone();
         db.add(obj).unwrap();
         {
-            db.get_mut(&id, &mut|to_modify:&mut DataObject| {
+            db.get_mut(&id, &mut |to_modify: &mut DataObject| {
                 to_modify.query_mut::<dyn Store>().unwrap().set_store_data(String::from("new data"));
                 Ok(())
-            }).unwrap();
+            })
+            .unwrap();
         }
-        db.get(&id, &mut|read:&DataObject| {
+        db.get(&id, &mut |read: &DataObject| {
             let data = read.query_ref::<dyn Store>().unwrap().get_store_data();
             assert_eq!(String::from("new data"), data);
             Ok(())
-        }).unwrap();
+        })
+        .unwrap();
     }
 
     #[test]
@@ -250,7 +244,7 @@ mod tests {
         let removed = db.remove(&id).unwrap();
         let data = removed.query_ref::<dyn Store>().unwrap().get_store_data();
         assert_eq!(String::from("some data"), data);
-        assert!(db.get(&id, |_| {Ok(())}).is_err());
+        assert!(db.get(&id, |_| { Ok(()) }).is_err());
     }
 
     #[test]
@@ -279,23 +273,24 @@ mod tests {
         }
         let db = FileDatabase::new();
         db.open(&path).unwrap();
-        db.get(&id_1, &mut|obj:&DataObject| {
+        db.get(&id_1, &mut |obj: &DataObject| {
             let data = obj.query_ref::<dyn Store>().unwrap().get_store_data();
             assert_eq!(String::from("first"), data);
             Ok(())
-        }).unwrap();
-        db.get(&id_2, &mut|obj:&DataObject| {
+        })
+        .unwrap();
+        db.get(&id_2, &mut |obj: &DataObject| {
             let data = obj.query_ref::<dyn Store>().unwrap().get_store_data();
             assert_eq!(String::from("second"), data);
             Ok(())
-        }).unwrap();
-        db.get(&id_3, &mut|obj:&DataObject| {
+        })
+        .unwrap();
+        db.get(&id_3, &mut |obj: &DataObject| {
             let data = obj.query_ref::<dyn Store>().unwrap().get_store_data();
             assert_eq!(String::from("third"), data);
             Ok(())
-        }).unwrap();
+        })
+        .unwrap();
         std::fs::remove_file(path).unwrap();
     }
-
-
 }

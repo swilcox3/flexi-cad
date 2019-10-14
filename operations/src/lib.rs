@@ -1,29 +1,34 @@
 #![allow(dead_code)]
 extern crate ccl;
-#[macro_use] extern crate lazy_static;
-extern crate rayon;
+#[macro_use]
+extern crate lazy_static;
 extern crate crossbeam_channel;
 extern crate data_model;
-#[cfg(test)] #[macro_use]
+extern crate rayon;
+#[cfg(test)]
+#[macro_use]
 extern crate query_interface;
-#[macro_use] extern crate serde_json;
+#[macro_use]
+extern crate serde_json;
 extern crate bincode;
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
+extern crate indexmap;
 
 #[cfg(test)]
 mod tests;
 
-mod operation_manager;
 pub mod app_state;
 pub mod entity_ops;
+mod operation_manager;
 
 mod prelude {
-    pub use data_model::*;
-    pub use crate::entity_ops;
-    pub use std::path::PathBuf;
     pub use crate::app_state;
+    pub use crate::entity_ops;
+    pub use data_model::*;
     pub use rayon::prelude::*;
-    pub use std::collections::{HashSet, HashMap, VecDeque};
+    pub use std::collections::{HashMap, HashSet, VecDeque};
+    pub use std::path::PathBuf;
 }
 
 use prelude::*;
@@ -31,13 +36,13 @@ use prelude::*;
 ///This is the only value that can be returned from a library interface.
 type LibResult = Result<(), DBError>;
 
-pub use app_state::{open_file, init_file, save_file, save_as_file, begin_undo_event, end_undo_event, undo_latest, redo_latest, suspend_event, resume_event,
-    cancel_event, take_undo_snapshot, add_obj, copy_obj};
+pub use app_state::{
+    add_obj, begin_undo_event, cancel_event, copy_obj, end_undo_event, init_file, open_file, redo_latest, resume_event, save_as_file, save_file,
+    suspend_event, take_undo_snapshot, undo_latest,
+};
 
 pub fn get_obj(file: &PathBuf, obj_id: &RefID, query_id: QueryID, user_id: &UserID) -> LibResult {
-    app_state::get_obj(file, obj_id, |obj| {
-        app_state::send_read_result(file, query_id, user_id, json!(obj))
-    })
+    app_state::get_obj(file, obj_id, |obj| app_state::send_read_result(file, query_id, user_id, json!(obj)))
 }
 
 pub fn delete_obj(file: &PathBuf, event: &UndoEventID, obj_id: &RefID) -> LibResult {
@@ -93,7 +98,15 @@ pub fn snap_obj_to_other(file: PathBuf, event: &UndoEventID, obj: RefID, other_o
     Ok(())
 }
 
-pub fn join_objs(file: PathBuf, event: &UndoEventID, first: RefID, second: RefID, first_wants: &RefType, second_wants: &RefType, guess: &Point3f) -> LibResult {
+pub fn join_objs(
+    file: PathBuf,
+    event: &UndoEventID,
+    first: RefID,
+    second: RefID,
+    first_wants: &RefType,
+    second_wants: &RefType,
+    guess: &Point3f,
+) -> LibResult {
     entity_ops::join_refs(&file, event, &first, &second, first_wants, second_wants, guess)?;
     app_state::update_all_deps(file, vec![first, second]);
     Ok(())
@@ -161,7 +174,10 @@ pub fn demo(file: &PathBuf, user: &UserID, position: &Point3f) -> Result<(), DBE
     entity_ops::snap_to_ref(file, &event, &dim_id_4, &id_4, &RefType::Point, &position_4)?;
     entity_ops::snap_to_ref(file, &event, &dim_id_4, &id_4, &RefType::Point, position)?;*/
     app_state::end_undo_event(file, event)?;
-    app_state::update_all_deps(file.clone(), vec![id_1, id_2, id_3, id_4, door_id, /*dim_id_1, dim_id_2, dim_id_3, dim_id_4*/]);
+    app_state::update_all_deps(
+        file.clone(),
+        vec![id_1, id_2, id_3, id_4, door_id /*dim_id_1, dim_id_2, dim_id_3, dim_id_4*/],
+    );
     Ok(())
 }
 
