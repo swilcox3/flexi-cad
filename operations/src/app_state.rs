@@ -19,6 +19,7 @@ impl AppState {
 }
 
 pub fn init_file(file: PathBuf, user: UserID, updates: Sender<UpdateMsg>) {
+    rayon::ThreadPoolBuilder::new().num_threads(6).build_global().unwrap();
     if let Some(ops) = APP_STATE.files.get(&file) {
         ops.updates.insert(user, updates);
     } else {

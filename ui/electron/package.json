@@ -13,7 +13,6 @@
   "dependencies": {
     "babylonjs": "^4.0.0",
     "babylonjs-gui": "^4.0.0",
-    "mousetrap": "^1.6.3",
     "websocket-as-promised": "^0.10.1"
   },
   "devDependencies": {

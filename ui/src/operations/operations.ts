@@ -1,4 +1,4 @@
-import {Point3d, Vector3d} from "../utils/math"
+import { Point3d, Vector3d } from "../utils/math"
 import * as BABYLON from 'babylonjs'
 
 export var dataModel: any = null;
@@ -11,16 +11,16 @@ export function initialize(mod: any) {
 }
 
 export async function setConnection(conn?: any) {
-    if(conn) {
+    if (conn) {
         connection = conn;
-        connection.onUnpackedMessage.addListener((data:any) => {
+        connection.onUnpackedMessage.addListener((data: any) => {
             handleUpdate(data);
         });
         await connection.open();
     }
 }
 
-import {Renderer} from '../rendering/renderer'
+import { Renderer } from '../rendering/renderer'
 
 var renderer: Renderer = null;
 var filename: string = "";
@@ -35,8 +35,7 @@ export interface DataObject {
     id(): string
 }
 
-function initRenderer(canvas: HTMLCanvasElement)
-{
+function initRenderer(canvas: HTMLCanvasElement) {
     renderer = new Renderer()
     renderer.initialize(canvas)
 }
@@ -49,10 +48,9 @@ function send(func: string, params: Array<any>) {
     connection.sendPacked(msg)
 }
 
-export function initFile(canvas: HTMLCanvasElement)
-{
+export function initFile(canvas: HTMLCanvasElement) {
     filename = "defaultNew.flx"
-    if(connection) {
+    if (connection) {
         send("init_file", [filename])
     }
     else {
@@ -62,10 +60,9 @@ export function initFile(canvas: HTMLCanvasElement)
     renderNext(filename)  //This will readd itself, so it's an infinite loop in the background
 }
 
-export function openFile(in_file:string, canvas:HTMLCanvasElement)
-{
+export function openFile(in_file: string, canvas: HTMLCanvasElement) {
     filename = in_file;
-    if(connection) {
+    if (connection) {
         send("open_file", [filename])
     }
     else {
@@ -75,9 +72,8 @@ export function openFile(in_file:string, canvas:HTMLCanvasElement)
     renderNext(filename)
 }
 
-export function saveFile()
-{
-    if(connection) {
+export function saveFile() {
+    if (connection) {
         send("save_file", [filename])
     }
     else {
@@ -85,9 +81,8 @@ export function saveFile()
     }
 }
 
-export function saveAsFile(in_file:string)
-{
-    if(connection) {
+export function saveAsFile(in_file: string) {
+    if (connection) {
         send("save_as_file", [filename, in_file])
     }
     else {
@@ -95,10 +90,9 @@ export function saveAsFile(in_file:string)
     }
 }
 
-export function beginUndoEvent(desc: string)
-{
+export function beginUndoEvent(desc: string) {
     var event = dataModel.getUndoEventId();
-    if(connection) {
+    if (connection) {
         send("begin_undo_event", [filename, event, desc])
     }
     else {
@@ -107,9 +101,8 @@ export function beginUndoEvent(desc: string)
     return event;
 }
 
-export function endUndoEvent(event: string)
-{
-    if(connection) {
+export function endUndoEvent(event: string) {
+    if (connection) {
         send("end_undo_event", [filename, event])
     }
     else {
@@ -117,9 +110,8 @@ export function endUndoEvent(event: string)
     }
 }
 
-export function undoLatest()
-{
-    if(connection) {
+export function undoLatest() {
+    if (connection) {
         send("undo_latest", [filename])
     }
     else {
@@ -128,9 +120,8 @@ export function undoLatest()
     renderNext(filename)
 }
 
-export function suspendEvent(event: string)
-{
-    if(connection) {
+export function suspendEvent(event: string) {
+    if (connection) {
         send("suspend_event", [filename, event])
     }
     else {
@@ -138,9 +129,8 @@ export function suspendEvent(event: string)
     }
 }
 
-export function resumeEvent(event: string)
-{
-    if(connection) {
+export function resumeEvent(event: string) {
+    if (connection) {
         send("resume_event", [filename, event])
     }
     else {
@@ -148,9 +138,8 @@ export function resumeEvent(event: string)
     }
 }
 
-export function cancelEvent(event: string)
-{
-    if(connection) {
+export function cancelEvent(event: string) {
+    if (connection) {
         send("cancel_event", [filename, event])
     }
     else {
@@ -158,9 +147,8 @@ export function cancelEvent(event: string)
     }
 }
 
-export function redoLatest()
-{
-    if(connection) {
+export function redoLatest() {
+    if (connection) {
         send("redo_latest", [filename])
     }
     else {
@@ -168,9 +156,8 @@ export function redoLatest()
     }
 }
 
-export function takeUndoSnapshot(event: string, id: string)
-{
-    if(connection) {
+export function takeUndoSnapshot(event: string, id: string) {
+    if (connection) {
         send("take_undo_snapshot", [filename, event, id])
     }
     else {
@@ -178,25 +165,22 @@ export function takeUndoSnapshot(event: string, id: string)
     }
 }
 
-export function renderTempObject(obj: DataObject) 
-{
+export function renderTempObject(obj: DataObject) {
     var msg = obj.getTempRepr();
-    if(msg.Mesh) {
+    if (msg.Mesh) {
         renderer.renderMesh(msg.Mesh.data, msg.Mesh.data.id, true)
     }
-    if(msg.Other) {
+    if (msg.Other) {
         renderer.renderObject(msg.Other.data, msg.Other.data.id, true)
     }
 }
 
-export function deleteTempObject(id: string)
-{
+export function deleteTempObject(id: string) {
     renderer.deleteMesh(id)
 }
 
-export function deleteObject(event: string, id: string)
-{
-    if(connection) {
+export function deleteObject(event: string, id: string) {
+    if (connection) {
         send("delete_object", [filename, event, id])
     }
     else {
@@ -206,33 +190,33 @@ export function deleteObject(event: string, id: string)
 
 function handleUpdate(msg: any) {
     console.log(msg);
-    if(msg.Error) {
+    if (msg.Error) {
         console.log(msg.Error.msg)
     }
-    else if(msg.Delete) {
+    else if (msg.Delete) {
         renderer.deleteMesh(msg.Delete.key)
     }
     else {
-        if(msg.Read) {
-            var cb = pendingReads.get(msg.Read.query_id) 
-            if(cb) {
+        if (msg.Read) {
+            var cb = pendingReads.get(msg.Read.query_id)
+            if (cb) {
                 cb(msg.Read.data)
                 pendingReads.delete(msg.Read.query_id)
             }
         }
         else {
             var id = null;
-            if(msg.Mesh) {
+            if (msg.Mesh) {
                 id = msg.Mesh.data.id;
                 renderer.renderMesh(msg.Mesh.data, id)
             }
-            if(msg.Other) {
+            if (msg.Other) {
                 id = msg.Other.data.id;
                 renderer.renderObject(msg.Other.data, id)
             }
-            if(id) {
+            if (id) {
                 let callbacks = pendingChanges.get(id)
-                if(callbacks) {
+                if (callbacks) {
                     let mesh = renderer.getMesh(id)
                     callbacks.forEach((callback) => {
                         callback(mesh)
@@ -244,8 +228,8 @@ function handleUpdate(msg: any) {
     }
 }
 
-function handleUpdates(err: any, updates:any) {
-    if(!err) {
+function handleUpdates(err: any, updates: any) {
+    if (!err) {
         updates.forEach((msg: any) => {
             handleUpdate(msg)
         })
@@ -253,48 +237,42 @@ function handleUpdates(err: any, updates:any) {
     renderNext(filename)
 }
 
-function renderNext(filename: string) 
-{
-    if(!connection) {
+function renderNext(filename: string) {
+    if (!connection) {
         dataModel.get_updates(filename, handleUpdates);
     }
 }
 
-function addPendingChange(id: string, callback: (obj: BABYLON.Mesh) => void) 
-{
+function addPendingChange(id: string, callback: (obj: BABYLON.Mesh) => void) {
     var arr = pendingChanges.get(id)
-    if(!arr) {
+    if (!arr) {
         arr = []
     }
     arr.push(callback)
     pendingChanges.set(id, arr)
 }
 
-function addPendingRead(id: string, callback: (val: any) => void)
-{
+function addPendingRead(id: string, callback: (val: any) => void) {
     pendingReads.set(id, callback)
 }
 
-function waitForChange(id: string)
-{
-    return new Promise((resolve: (value: BABYLON.Mesh)=>void, reject) => {
+function waitForChange(id: string) {
+    return new Promise((resolve: (value: BABYLON.Mesh) => void, reject) => {
         addPendingChange(id, (mesh: BABYLON.Mesh) => {
             resolve(mesh)
         })
     })
 }
 
-function waitForRead(id: string)
-{
-    return new Promise((resolve: (val: any)=>void, reject) => {
+function waitForRead(id: string) {
+    return new Promise((resolve: (val: any) => void, reject) => {
         addPendingRead(id, (val: any) => {
             resolve(val)
         })
     })
 }
 
-function waitForAllChanges(ids: Array<string>)
-{
+function waitForAllChanges(ids: Array<string>) {
     var promises: Array<Promise<BABYLON.Mesh>> = [];
     ids.forEach((id) => {
         promises.push(waitForChange(id))
@@ -302,8 +280,7 @@ function waitForAllChanges(ids: Array<string>)
     return Promise.all(promises)
 }
 
-function waitForAllReads(ids: Array<string>)
-{
+function waitForAllReads(ids: Array<string>) {
     var promises: Array<Promise<BABYLON.Mesh>> = [];
     ids.forEach((id) => {
         promises.push(waitForRead(id))
@@ -311,21 +288,19 @@ function waitForAllReads(ids: Array<string>)
     return Promise.all(promises)
 }
 
-function renderFromMsg(msg: any)
-{
-    if(msg.Mesh) {
+function renderFromMsg(msg: any) {
+    if (msg.Mesh) {
         renderer.renderMesh(msg.Mesh.data, msg.Mesh.data.id, false)
     }
-    if(msg.Other) {
+    if (msg.Other) {
         renderer.renderObject(msg.Other.data, msg.Mesh.data.id, false)
     }
 }
 
-export function createObj(event: string, obj: DataObject)
-{
+export function createObj(event: string, obj: DataObject) {
     renderFromMsg(obj.getTempRepr());
     let json_obj = obj.getObj();
-    if(connection) {
+    if (connection) {
         send("add_object", [filename, event, json_obj.type, json_obj.obj])
     }
     else {
@@ -334,9 +309,8 @@ export function createObj(event: string, obj: DataObject)
     return waitForChange(obj.id());
 }
 
-export function joinAtPoints(event: string, id_1: string, id_2: string, pt: Point3d) 
-{
-    if(connection) {
+export function joinAtPoints(event: string, id_1: string, id_2: string, pt: Point3d) {
+    if (connection) {
         send("join_at_points", [filename, event, id_1, id_2, pt])
     }
     else {
@@ -345,22 +319,23 @@ export function joinAtPoints(event: string, id_1: string, id_2: string, pt: Poin
     return waitForAllChanges([id_1, id_2])
 }
 
-export function canReferTo(id:string)
-{
-    const query = dataModel.getQueryId();
-    if(connection) {
-        send("can_refer_to", [filename, id, query])
-    } 
-    else {
-        dataModel.can_refer_to(filename, id, user, query)
+export function canReferTo(id: string) {
+    var mesh = renderer.getMesh(id);
+    if (mesh) {
+        if (mesh.metadata) {
+            if (mesh.metadata.traits) {
+                if (mesh.metadata.traits.includes("ReferTo")) {
+                    return true;
+                }
+            }
+        }
     }
-    return waitForRead(query)
+    return false;
 }
 
-export function getClosestPoint(id:string, pt: Point3d)
-{
+export function getClosestPoint(id: string, pt: Point3d) {
     const query = dataModel.getQueryId();
-    if(connection) {
+    if (connection) {
         send("get_closest_point", [filename, id, pt, query])
     }
     else {
@@ -369,9 +344,8 @@ export function getClosestPoint(id:string, pt: Point3d)
     return waitForRead(query)
 }
 
-export function snapToPoint(event: string, id: string, snap_to_id: string, pt: Point3d)
-{
-    if(connection) {
+export function snapToPoint(event: string, id: string, snap_to_id: string, pt: Point3d) {
+    if (connection) {
         send("snap_to_point", [filename, event, id, snap_to_id, pt])
     }
     else {
@@ -380,9 +354,8 @@ export function snapToPoint(event: string, id: string, snap_to_id: string, pt: P
     return waitForChange(id)
 }
 
-export function snapToLine(event: string, id: string, snap_to_id: string, pt: Point3d) 
-{
-    if(connection) {
+export function snapToLine(event: string, id: string, snap_to_id: string, pt: Point3d) {
+    if (connection) {
         send("snap_to_line", [filename, event, id, snap_to_id, pt])
     }
     else {
@@ -391,9 +364,8 @@ export function snapToLine(event: string, id: string, snap_to_id: string, pt: Po
     return waitForChange(id)
 }
 
-export function moveObj(event: string, id: string, delta: Point3d)
-{
-    if(connection) {
+export function moveObj(event: string, id: string, delta: Point3d) {
+    if (connection) {
         send("move_object", [filename, event, id, delta])
     }
     else {
@@ -402,9 +374,8 @@ export function moveObj(event: string, id: string, delta: Point3d)
     return waitForChange(id)
 }
 
-export function moveObjs(event: string, ids: Array<string>, delta: Point3d)
-{
-    if(connection) {
+export function moveObjs(event: string, ids: Array<string>, delta: Point3d) {
+    if (connection) {
         send("move_objects", [filename, event, ids, delta])
     }
     else {
@@ -413,10 +384,9 @@ export function moveObjs(event: string, ids: Array<string>, delta: Point3d)
     return waitForAllChanges(ids)
 }
 
-export function getObjectData(id: string, prop_name: string)
-{
+export function getObjectData(id: string, prop_name: string) {
     const query = dataModel.getQueryId();
-    if(connection) {
+    if (connection) {
         send("get_object_data", [filename, id, prop_name, query])
     }
     else {
@@ -425,9 +395,8 @@ export function getObjectData(id: string, prop_name: string)
     return waitForRead(query)
 }
 
-export function setObjectData(event: string, id: string, data:any) 
-{
-    if(connection) {
+export function setObjectData(event: string, id: string, data: any) {
+    if (connection) {
         send("set_object_data", [filename, event, id, data])
     }
     else {
@@ -436,9 +405,8 @@ export function setObjectData(event: string, id: string, data:any)
     return waitForChange(id)
 }
 
-export function setObjectsDatas(event: string, data: Array<[string, any]>)
-{
-    if(connection) {
+export function setObjectsDatas(event: string, data: Array<[string, any]>) {
+    if (connection) {
         send("set_object_datas", [filename, event, data])
     }
     else {
@@ -447,15 +415,13 @@ export function setObjectsDatas(event: string, data: Array<[string, any]>)
     return waitForAllChanges(data.map(val => val[0]))
 }
 
-export function getMeshByID(id: string)
-{
+export function getMeshByID(id: string) {
     return renderer.getMesh(id)
 }
 
-export function copyObjs(event: string, ids:Array<string>, delta: Point3d)
-{
+export function copyObjs(event: string, ids: Array<string>, delta: Point3d) {
     const query = dataModel.getQueryId();
-    if(connection) {
+    if (connection) {
         send("copy_objects", [filename, event, ids, delta, user, query])
     }
     else {
@@ -464,9 +430,8 @@ export function copyObjs(event: string, ids:Array<string>, delta: Point3d)
     return waitForRead(query)
 }
 
-export function demo(position: Point3d)
-{
-    if(connection) {
+export function demo(position: Point3d) {
+    if (connection) {
         send("demo", [filename, position])
     }
     else {
@@ -474,9 +439,8 @@ export function demo(position: Point3d)
     }
 }
 
-export function demo_100(position: Point3d)
-{
-    if(connection) {
+export function demo_100(position: Point3d) {
+    if (connection) {
         send("demo_100", [filename, position])
     }
     else {
@@ -484,10 +448,8 @@ export function demo_100(position: Point3d)
     }
 }
 
-export function createDataObjectFromJSON(data: any) 
-{
-    switch (data.type)
-    {
+export function createDataObjectFromJSON(data: any) {
+    switch (data.type) {
         case "Wall":
             return new dataModel.JsWall(data.obj.first_pt.geom.pt, data.obj.second_pt.geom.pt, data.obj.width, data.obj.height)
         case "Door":

@@ -45,7 +45,11 @@ impl Data for Door {
             id: self.get_id().clone(),
             positions: Vec::with_capacity(24),
             indices: Vec::with_capacity(36),
-            metadata: Some(to_json("Door", &self)),
+            metadata: Some(to_json(
+                "Door",
+                &["ReferTo", "Position", "UpdateFromRefs"],
+                &self,
+            )),
         };
         let rotated = rotate_point_through_angle_2d(
             &self.dir.geom.pt_1,

@@ -120,11 +120,6 @@ pub fn join_objs(
     Ok(())
 }
 
-pub fn can_refer_to(file: &PathBuf, obj_id: &RefID, query_id: QueryID, user_id: &UserID) -> LibResult {
-    let can_refer = entity_ops::can_refer_to(file, obj_id)?;
-    app_state::send_read_result(file, query_id, user_id, json!(can_refer))
-}
-
 pub fn get_closest_result(file: &PathBuf, obj_id: &RefID, only_match: &RefType, guess: &Point3f, query_id: QueryID, user_id: &UserID) -> LibResult {
     let res = entity_ops::get_closest_result(file, obj_id, only_match, guess)?;
     app_state::send_read_result(file, query_id, user_id, json!(res))
@@ -160,7 +155,7 @@ pub fn demo(file: &PathBuf, user: &UserID, position: &Point3f) -> Result<(), DBE
     let door_id = door.get_id().clone();
     app_state::add_obj(file, &event, Box::new(door))?;
     entity_ops::join_refs(file, &event, &door_id, &id_1, &RefType::Line, &RefType::Rect, &door_pos)?;
-    /*let offset = 5.0;
+    let offset = 5.0;
     let dim_1 = Dimension::new(position.clone(), position_2.clone(), offset);
     let dim_2 = Dimension::new(position_2.clone(), position_3.clone(), offset);
     let dim_3 = Dimension::new(position_3.clone(), position_4.clone(), offset);
@@ -180,7 +175,7 @@ pub fn demo(file: &PathBuf, user: &UserID, position: &Point3f) -> Result<(), DBE
     entity_ops::snap_to_ref(file, &event, &dim_id_3, &id_3, &RefType::Point, &position_3)?;
     entity_ops::snap_to_ref(file, &event, &dim_id_3, &id_3, &RefType::Point, &position_4)?;
     entity_ops::snap_to_ref(file, &event, &dim_id_4, &id_4, &RefType::Point, &position_4)?;
-    entity_ops::snap_to_ref(file, &event, &dim_id_4, &id_4, &RefType::Point, position)?;*/
+    entity_ops::snap_to_ref(file, &event, &dim_id_4, &id_4, &RefType::Point, position)?;
     app_state::end_undo_event(file, event)?;
     app_state::update_all_deps(
         file.clone(),
@@ -190,7 +185,6 @@ pub fn demo(file: &PathBuf, user: &UserID, position: &Point3f) -> Result<(), DBE
 }
 
 pub fn demo_100(file: PathBuf, user: UserID, position: Point3f) {
-    rayon::ThreadPoolBuilder::new().num_threads(6).build_global().unwrap();
     rayon::spawn(move || {
         let i_s: Vec<u64> = (0..10).collect();
         let j_s: Vec<u64> = (0..10).collect();

@@ -66,9 +66,13 @@ pub struct CmdMsg {
     pub params: Vec<serde_json::Value>,
 }
 
-pub fn to_json<T: Serialize>(type_label: &str, obj: &T) -> serde_json::Value {
+pub fn to_json<T>(type_label: &str, traits: &[&str], obj: &T) -> serde_json::Value
+where
+    T: Serialize,
+{
     json!({
         "type": type_label,
+        "traits": traits,
         "obj": obj
     })
 }

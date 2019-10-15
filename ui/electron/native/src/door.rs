@@ -115,7 +115,7 @@ declare_types! {
             let height = arg.downcast::<JsNumber>().or_throw(&mut cx)?.value();
             {
                 let guard = cx.lock();
-                this.borrow_mut(&guard).height = height; 
+                this.borrow_mut(&guard).height = height;
             };
             Ok(cx.undefined().upcast())
         }
@@ -138,7 +138,7 @@ declare_types! {
                 let door = this.borrow(&guard).clone();
                 door
             };
-            let val = neon_serde::to_value(&mut cx, &data_model::to_json("Door", &door))?;
+            let val = neon_serde::to_value(&mut cx, &data_model::to_json("Door", &["Position", "ReferTo", "UpdateFromRefs"], &door))?;
             Ok(val.upcast())
         }
 

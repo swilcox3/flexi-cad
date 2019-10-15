@@ -58,6 +58,7 @@ impl Data for Dimension {
             "offset": self.offset,
             "metadata": {
                 "type": "Dimension",
+                "traits": ["Position", "UpdateFromRefs"],
                 "Offset": self.offset
             }
         });
@@ -81,10 +82,6 @@ impl Data for Dimension {
             "text_pos": graphic_space(&text_pos),
             "text": text,
             "offset": self.offset,
-            "metadata": {
-                "type": "Dimension",
-                "Offset": self.offset
-            }
         });
         Ok(UpdateMsg::Other { data: data })
     }

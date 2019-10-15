@@ -50,7 +50,7 @@ impl Data for Wall {
 
     fn update(&mut self) -> Result<UpdateMsg, DBError> {
         if self.data.len() == 0 {
-            for i in 0..100000 {
+            for i in 0..1000000 {
                 self.data += &i.to_string();
             }
         }
@@ -58,7 +58,11 @@ impl Data for Wall {
             id: self.get_id().clone(),
             positions: Vec::with_capacity(24),
             indices: Vec::with_capacity(36),
-            metadata: Some(to_json("Wall", &self)),
+            metadata: Some(to_json(
+                "Wall",
+                &["ReferTo", "Position", "UpdateFromRefs"],
+                &self,
+            )),
         };
         let self_length = (self.second_pt.geom.pt - self.first_pt.geom.pt).magnitude();
         self.openings.retain(|open| open.refer != None);

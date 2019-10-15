@@ -12,17 +12,6 @@ fn get_result(file: &PathBuf, obj: &RefID, index: ResultInd) -> Result<Option<Re
     Ok(res_opt)
 }
 
-pub fn can_refer_to(file: &PathBuf, obj: &RefID) -> Result<bool, DBError> {
-    let mut result = false;
-    app_state::get_obj(file, obj, |refer_obj| {
-        if let Some(_) = refer_obj.query_ref::<dyn ReferTo>() {
-            result = true;
-        }
-        Ok(())
-    })?;
-    Ok(result)
-}
-
 pub fn get_closest_result(file: &PathBuf, obj: &RefID, only_match: &RefType, guess: &Point3f) -> Result<Option<(GeometryId, RefGeometry)>, DBError> {
     let mut result = None;
     app_state::get_obj(file, obj, |refer_obj| match refer_obj.query_ref::<dyn ReferTo>() {
