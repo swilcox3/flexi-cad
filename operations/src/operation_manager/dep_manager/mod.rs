@@ -118,7 +118,8 @@ mod tests {
 
     fn set_exists_within_range(mut set: HashSet<Reference>, base: &IndexSet<Reference>, index: usize, size: usize) -> bool {
         for i in index..index + size {
-            set.remove(&base.get_index(i).unwrap());
+            let entry = base.get_index(i).unwrap();
+            set.remove(&entry);
         }
         set.len() == 0
     }
@@ -138,60 +139,39 @@ mod tests {
     #[test]
     fn test_get_all_deps() {
         let deps = DependencyManager::new();
-        //This simulates three walls with windows in each one.
         let a = RefID::new_v4();
-        let a_1 = GeometryId::new(a.clone(), 0);
-        let a_2 = GeometryId::new(a.clone(), 1);
-        let a_3 = GeometryId::new(a.clone(), 2);
+        let a_0 = GeometryId::new(a.clone(), 0);
+        let a_1 = GeometryId::new(a.clone(), 1);
+        let a_2 = GeometryId::new(a.clone(), 2);
         let b = RefID::new_v4();
-        let b_1 = GeometryId::new(b.clone(), 0);
-        let b_2 = GeometryId::new(b.clone(), 1);
-        let b_3 = GeometryId::new(b.clone(), 2);
+        let b_0 = GeometryId::new(b.clone(), 0);
+        let b_1 = GeometryId::new(b.clone(), 1);
+        let b_2 = GeometryId::new(b.clone(), 2);
         let c = RefID::new_v4();
-        let c_1 = GeometryId::new(c.clone(), 0);
-        let c_2 = GeometryId::new(c.clone(), 1);
-        let c_3 = GeometryId::new(c.clone(), 2);
-        let d = RefID::new_v4();
-        let d_1 = GeometryId::new(d.clone(), 0);
-        let d_2 = GeometryId::new(d.clone(), 1);
-        let e = RefID::new_v4();
-        let e_1 = GeometryId::new(e.clone(), 0);
-        let e_2 = GeometryId::new(e.clone(), 1);
-        let f = RefID::new_v4();
-        let f_1 = GeometryId::new(f.clone(), 0);
-        let f_2 = GeometryId::new(f.clone(), 1);
+        let c_0 = GeometryId::new(c.clone(), 0);
+        let c_1 = GeometryId::new(c.clone(), 1);
+        let c_2 = GeometryId::new(c.clone(), 2);
 
-        deps.register_sub(&a_1, b_1.clone());
-        deps.register_sub(&a_1, d_1.clone());
-        deps.register_sub(&a_2, c_2.clone());
-        deps.register_sub(&a_2, d_2.clone());
-        deps.register_sub(&b_1, a_1.clone());
-        deps.register_sub(&b_1, e_1.clone());
-        deps.register_sub(&b_2, e_2.clone());
-        deps.register_sub(&c_1, f_1.clone());
-        deps.register_sub(&c_2, a_2.clone());
-        deps.register_sub(&c_2, f_2.clone());
-        deps.register_sub(&d_1, a_3.clone());
-        deps.register_sub(&e_1, b_3.clone());
-        deps.register_sub(&f_1, c_3.clone());
+        deps.register_sub(&a_0, b_0.clone());
+        deps.register_sub(&a_1, c_2.clone());
+        deps.register_sub(&a_1, a_2.clone());
+        deps.register_sub(&b_1, c_0.clone());
+        deps.register_sub(&b_2, a_1.clone());
+        deps.register_sub(&c_0, b_1.clone());
+        deps.register_sub(&c_1, c_0.clone());
+        deps.register_sub(&c_2, c_1.clone());
 
-        let results = deps.get_all_deps(vec![a_1.clone()]);
-        let answer = vec![
-            set![get_ref(&b_1, &a_1), get_ref(&d_1, &a_1)],
-            set![get_ref(&e_1, &b_1), get_ref(&a_3, &d_1)],
-            set![get_ref(&b_3, &e_1)],
-        ];
+        let results = deps.get_all_deps(vec![a_0.clone()]);
+        let answer = vec![set![get_ref(&b_0, &a_0)]];
         assert!(deps_equals(results, answer));
 
         let results = deps.get_all_deps(vec![b_2.clone()]);
-        let answer = vec![set![get_ref(&e_2, &b_2)]];
-        assert!(deps_equals(results, answer));
-
-        let results = deps.get_all_deps(vec![a_1.clone(), a_2.clone()]);
         let answer = vec![
-            set![get_ref(&b_1, &a_1), get_ref(&d_1, &a_1), get_ref(&c_2, &a_2), get_ref(&d_2, &a_2)],
-            set![get_ref(&e_1, &b_1), get_ref(&a_3, &d_1), get_ref(&f_2, &c_2)],
-            set![get_ref(&b_3, &e_1)],
+            set![get_ref(&a_1, &b_2)],
+            set![get_ref(&a_2, &a_1), get_ref(&c_2, &a_1)],
+            set![get_ref(&c_1, &c_2)],
+            set![get_ref(&c_0, &c_1)],
+            set![get_ref(&b_1, &c_0)],
         ];
         assert!(deps_equals(results, answer));
     }

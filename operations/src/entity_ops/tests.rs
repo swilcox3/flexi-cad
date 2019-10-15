@@ -233,13 +233,6 @@ fn test_walls_and_doors() {
         let door_3 = Box::new(Door::new(Point3f::new(0.75, 1.0, 0.0), Point3f::new(0.25, 1.0, 0.0), 0.25, 0.75));
         let door_3_id = door_3.get_id().clone();
 
-        println!("wall_1: {:?}", wall_1_id);
-        println!("wall_2: {:?}", wall_2_id);
-        println!("wall_3: {:?}", wall_3_id);
-        println!("door_1: {:?}", door_1_id);
-        println!("door_2: {:?}", door_2_id);
-        println!("door_3: {:?}", door_3_id);
-
         let event = UndoEventID::new_v4();
         app_state::begin_undo_event(&file, &user, event.clone(), String::from("add objs")).unwrap();
         app_state::add_obj(&file, &event, first).unwrap();

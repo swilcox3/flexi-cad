@@ -37,7 +37,7 @@ use prelude::*;
 type LibResult = Result<(), DBError>;
 
 pub use app_state::{
-    add_obj, begin_undo_event, cancel_event, copy_obj, end_undo_event, init_file, open_file, redo_latest, resume_event, save_as_file, save_file,
+    begin_undo_event, cancel_event, copy_obj, end_undo_event, init_file, open_file, redo_latest, resume_event, save_as_file, save_file,
     suspend_event, take_undo_snapshot, undo_latest,
 };
 
@@ -47,6 +47,14 @@ pub fn get_obj(file: &PathBuf, obj_id: &RefID, query_id: QueryID, user_id: &User
 
 pub fn delete_obj(file: &PathBuf, event: &UndoEventID, obj_id: &RefID) -> LibResult {
     app_state::delete_obj(file, event, obj_id)?;
+    app_state::update_deps(file.clone(), obj_id.clone());
+    Ok(())
+}
+
+pub fn add_obj(file: &PathBuf, event: &UndoEventID, obj: DataObject) -> LibResult {
+    let obj_id = obj.get_id().clone();
+    app_state::add_obj(file, event, obj)?;
+    app_state::update_deps(file.clone(), obj_id.clone());
     Ok(())
 }
 

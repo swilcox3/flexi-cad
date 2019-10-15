@@ -13,11 +13,11 @@ use query_interface::Object;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+pub use cgmath::prelude::*;
+pub use entities::dimension::Dimension;
 pub use entities::door::Door;
 pub use entities::wall::Wall;
 pub use geometry_kernel::*;
-//pub use entities::dimension::Dimension;
-pub use cgmath::prelude::*;
 
 #[derive(Debug, PartialEq)]
 pub enum DBError {
@@ -83,10 +83,10 @@ pub fn from_json(type_str: &str, obj: serde_json::Value) -> Result<DataObject, D
             let val: Door = serde_json::from_value(obj).map_err(error_other)?;
             Ok(Box::new(val))
         }
-        /*"Dimension" => {
+        "Dimension" => {
             let val: Dimension = serde_json::from_value(obj).map_err(error_other)?;
             Ok(Box::new(val))
-        }*/
+        }
         _ => Err(DBError::ObjNotFound),
     }
 }

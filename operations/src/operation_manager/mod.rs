@@ -100,29 +100,11 @@ impl OperationManager {
 
     pub fn update_all(&self, only_to: Option<&UserID>) -> Result<(), DBError> {
         let mut set = HashSet::new();
-        self.data.iterate_all(&mut |obj: &DataObject| {
+        self.data.iterate_all_mut(&mut |obj: &mut DataObject| {
             set.insert(obj.get_id().clone());
-            Ok(())
-        })?;
-        self.update_set(set, only_to)
-    }
-
-    fn update_set<T>(&self, set: T, only_to: Option<&UserID>) -> Result<(), DBError>
-    where
-        T: IntoIterator<Item = RefID>,
-    {
-        for obj_id in set.into_iter() {
-            if let Err(e) = self.data.get_mut_obj_no_undo(&obj_id, &mut |obj: &mut DataObject| {
-                let msg = obj.update()?;
-                self.send(msg, only_to)
-            }) {
-                match e {
-                    DBError::ObjNotFound => self.send(UpdateMsg::Delete { key: obj_id }, None)?,
-                    _ => return Err(e),
-                }
-            }
-        }
-        Ok(())
+            let msg = obj.update()?;
+            self.send(msg, only_to)
+        })
     }
 
     fn get_ref_result(&self, refer: &GeometryId) -> Option<RefGeometry> {
@@ -141,7 +123,6 @@ impl OperationManager {
 
     fn update_reference(&self, refer: &Reference) -> Result<(), DBError> {
         if refer.owner.id != refer.other.id {
-            println!("Updating ref: {:?}\n", refer);
             let result = self.get_ref_result(&refer.other);
             self.data
                 .get_mut_obj_no_undo(&refer.owner.id, |obj| match obj.query_mut::<dyn UpdateFromRefs>() {
@@ -178,18 +159,22 @@ impl OperationManager {
         let mut geom_ids = Vec::new();
         let mut to_remove = HashSet::new();
         for dep_id in deps.into_iter() {
-            if let Err(e) = self.data.get_obj(&dep_id, |obj| match obj.query_ref::<dyn ReferTo>() {
-                Some(referrable) => {
-                    for i in 0..referrable.get_num_results() {
-                        geom_ids.push(GeometryId {
-                            id: dep_id.clone(),
-                            index: i,
-                        });
+            let for_each = |obj: &mut DataObject| {
+                self.send(obj.update()?, None)?;
+                match obj.query_ref::<dyn ReferTo>() {
+                    Some(referrable) => {
+                        for i in 0..referrable.get_num_results() {
+                            geom_ids.push(GeometryId {
+                                id: dep_id.clone(),
+                                index: i,
+                            });
+                        }
+                        Ok(())
                     }
-                    Ok(())
+                    None => Err(DBError::ObjLacksTrait),
                 }
-                None => Err(DBError::ObjLacksTrait),
-            }) {
+            };
+            if let Err(e) = self.data.get_mut_obj_no_undo(&dep_id, for_each) {
                 match e {
                     DBError::ObjNotFound => {
                         to_remove.insert(dep_id);
@@ -200,8 +185,10 @@ impl OperationManager {
                 }
             }
         }
+        for delete in &to_remove {
+            self.send(UpdateMsg::Delete { key: delete.clone() }, None)?;
+        }
         self.deps.delete_ids(to_remove);
-        println!("geom_ids: {:?}", geom_ids);
         let refers = self.deps.get_all_deps(geom_ids);
         if refers.len() > 0 {
             self.update_reference_set(refers)?;
@@ -259,11 +246,9 @@ impl OperationManager {
         output.push_str(&"\n");
     }
 
-    pub fn add_object(&self, event: &UndoEventID, mut obj: DataObject) -> Result<(), DBError> {
+    pub fn add_object(&self, event: &UndoEventID, obj: DataObject) -> Result<(), DBError> {
         self.register_deps(&obj);
-        let msg = obj.update()?;
-        self.data.add_obj(event, obj)?;
-        self.send(msg, None)
+        self.data.add_obj(event, obj)
     }
 
     pub fn delete_obj(&self, event: &UndoEventID, id: &RefID) -> Result<DataObject, DBError> {
@@ -287,7 +272,6 @@ impl OperationManager {
     ) -> Result<(), DBError> {
         self.data.get_mut_obj(event, id, |mut obj| {
             callback(&mut obj)?;
-            self.send(obj.update()?, None)?;
             Ok(())
         })
     }
