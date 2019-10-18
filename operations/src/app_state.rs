@@ -216,7 +216,9 @@ pub fn set_ref(
 pub fn update_deps(file: PathBuf, id: RefID) {
     rayon::spawn(move || {
         if let Some(ops) = APP_STATE.files.get(&file) {
-            ops.update_deps(&id).unwrap();
+            if let Err(e) = ops.update_deps(&id) {
+                println!("Error in background: {:?}", e);
+            }
         }
     });
 }
@@ -224,7 +226,9 @@ pub fn update_deps(file: PathBuf, id: RefID) {
 pub fn update_all_deps(file: PathBuf, ids: Vec<RefID>) {
     rayon::spawn(move || {
         if let Some(ops) = APP_STATE.files.get(&file) {
-            ops.update_all_deps(ids).unwrap();
+            if let Err(e) = ops.update_all_deps(ids) {
+                println!("Error in background: {:?}", e);
+            }
         }
     });
 }

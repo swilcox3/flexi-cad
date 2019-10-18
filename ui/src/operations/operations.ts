@@ -264,9 +264,12 @@ function waitForChange(id: string) {
     })
 }
 
-function waitForRead(id: string) {
+function waitForRead(id: string, mapper?: (val: any) => any) {
     return new Promise((resolve: (val: any) => void, reject) => {
         addPendingRead(id, (val: any) => {
+            if (mapper) {
+                val = mapper(val)
+            }
             resolve(val)
         })
     })
@@ -293,7 +296,7 @@ function renderFromMsg(msg: any) {
         renderer.renderMesh(msg.Mesh.data, msg.Mesh.data.id, false)
     }
     if (msg.Other) {
-        renderer.renderObject(msg.Other.data, msg.Mesh.data.id, false)
+        renderer.renderObject(msg.Other.data, msg.Other.data.id, false)
     }
 }
 
@@ -341,7 +344,14 @@ export function getClosestPoint(id: string, pt: Point3d) {
     else {
         dataModel.get_closest_point(filename, id, pt, user, query)
     }
-    return waitForRead(query)
+    return waitForRead(query, (val: any) => {
+        if (val) {
+            return val[1].Point.pt;
+        }
+        else {
+            return val
+        }
+    })
 }
 
 export function snapToPoint(event: string, id: string, snap_to_id: string, pt: Point3d) {

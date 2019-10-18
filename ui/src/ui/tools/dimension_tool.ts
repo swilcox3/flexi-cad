@@ -25,31 +25,39 @@ export class DimensionTool {
         }
         var dim = new ops.dataModel.JsDimension(this.curTemp.first_pt(), this.curTemp.second_pt(), this.offset)
         ops.deleteTempObject(this.curTemp.id())
+        this.curTemp = null;
         ops.createObj(this.undoEventId, dim)
         if (this.canAttach(picked)) {
-            ops.snapToPoint(this.undoEventId, dim.id(), picked.name, dim.first_pt())
-            ops.snapToPoint(this.undoEventId, dim.id(), picked.name, pt)
+            if (this.lastAttached) {
+                ops.snapToPoint(this.undoEventId, dim.id(), this.lastAttached.name, dim.first_pt())
+            }
+            if (picked) {
+                ops.snapToPoint(this.undoEventId, dim.id(), picked.name, pt)
+            }
         }
     }
 
     onMouseDown(pt: Point3d, picked: BABYLON.Mesh) {
         if (this.curTemp == null) {
             var first: Point3d = null;
+            var second = new Point3d(pt.x + 1, pt.y, 0)
             if (this.canAttach(picked)) {
+                this.lastAttached = picked;
                 ops.getClosestPoint(picked.name, new Point3d(pt.x, pt.y, 0)).then(pt => {
                     first = pt;
+                    console.log(first, second, this.offset);
+                    this.curTemp = new ops.dataModel.JsDimension(first, second, this.offset);
+                    ops.renderTempObject(this.curTemp)
                 })
             }
             else {
                 first = new Point3d(pt.x, pt.y, 0)
+                this.curTemp = new ops.dataModel.JsDimension(first, second, this.offset);
+                ops.renderTempObject(this.curTemp)
             }
-            var second = new Point3d(pt.x + 1, pt.y, 0)
-            this.curTemp = new ops.dataModel.JsDimension(first, second, this.offset);
-            ops.renderTempObject(this.curTemp)
         }
         else {
             this.createDimension(new Point3d(pt.x, pt.y, 0), picked);
-            this.curTemp = null;
         }
     }
 
@@ -70,7 +78,9 @@ export class DimensionTool {
         if (this.undoEventId) {
             ops.endUndoEvent(this.undoEventId)
         }
-        ops.deleteTempObject(this.curTemp.id())
+        if (this.curTemp) {
+            ops.deleteTempObject(this.curTemp.id())
+        }
     }
 
     drawDimension() {

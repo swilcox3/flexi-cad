@@ -179,19 +179,24 @@ impl OperationManager {
                     DBError::ObjNotFound => {
                         to_remove.insert(dep_id);
                     }
+                    DBError::ObjLacksTrait => (),
                     _ => {
                         return Err(e);
                     }
                 }
             }
         }
-        for delete in &to_remove {
-            self.send(UpdateMsg::Delete { key: delete.clone() }, None)?;
+        if to_remove.len() > 0 {
+            for delete in &to_remove {
+                self.send(UpdateMsg::Delete { key: delete.clone() }, None)?;
+            }
+            self.deps.delete_ids(to_remove);
         }
-        self.deps.delete_ids(to_remove);
-        let refers = self.deps.get_all_deps(geom_ids);
-        if refers.len() > 0 {
-            self.update_reference_set(refers)?;
+        if geom_ids.len() > 0 {
+            let refers = self.deps.get_all_deps(geom_ids);
+            if refers.len() > 0 {
+                self.update_reference_set(refers)?;
+            }
         }
         Ok(())
     }

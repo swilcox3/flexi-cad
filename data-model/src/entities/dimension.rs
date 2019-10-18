@@ -82,6 +82,9 @@ impl Data for Dimension {
             "text_pos": graphic_space(&text_pos),
             "text": text,
             "offset": self.offset,
+            "metadata": {
+                "type": "Dimension"
+            }
         });
         Ok(UpdateMsg::Other { data: data })
     }
