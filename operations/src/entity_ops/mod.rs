@@ -28,8 +28,8 @@ pub fn get_obj_data(file: &PathBuf, id: &RefID, prop_name: &str) -> Result<serde
     }
 }
 
-pub fn set_obj_data(file: &PathBuf, event: &UndoEventID, id: &RefID, data: &serde_json::Value) -> Result<(), DBError> {
-    app_state::modify_obj(file, event, id, |obj| obj.set_data(data))
+pub fn set_obj_data(file: &PathBuf, event: &UndoEventID, id: &RefID, data: serde_json::Value) -> Result<(), DBError> {
+    app_state::modify_obj(file, event, id, move |obj| obj.set_data(data.clone()))
 }
 
 pub fn copy_objs(file: &PathBuf, event: &UndoEventID, ids: HashSet<RefID>) -> Result<(Vec<RefID>, HashMap<RefID, RefID>), DBError> {

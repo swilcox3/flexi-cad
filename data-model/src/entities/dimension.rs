@@ -59,7 +59,10 @@ impl Data for Dimension {
             "metadata": {
                 "type": "Dimension",
                 "traits": ["Position", "UpdateFromRefs"],
-                "Offset": self.offset
+                "obj": {
+                    "Offset": self.offset,
+                    "Value": text
+                }
             }
         });
         Ok(UpdateMsg::Other { data: data })
@@ -83,7 +86,8 @@ impl Data for Dimension {
             "text": text,
             "offset": self.offset,
             "metadata": {
-                "type": "Dimension"
+                "type": "Dimension",
+                "traits": ["Position", "UpdateFromRefs"],
             }
         });
         Ok(UpdateMsg::Other { data: data })
@@ -98,11 +102,15 @@ impl Data for Dimension {
         }
     }
 
-    fn set_data(&mut self, data: &serde_json::Value) -> Result<(), DBError> {
+    fn set_data(&mut self, data: serde_json::Value) -> Result<(), DBError> {
         let mut changed = false;
         if let serde_json::Value::Number(num) = &data["Offset"] {
             changed = true;
             self.offset = num.as_f64().unwrap();
+        }
+        if let serde_json::Value::Number(_) = &data["Value"] {
+            changed = true;
+            //Do nothing, dimensions aren't driving
         }
         if changed {
             Ok(())

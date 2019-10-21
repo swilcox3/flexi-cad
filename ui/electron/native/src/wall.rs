@@ -127,7 +127,10 @@ declare_types! {
                 let wall = this.borrow(&guard).clone();
                 wall
             };
-            let val = neon_serde::to_value(&mut cx, &data_model::to_json("Wall", &["Position", "ReferTo", "UpdateFromRefs"], &wall))?;
+            let val = neon_serde::to_value(&mut cx, &json!({
+                "type": "Wall",
+                "obj": wall
+            }))?;
             Ok(val.upcast())
         }
 

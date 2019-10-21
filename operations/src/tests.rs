@@ -68,7 +68,7 @@ impl Data for TestObj {
         }
     }
 
-    fn set_data(&mut self, _data: &serde_json::Value) -> Result<(), DBError> {
+    fn set_data(&mut self, _data: serde_json::Value) -> Result<(), DBError> {
         Ok(())
     }
 }

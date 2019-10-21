@@ -45,11 +45,16 @@ impl Data for Door {
             id: self.get_id().clone(),
             positions: Vec::with_capacity(24),
             indices: Vec::with_capacity(36),
-            metadata: Some(to_json(
-                "Door",
-                &["ReferTo", "Position", "UpdateFromRefs"],
-                &self,
-            )),
+            metadata: Some(json!({
+                "type": "Door",
+                "traits": ["ReferTo", "Position", "UpdateFromRefs"],
+                "obj": {
+                    "Width": self.width,
+                    "Height": self.height,
+                    "First": self.dir.geom.pt_1,
+                    "Second": self.dir.geom.pt_2
+                }
+            })),
         };
         let rotated = rotate_point_through_angle_2d(
             &self.dir.geom.pt_1,
@@ -99,7 +104,7 @@ impl Data for Door {
         }
     }
 
-    fn set_data(&mut self, data: &serde_json::Value) -> Result<(), DBError> {
+    fn set_data(&mut self, data: serde_json::Value) -> Result<(), DBError> {
         let mut changed = false;
         if let serde_json::Value::Number(num) = &data["Width"] {
             changed = true;

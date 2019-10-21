@@ -9,6 +9,9 @@ export class Point3d {
         this.y = y;
         this.z = z;
     }
+    toString() {
+        return "{x: " + this.x + ", y: " + this.y + ", z: " + this.z + "}"
+    }
 }
 
 export class Vector3d {
@@ -22,24 +25,20 @@ export class Vector3d {
     }
 }
 
-export interface CoordTriple
-{
+export interface CoordTriple {
     x: number,
     y: number,
     z: number
 }
 
-export function transformModelToGraphicCoords(point: CoordTriple)
-{
+export function transformModelToGraphicCoords(point: CoordTriple) {
     return new Point3d(point.x, point.z, -point.y)
 }
 
-export function transformGraphicToModelCoords(point: BABYLON.Vector3)
-{
+export function transformGraphicToModelCoords(point: BABYLON.Vector3) {
     return new Point3d(point.x, -point.z, point.y)
 }
 
-export function toBabylonVector3(point: CoordTriple)
-{
+export function toBabylonVector3(point: CoordTriple) {
     return new BABYLON.Vector3(point.x, -point.z, point.y)
 }

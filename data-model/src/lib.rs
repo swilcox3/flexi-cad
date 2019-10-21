@@ -66,17 +66,6 @@ pub struct CmdMsg {
     pub params: Vec<serde_json::Value>,
 }
 
-pub fn to_json<T>(type_label: &str, traits: &[&str], obj: &T) -> serde_json::Value
-where
-    T: Serialize,
-{
-    json!({
-        "type": type_label,
-        "traits": traits,
-        "obj": obj
-    })
-}
-
 pub fn from_json(type_str: &str, obj: serde_json::Value) -> Result<DataObject, DBError> {
     match type_str.as_ref() {
         "Wall" => {
@@ -101,7 +90,7 @@ pub trait Data: Object + Send + Sync {
     fn update(&mut self) -> Result<UpdateMsg, DBError>;
     fn get_temp_repr(&self) -> Result<UpdateMsg, DBError>;
     fn get_data(&self, prop_name: &str) -> Result<serde_json::Value, DBError>;
-    fn set_data(&mut self, data: &serde_json::Value) -> Result<(), DBError>;
+    fn set_data(&mut self, data: serde_json::Value) -> Result<(), DBError>;
     //Only use this if you know exactly what you're doing.
     fn set_id(&mut self, id: RefID);
 }

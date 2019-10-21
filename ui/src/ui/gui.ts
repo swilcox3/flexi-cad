@@ -60,6 +60,9 @@ export class GUI {
         this.newButton("demo 2", "Demo 100", this.buttonPanel, () => {
             ops.demo_100(new Point3d(0, 0, 0))
         });
+        this.newButton("delete", "Delete", this.buttonPanel, () => {
+            mySingleton.onDeleteKey();
+        });
         this.newButton("undo", "Undo", this.buttonPanel, () => {
             ops.undoLatest();
         });
@@ -88,7 +91,7 @@ export class GUI {
         edit.metadata = label
         edit.onBlurObservable.add((evt) => {
             const event = ops.beginUndoEvent("prop set");
-            var data = { [evt.metadata]: Number(evt.text) };
+            var data = { [evt.metadata]: JSON.parse(evt.text) };
             if (objIds.length == 1) {
                 ops.setObjectData(event, objIds[0], data);
             }
@@ -129,7 +132,15 @@ export class GUI {
         });
         for (const prop of Object.keys(props)) {
             objPanel.addRowDefinition(40, true);
-            this.createPropPair(objPanel, curRow, ids, prop, props[prop].toString());
+            if (props[prop] === null) {
+                this.createPropPair(objPanel, curRow, ids, prop, "");
+            }
+            else if (props[prop].toString() == "[object Object]") {
+                this.createPropPair(objPanel, curRow, ids, prop, JSON.stringify(props[prop]));
+            }
+            else {
+                this.createPropPair(objPanel, curRow, ids, prop, props[prop].toString());
+            }
             curRow = curRow + 1;
         }
     }

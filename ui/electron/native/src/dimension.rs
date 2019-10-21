@@ -105,7 +105,10 @@ declare_types! {
                 let dim = this.borrow(&guard).clone();
                 dim
             };
-            let val = neon_serde::to_value(&mut cx, &data_model::to_json("Dimension", &["Position", "UpdateFromRefs"], &dim))?;
+            let val = neon_serde::to_value(&mut cx, &json!({
+                "type": "Dimension",
+                "obj": &dim
+            }))?;
             Ok(val.upcast())
         }
 

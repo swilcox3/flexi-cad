@@ -6,6 +6,7 @@ extern crate data_model;
 #[cfg(feature = "kernel")]
 extern crate operations_kernel;
 extern crate serde;
+#[macro_use]
 extern crate serde_json;
 #[macro_use]
 extern crate lazy_static;
@@ -310,7 +311,7 @@ fn set_object_data(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let id_1 = RefID::from_str(&cx.argument::<JsString>(2)?.value()).unwrap();
     let arg_3 = cx.argument::<JsString>(3)?.value();
     let data: serde_json::Value = serde_json::from_str(&arg_3).unwrap();
-    operations_kernel::set_obj_data(PathBuf::from(path), &event, id_1, &data).unwrap();
+    operations_kernel::set_obj_data(PathBuf::from(path), &event, id_1, data).unwrap();
     Ok(cx.undefined())
 }
 

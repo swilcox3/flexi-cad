@@ -77,7 +77,7 @@ pub fn get_obj_data(file: &PathBuf, obj_id: &RefID, prop_name: &str, query_id: Q
     app_state::send_read_result(file, query_id, user_id, data)
 }
 
-pub fn set_obj_data(file: PathBuf, event: &UndoEventID, obj_id: RefID, data: &serde_json::Value) -> LibResult {
+pub fn set_obj_data(file: PathBuf, event: &UndoEventID, obj_id: RefID, data: serde_json::Value) -> LibResult {
     entity_ops::set_obj_data(&file, event, &obj_id, data)?;
     app_state::update_deps(file, obj_id);
     Ok(())
@@ -86,7 +86,7 @@ pub fn set_obj_data(file: PathBuf, event: &UndoEventID, obj_id: RefID, data: &se
 pub fn set_objs_data(file: PathBuf, event: &UndoEventID, data: Vec<(RefID, serde_json::Value)>) -> LibResult {
     let mut keys = HashSet::new();
     for (id, val) in data {
-        entity_ops::set_obj_data(&file, event, &id, &val)?;
+        entity_ops::set_obj_data(&file, event, &id, val)?;
         keys.insert(id);
     }
     app_state::update_all_deps(file, keys.into_iter().collect());

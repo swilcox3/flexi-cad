@@ -58,11 +58,16 @@ impl Data for Wall {
             id: self.get_id().clone(),
             positions: Vec::with_capacity(24),
             indices: Vec::with_capacity(36),
-            metadata: Some(to_json(
-                "Wall",
-                &["ReferTo", "Position", "UpdateFromRefs"],
-                &self,
-            )),
+            metadata: Some(json! ({
+                "type": "Wall",
+                "traits": ["ReferTo", "Position", "UpdateFromRefs"],
+                "obj": {
+                    "Width": self.width,
+                    "Height": self.height,
+                    "First": self.first_pt.geom.pt,
+                    "Second": self.second_pt.geom.pt
+                }
+            })),
         };
         let self_length = (self.second_pt.geom.pt - self.first_pt.geom.pt).magnitude();
         self.openings.retain(|open| open.refer != None);
@@ -140,15 +145,27 @@ impl Data for Wall {
         }
     }
 
-    fn set_data(&mut self, data: &serde_json::Value) -> Result<(), DBError> {
+    fn set_data(&mut self, mut data: serde_json::Value) -> Result<(), DBError> {
         let mut changed = false;
         if let serde_json::Value::Number(num) = &data["Width"] {
             changed = true;
-            self.width = num.as_f64().unwrap();
+            self.width = num
+                .as_f64()
+                .ok_or(DBError::Other(String::from("Not a number")))?;
         }
         if let serde_json::Value::Number(num) = &data["Height"] {
             changed = true;
-            self.height = num.as_f64().unwrap();
+            self.height = num
+                .as_f64()
+                .ok_or(DBError::Other(String::from("Not a number")))?;
+        }
+        if let Some(pt) = data.get_mut("First") {
+            changed = true;
+            self.first_pt.geom.pt = serde_json::from_value(pt.take()).map_err(error_other)?;
+        }
+        if let Some(pt) = data.get_mut("Second") {
+            changed = true;
+            self.second_pt.geom.pt = serde_json::from_value(pt.take()).map_err(error_other)?;
         }
         if changed {
             Ok(())
