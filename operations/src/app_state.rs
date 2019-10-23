@@ -14,16 +14,25 @@ pub struct AppState {
 
 impl AppState {
     fn new() -> AppState {
-        AppState { files: DHashMap::default() }
+        AppState {
+            files: DHashMap::default(),
+        }
     }
 }
 
 pub fn init_file(file: PathBuf, user: UserID, updates: Sender<UpdateMsg>) {
-    rayon::ThreadPoolBuilder::new().num_threads(6).build_global().unwrap();
+    if let Err(_) = rayon::ThreadPoolBuilder::new()
+        .num_threads(6)
+        .build_global()
+    {
+        println!("Thread pool already initialized");
+    }
     if let Some(ops) = APP_STATE.files.get(&file) {
         ops.updates.insert(user, updates);
     } else {
-        APP_STATE.files.insert(file, OperationManager::new(user, updates));
+        APP_STATE
+            .files
+            .insert(file, OperationManager::new(user, updates));
     }
 }
 
@@ -65,7 +74,12 @@ pub fn save_as_file(orig_file: &PathBuf, file_new: PathBuf) -> Result<(), DBErro
     }
 }
 
-pub fn send_read_result(file: &PathBuf, query_id: QueryID, user: &UserID, data: serde_json::Value) -> Result<(), DBError> {
+pub fn send_read_result(
+    file: &PathBuf,
+    query_id: QueryID,
+    user: &UserID,
+    data: serde_json::Value,
+) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => {
             info!("Sending data {:?} to user {:?}", data, user);
@@ -82,7 +96,12 @@ pub fn send_read_result(file: &PathBuf, query_id: QueryID, user: &UserID, data: 
     }
 }
 
-pub fn begin_undo_event(file: &PathBuf, user_id: &UserID, event_id: UndoEventID, desc: String) -> Result<(), DBError> {
+pub fn begin_undo_event(
+    file: &PathBuf,
+    user_id: &UserID,
+    event_id: UndoEventID,
+    desc: String,
+) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.begin_undo_event(user_id, event_id, desc),
         None => Err(DBError::FileNotFound),
@@ -145,7 +164,11 @@ pub fn add_obj(file: &PathBuf, event: &UndoEventID, obj: DataObject) -> Result<(
     }
 }
 
-pub fn get_obj(file: &PathBuf, id: &RefID, mut callback: impl FnMut(&DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
+pub fn get_obj(
+    file: &PathBuf,
+    id: &RefID,
+    mut callback: impl FnMut(&DataObject) -> Result<(), DBError>,
+) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.get_obj(id, &mut callback),
         None => Err(DBError::FileNotFound),
@@ -180,16 +203,18 @@ pub fn add_ref(
     snap_pt: &Option<Point3f>,
 ) -> Result<(), DBError> {
     let mut index = 0;
-    modify_obj(&file, &event, &obj, |owner| match owner.query_mut::<dyn UpdateFromRefs>() {
-        Some(joinable) => {
-            index = joinable.get_num_refs();
-            if joinable.add_ref(result, refer.clone(), snap_pt) {
-                Ok(())
-            } else {
-                Err(error_other("Reference not added"))
+    modify_obj(&file, &event, &obj, |owner| {
+        match owner.query_mut::<dyn UpdateFromRefs>() {
+            Some(joinable) => {
+                index = joinable.get_num_refs();
+                if joinable.add_ref(result, refer.clone(), snap_pt) {
+                    Ok(())
+                } else {
+                    Err(error_other("Reference not added"))
+                }
             }
+            None => Err(DBError::ObjLacksTrait),
         }
-        None => Err(DBError::ObjLacksTrait),
     })?;
     add_deps(&file, obj)
 }
@@ -203,12 +228,14 @@ pub fn set_ref(
     refer: GeometryId,
     snap_pt: &Option<Point3f>,
 ) -> Result<(), DBError> {
-    modify_obj(&file, &event, &obj, |owner| match owner.query_mut::<dyn UpdateFromRefs>() {
-        Some(joinable) => {
-            joinable.set_ref(index, result, refer.clone(), snap_pt);
-            Ok(())
+    modify_obj(&file, &event, &obj, |owner| {
+        match owner.query_mut::<dyn UpdateFromRefs>() {
+            Some(joinable) => {
+                joinable.set_ref(index, result, refer.clone(), snap_pt);
+                Ok(())
+            }
+            None => Err(DBError::ObjLacksTrait),
         }
-        None => Err(DBError::ObjLacksTrait),
     })?;
     add_deps(&file, obj)
 }
@@ -240,7 +267,11 @@ pub fn add_deps(file: &PathBuf, id: &RefID) -> Result<(), DBError> {
     }
 }
 
-pub fn remove_dep(file: &PathBuf, publisher: &GeometryId, subscriber: &GeometryId) -> Result<(), DBError> {
+pub fn remove_dep(
+    file: &PathBuf,
+    publisher: &GeometryId,
+    subscriber: &GeometryId,
+) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => Ok(ops.remove_dep(publisher, subscriber)),
         None => Err(DBError::FileNotFound),
