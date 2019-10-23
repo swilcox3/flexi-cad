@@ -47,6 +47,7 @@ export class GUI {
             mySingleton.setActiveTool(tool)
         });
         this.newButton("but2", "Door", this.buttonPanel, () => {
+            console.log("door button push")
             var tool = new DoorTool()
             mySingleton.setActiveTool(tool)
         })

@@ -9,7 +9,8 @@ declare global {
 }
 window.addEventListener('DOMContentLoaded', () => {
   import("../data-model-wasm/pkg/index").then(mod => {
-    var connection = "ws://127.0.0.1:80/ws";
+    var connection = "ws://" + window.location.host + "/ws";
+    console.log(connection)
     var user = ops.initialize(mod);
     connection = connection + "?user_id=" + user;
     var conn = new WebsocketAsPromised(connection, {

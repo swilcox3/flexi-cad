@@ -1,9 +1,11 @@
 #![allow(non_snake_case)]
-extern crate wasm_bindgen;
 extern crate data_model;
+extern crate wasm_bindgen;
+#[macro_use]
+extern crate serde_json;
 
-use wasm_bindgen::prelude::*;
 use data_model::*;
+use wasm_bindgen::prelude::*;
 
 // This is like the `main` function, except for JavaScript.
 #[wasm_bindgen(start)]
@@ -42,9 +44,14 @@ pub struct JsWall {
 #[wasm_bindgen]
 impl JsWall {
     #[wasm_bindgen(constructor)]
-    pub fn new(first: CoordTriple, second: CoordTriple, width: WorldCoord, height: WorldCoord) -> JsWall {
-        let wall = data_model::Wall::new(point_3f(&first), point_3f(&second), width, height );
-        JsWall{ wall }
+    pub fn new(
+        first: CoordTriple,
+        second: CoordTriple,
+        width: WorldCoord,
+        height: WorldCoord,
+    ) -> JsWall {
+        let wall = data_model::Wall::new(point_3f(&first), point_3f(&second), width, height);
+        JsWall { wall }
     }
 
     pub fn getTempRepr(&self) -> JsValue {
@@ -57,7 +64,11 @@ impl JsWall {
     }
 
     pub fn getObj(&self) -> JsValue {
-        JsValue::from_serde(&data_model::to_json("Wall", &self.wall)).unwrap()
+        JsValue::from_serde(&json!({
+            "type": "Wall",
+            "obj": &self.wall
+        }))
+        .unwrap()
     }
 
     pub fn first_pt(&self) -> JsValue {
@@ -105,9 +116,14 @@ pub struct JsDoor {
 #[wasm_bindgen]
 impl JsDoor {
     #[wasm_bindgen(constructor)]
-    pub fn new(first: CoordTriple, second: CoordTriple, width: WorldCoord, height: WorldCoord) -> JsDoor {
-        let door = data_model::Door::new(point_3f(&first), point_3f(&second), width, height );
-        JsDoor{ door }
+    pub fn new(
+        first: CoordTriple,
+        second: CoordTriple,
+        width: WorldCoord,
+        height: WorldCoord,
+    ) -> JsDoor {
+        let door = data_model::Door::new(point_3f(&first), point_3f(&second), width, height);
+        JsDoor { door }
     }
 
     pub fn getTempRepr(&self) -> JsValue {
@@ -120,7 +136,11 @@ impl JsDoor {
     }
 
     pub fn getObj(&self) -> JsValue {
-        JsValue::from_serde(&data_model::to_json("Door", &self.door)).unwrap()
+        JsValue::from_serde(&json!({
+            "type": "Door",
+            "obj": &self.door
+        }))
+        .unwrap()
     }
 
     pub fn setDir(&mut self, delta: CoordTriple) {
@@ -132,7 +152,7 @@ impl JsDoor {
     }
 
     pub fn set_first_pt(&mut self, val: CoordTriple) {
-        self.door.dir.geom.pt_2 = point_3f(&val);
+        self.door.dir.geom.pt_1 = point_3f(&val);
     }
 
     pub fn second_pt(&self) -> JsValue {
@@ -166,7 +186,7 @@ impl JsDoor {
 
 #[wasm_bindgen]
 pub struct JsDimension {
-    dim: data_model::Dimension
+    dim: data_model::Dimension,
 }
 
 #[wasm_bindgen]
@@ -174,7 +194,7 @@ impl JsDimension {
     #[wasm_bindgen(constructor)]
     pub fn new(first: CoordTriple, second: CoordTriple, offset: WorldCoord) -> JsDimension {
         let dim = data_model::Dimension::new(point_3f(&first), point_3f(&second), offset);
-        JsDimension{ dim }
+        JsDimension { dim }
     }
 
     pub fn getTempRepr(&self) -> JsValue {
@@ -186,8 +206,12 @@ impl JsDimension {
         self.dim.move_obj(&vector_3f(&delta));
     }
 
-    pub fn getObj(&self) -> JsValue{
-        JsValue::from_serde(&data_model::to_json("Dimension", &self.dim)).unwrap()
+    pub fn getObj(&self) -> JsValue {
+        JsValue::from_serde(&json!({
+            "type": "Dimension",
+            "obj": &self.dim
+        }))
+        .unwrap()
     }
 
     pub fn first_pt(&self) -> JsValue {
@@ -221,7 +245,12 @@ impl JsDimension {
 
 #[wasm_bindgen]
 pub fn projectOnLine(first: CoordTriple, second: CoordTriple, project: CoordTriple) -> JsValue {
-    JsValue::from_serde(&data_model::project_on_line(&point_3f(&first), &point_3f(&second), &point_3f(&project))).unwrap()
+    JsValue::from_serde(&data_model::project_on_line(
+        &point_3f(&first),
+        &point_3f(&second),
+        &point_3f(&project),
+    ))
+    .unwrap()
 }
 
 #[wasm_bindgen]

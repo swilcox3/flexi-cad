@@ -3,11 +3,11 @@ use std::time::{Duration, Instant};
 use actix::prelude::*;
 use actix_web::{web, Error, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
-use std::path::PathBuf;
-use data_model::*;
 use ccl::dhashmap::DHashMap;
-use crossbeam_channel::{Receiver};
+use crossbeam_channel::Receiver;
+use data_model::*;
 use serde::Deserialize;
+use std::path::PathBuf;
 
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -20,11 +20,15 @@ fn error<T: std::fmt::Debug>(err: T) -> String {
 
 #[derive(Deserialize)]
 pub struct User {
-    user_id: UserID
+    user_id: UserID,
 }
 
 /// do websocket handshake and start `MyWebSocket` actor
-pub fn ws_index(r: HttpRequest, user: web::Query<User>, stream: web::Payload) -> Result<HttpResponse, Error> {
+pub fn ws_index(
+    r: HttpRequest,
+    user: web::Query<User>,
+    stream: web::Payload,
+) -> Result<HttpResponse, Error> {
     let res = ws::start(MyWebSocket::new(user.user_id), &r, stream);
     info!("{:?}", res.as_ref().unwrap());
     res
@@ -37,7 +41,7 @@ struct MyWebSocket {
     /// otherwise we drop connection.
     hb: Instant,
     id: UserID,
-    updates: DHashMap<PathBuf, Receiver<UpdateMsg>>
+    updates: DHashMap<PathBuf, Receiver<UpdateMsg>>,
 }
 
 impl Actor for MyWebSocket {
@@ -66,7 +70,9 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for MyWebSocket {
                 info!("{:?}", cmd);
                 if let Err(e) = self.route(cmd) {
                     error!("{:?}", e);
-                    let msg = data_model::UpdateMsg::Error{msg: format!("{:?}", e)};
+                    let msg = data_model::UpdateMsg::Error {
+                        msg: format!("{:?}", e),
+                    };
                     ctx.text(serde_json::to_string(&msg).unwrap());
                 }
             }
@@ -81,10 +87,10 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for MyWebSocket {
 
 impl MyWebSocket {
     fn new(id: UserID) -> Self {
-        Self { 
+        Self {
             hb: Instant::now(),
             id: id,
-            updates: DHashMap::default()
+            updates: DHashMap::default(),
         }
     }
 
@@ -99,12 +105,14 @@ impl MyWebSocket {
             }
             "begin_undo_event" => {
                 let desc: String = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
-                let id: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let id: UndoEventID =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::begin_undo_event(&path, &self.id, id, desc).map_err(error)
             }
             "end_undo_event" => {
-                let id: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let id: UndoEventID =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::end_undo_event(&path, id).map_err(error)
             }
@@ -117,128 +125,182 @@ impl MyWebSocket {
                 operations_kernel::redo_latest(&path, &self.id).map_err(error)
             }
             "suspend_event" => {
-                let id: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let id: UndoEventID =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::suspend_event(&path, &id).map_err(error)
             }
             "resume_event" => {
-                let id: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let id: UndoEventID =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::resume_event(&path, &id).map_err(error)
             }
             "cancel_event" => {
-                let id: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let id: UndoEventID =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::cancel_event(&path, &id).map_err(error)
             }
             "take_undo_snapshot" => {
                 let obj_id: RefID = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
-                let event_id: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let event_id: UndoEventID =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::take_undo_snapshot(&path, &event_id, &obj_id).map_err(error)
             }
-            "join_objs" => {
-                let point: Point3f = serde_json::from_value(msg.params.remove(6)).map_err(error)?;
-                let type_2: RefType = serde_json::from_value(msg.params.remove(5)).map_err(error)?;
-                let type_1: RefType = serde_json::from_value(msg.params.remove(4)).map_err(error)?;
+            "join_at_points" => {
+                let point: Point3f = serde_json::from_value(msg.params.remove(4)).map_err(error)?;
                 let id_2: RefID = serde_json::from_value(msg.params.remove(3)).map_err(error)?;
                 let id_1: RefID = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
-                let event_id: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let event_id: UndoEventID =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::join_objs(path, &event_id, id_1, id_2, &type_1, &type_2, &point).map_err(error)
+                operations_kernel::join_objs(
+                    path,
+                    &event_id,
+                    id_1,
+                    id_2,
+                    &RefType::Point,
+                    &RefType::Point,
+                    &point,
+                )
+                .map_err(error)
             }
-            "snap_obj_to_other" => {
-                let point: Point3f = serde_json::from_value(msg.params.remove(5)).map_err(error)?;
-                let type_1: RefType = serde_json::from_value(msg.params.remove(4)).map_err(error)?;
+            "snap_to_line" => {
+                let point: Point3f = serde_json::from_value(msg.params.remove(4)).map_err(error)?;
                 let id_2: RefID = serde_json::from_value(msg.params.remove(3)).map_err(error)?;
                 let id_1: RefID = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
-                let event_id: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let event_id: UndoEventID =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::snap_obj_to_other(path, &event_id, id_1, &id_2, &type_1, &point).map_err(error)
+                operations_kernel::join_objs(
+                    path,
+                    &event_id,
+                    id_1,
+                    id_2,
+                    &RefType::Rect,
+                    &RefType::Line,
+                    &point,
+                )
+                .map_err(error)
             }
-            "can_refer_to" => {
-                let query: QueryID = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
+            "snap_to_point" => {
+                let point: Point3f = serde_json::from_value(msg.params.remove(4)).map_err(error)?;
+                let id_2: RefID = serde_json::from_value(msg.params.remove(3)).map_err(error)?;
+                let id_1: RefID = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
+                let event_id: UndoEventID =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
+                operations_kernel::snap_obj_to_other(
+                    path,
+                    &event_id,
+                    id_1,
+                    &id_2,
+                    &RefType::Point,
+                    &point,
+                )
+                .map_err(error)
+            }
+            "get_closest_point" => {
+                let query: QueryID = serde_json::from_value(msg.params.remove(3)).map_err(error)?;
+                let point: Point3f = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
                 let id: RefID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::can_refer_to(&path, &id, query, &self.id).map_err(error)
-            }
-            "get_closest_result" => {
-                let query: QueryID = serde_json::from_value(msg.params.remove(4)).map_err(error)?;
-                let point: Point3f = serde_json::from_value(msg.params.remove(3)).map_err(error)?;
-                let type_1: RefType = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
-                let id: RefID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
-                let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::get_closest_result(&path, &id, &type_1, &point, query, &self.id).map_err(error)
+                operations_kernel::get_closest_result(
+                    &path,
+                    &id,
+                    &RefType::Point,
+                    &point,
+                    query,
+                    &self.id,
+                )
+                .map_err(error)
             }
             "add_object" => {
                 let json = msg.params.remove(3);
-                let type_str: String = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
+                let type_str: String =
+                    serde_json::from_value(msg.params.remove(2)).map_err(error)?;
                 let boxed = data_model::from_json(&type_str, json).map_err(error)?;
-                let event: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let event: UndoEventID =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::add_obj(&path, &event, boxed).map_err(error)
             }
             "move_object" => {
-                let delta: Vector3f = serde_json::from_value(msg.params.remove(3)).map_err(error)?;
+                let delta: Vector3f =
+                    serde_json::from_value(msg.params.remove(3)).map_err(error)?;
                 let id: RefID = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
-                let event: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let event: UndoEventID =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::move_obj(path, &event, id, &delta).map_err(error)
             }
-            "delete_obj" => {
+            "delete_object" => {
                 let id: RefID = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
-                let event: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let event: UndoEventID =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::delete_obj(&path, &event, &id).map_err(error)
             }
-            "get_obj_data" => {
+            "get_object_data" => {
                 let query: QueryID = serde_json::from_value(msg.params.remove(3)).map_err(error)?;
-                let prop_name: String = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
+                let prop_name: String =
+                    serde_json::from_value(msg.params.remove(2)).map_err(error)?;
                 let id: RefID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::get_obj_data(&path, &id, &prop_name, query, &self.id).map_err(error)
+                operations_kernel::get_obj_data(&path, &id, &prop_name, query, &self.id)
+                    .map_err(error)
             }
-            "set_obj_data" => {
+            "set_object_data" => {
                 let data = msg.params.remove(3);
                 let id: RefID = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
-                let event: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let event: UndoEventID =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::set_obj_data(path, &event, id, &data).map_err(error)
+                operations_kernel::set_obj_data(path, &event, id, data).map_err(error)
             }
-            "set_objs_data" => {
-                let data: Vec<(RefID, serde_json::Value)> = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
-                let event: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+            "set_object_datas" => {
+                let data: Vec<(RefID, serde_json::Value)> =
+                    serde_json::from_value(msg.params.remove(2)).map_err(error)?;
+                let event: UndoEventID =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::set_objs_data(path, &event, data).map_err(error)
             }
             "move_objects" => {
-                let delta: Vector3f = serde_json::from_value(msg.params.remove(3)).map_err(error)?;
-                let data: std::collections::HashSet<RefID> = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
-                let event: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let delta: Vector3f =
+                    serde_json::from_value(msg.params.remove(3)).map_err(error)?;
+                let data: std::collections::HashSet<RefID> =
+                    serde_json::from_value(msg.params.remove(2)).map_err(error)?;
+                let event: UndoEventID =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::move_objs(path, &event, data, &delta).map_err(error)
             }
-            "copy_objs" => {
+            "copy_objects" => {
                 let query: QueryID = serde_json::from_value(msg.params.remove(3)).map_err(error)?;
-                let data: std::collections::HashSet<RefID> = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
-                let event: UndoEventID = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let data: std::collections::HashSet<RefID> =
+                    serde_json::from_value(msg.params.remove(2)).map_err(error)?;
+                let event: UndoEventID =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::copy_objs(path, &event, data, query, &self.id).map_err(error)
             }
             "demo" => {
-                let position: Point3f = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let position: Point3f =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::demo(&path, &self.id, &position).map_err(error)
             }
             "demo_100" => {
-                let position: Point3f = serde_json::from_value(msg.params.remove(1)).map_err(error)?;
+                let position: Point3f =
+                    serde_json::from_value(msg.params.remove(1)).map_err(error)?;
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
                 operations_kernel::demo_100(path, self.id.clone(), position);
                 Ok(())
             }
-            _ => {
-                Err(error("Not Implemented"))
-            }
+            _ => Err(error("Not Implemented")),
         }
     }
 

@@ -459,10 +459,11 @@ export function demo_100(position: Point3d) {
 }
 
 export function createDataObjectFromJSON(data: any) {
+    console.log(data)
     switch (data.type) {
         case "Wall":
-            return new dataModel.JsWall(data.obj.first_pt.geom.pt, data.obj.second_pt.geom.pt, data.obj.width, data.obj.height)
+            return new dataModel.JsWall(data.obj.First, data.obj.Second, data.obj.Width, data.obj.Height)
         case "Door":
-            return new dataModel.JsDoor(data.obj.dir.geom.pt_1, data.obj.dir.geom.pt_2, data.obj.width, data.obj.height)
+            return new dataModel.JsDoor(data.obj.First, data.obj.Second, data.obj.Width, data.obj.Height)
     }
 }

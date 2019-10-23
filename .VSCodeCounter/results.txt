@@ -1,0 +1,114 @@
+Date : 2019-10-22 10:39:46
+Directory : d:\Personal\flexi-cad
+Total : 58 files,  19036 codes, 205 comments, 738 blanks, all 19979 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| JSON       |          8 |     11,886 |          0 |          4 |     11,890 |
+| Rust       |         29 |      5,396 |         38 |        543 |      5,977 |
+| TypeScript |         13 |      1,577 |        163 |        162 |      1,902 |
+| HTML       |          2 |         70 |          0 |          5 |         75 |
+| JavaScript |          2 |         62 |          4 |          3 |         69 |
+| Markdown   |          3 |         40 |          0 |         20 |         60 |
+| Ignore     |          1 |          5 |          0 |          1 |          6 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                      | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                         |         58 |     19,036 |        205 |        738 |     19,979 |
+| ui                                                        |         35 |     14,640 |        169 |        330 |     15,139 |
+| ui\browser                                                |          7 |      6,958 |          5 |          6 |      6,969 |
+| ui\electron                                               |         13 |      5,943 |        151 |        103 |      6,197 |
+| operations\src                                            |         13 |      2,617 |          9 |        238 |      2,864 |
+| operations                                                |         13 |      2,617 |          9 |        238 |      2,864 |
+| data-model\src                                            |          7 |      1,452 |          6 |        141 |      1,599 |
+| data-model                                                |          7 |      1,452 |          6 |        141 |      1,599 |
+| operations\src\operation_manager                          |          7 |      1,444 |          5 |        137 |      1,586 |
+| ui\src                                                    |          9 |      1,400 |         12 |        146 |      1,558 |
+| ui\electron\native                                        |          7 |        881 |        143 |         86 |      1,110 |
+| ui\electron\native\src                                    |          5 |        818 |          0 |         81 |        899 |
+| operations\src\operation_manager\data_manager             |          4 |        796 |          2 |         81 |        879 |
+| data-model\src\entities                                   |          4 |        777 |          1 |         71 |        849 |
+| ui\src\ui                                                 |          6 |        750 |          7 |         74 |        831 |
+| operations\src\entity_ops                                 |          3 |        590 |          3 |         26 |        619 |
+| data-model\src\geometry_kernel                            |          2 |        556 |          4 |         57 |        617 |
+| ui\src\operations                                         |          1 |        419 |          0 |         49 |        468 |
+| ui\data-model-wasm                                        |          6 |        339 |          1 |         75 |        415 |
+| server                                                    |          2 |        319 |         21 |         27 |        367 |
+| server\src                                                |          2 |        319 |         21 |         27 |        367 |
+| ui\src\ui\tools                                           |          3 |        245 |          5 |         30 |        280 |
+| ui\src\rendering                                          |          1 |        193 |          5 |         17 |        215 |
+| ui\data-model-wasm\src                                    |          1 |        186 |          1 |         53 |        240 |
+| operations\src\operation_manager\dep_manager              |          1 |        158 |          3 |         18 |        179 |
+| ui\src\utils                                              |          1 |         38 |          0 |          6 |         44 |
+| ui\data-model-wasm\js                                     |          1 |          1 |          0 |          1 |          2 |
++-----------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                  | language   | code       | comment    | blank      | total      |
++-----------------------------------------------------------+------------+------------+------------+------------+------------+
+| README.md                                                 | Markdown   |          8 |          0 |          2 |         10 |
+| data-model\src\entities\dimension.rs                      | Rust       |        186 |          1 |         22 |        209 |
+| data-model\src\entities\door.rs                           | Rust       |        240 |          0 |         23 |        263 |
+| data-model\src\entities\mod.rs                            | Rust       |          3 |          0 |          1 |          4 |
+| data-model\src\entities\wall.rs                           | Rust       |        348 |          0 |         25 |        373 |
+| data-model\src\geometry_kernel\mod.rs                     | Rust       |        327 |          4 |         48 |        379 |
+| data-model\src\geometry_kernel\primitives.rs              | Rust       |        229 |          0 |          9 |        238 |
+| data-model\src\lib.rs                                     | Rust       |        119 |          1 |         13 |        133 |
+| operations\src\app_state.rs                               | Rust       |        238 |          0 |         29 |        267 |
+| operations\src\entity_ops\mod.rs                          | Rust       |         75 |          1 |          6 |         82 |
+| operations\src\entity_ops\snapping.rs                     | Rust       |         92 |          0 |          6 |         98 |
+| operations\src\entity_ops\tests.rs                        | Rust       |        423 |          2 |         14 |        439 |
+| operations\src\lib.rs                                     | Rust       |        177 |          1 |         21 |        199 |
+| operations\src\operation_manager\data_manager\database.rs | Rust       |        274 |          0 |         23 |        297 |
+| operations\src\operation_manager\data_manager\mod.rs      | Rust       |         96 |          0 |         24 |        120 |
+| operations\src\operation_manager\data_manager\tests.rs    | Rust       |        182 |          2 |         11 |        195 |
+| operations\src\operation_manager\data_manager\undo.rs     | Rust       |        244 |          0 |         23 |        267 |
+| operations\src\operation_manager\dep_manager\mod.rs       | Rust       |        158 |          3 |         18 |        179 |
+| operations\src\operation_manager\mod.rs                   | Rust       |        257 |          0 |         31 |        288 |
+| operations\src\operation_manager\tests.rs                 | Rust       |        233 |          0 |          7 |        240 |
+| operations\src\tests.rs                                   | Rust       |        168 |          0 |         25 |        193 |
+| server\src\main.rs                                        | Rust       |         79 |          4 |         12 |         95 |
+| server\src\ws_actor.rs                                    | Rust       |        240 |         17 |         15 |        272 |
+| ui\browser\README.md                                      | Markdown   |          1 |          0 |          0 |          1 |
+| ui\browser\index.ejs                                      | HTML       |         24 |          0 |          1 |         25 |
+| ui\browser\index.ts                                       | TypeScript |         21 |          1 |          2 |         24 |
+| ui\browser\package-lock.json                              | JSON       |      6,795 |          0 |          1 |      6,796 |
+| ui\browser\package.json                                   | JSON       |         34 |          0 |          0 |         34 |
+| ui\browser\tsconfig.json                                  | JSON       |         22 |          0 |          0 |         22 |
+| ui\browser\webpack.config.js                              | JavaScript |         61 |          4 |          2 |         67 |
+| ui\data-model-wasm\.gitignore                             | Ignore     |          5 |          0 |          1 |          6 |
+| ui\data-model-wasm\README.md                              | Markdown   |         31 |          0 |         18 |         49 |
+| ui\data-model-wasm\js\index.js                            | JavaScript |          1 |          0 |          1 |          2 |
+| ui\data-model-wasm\package-lock.json                      | JSON       |        105 |          0 |          1 |        106 |
+| ui\data-model-wasm\package.json                           | JSON       |         11 |          0 |          1 |         12 |
+| ui\data-model-wasm\src\lib.rs                             | Rust       |        186 |          1 |         53 |        240 |
+| ui\electron\index_electron.html                           | HTML       |         46 |          0 |          4 |         50 |
+| ui\electron\index_electron.ts                             | TypeScript |          7 |          0 |          3 |         10 |
+| ui\electron\main.ts                                       | TypeScript |         90 |          8 |          9 |        107 |
+| ui\electron\native\build.rs                               | Rust       |          4 |          1 |          3 |          8 |
+| ui\electron\native\index.d.ts                             | TypeScript |         59 |        142 |          2 |        203 |
+| ui\electron\native\src\dimension.rs                       | Rust       |        115 |          0 |         12 |        127 |
+| ui\electron\native\src\door.rs                            | Rust       |        145 |          0 |         15 |        160 |
+| ui\electron\native\src\lib.rs                             | Rust       |        411 |          0 |         39 |        450 |
+| ui\electron\native\src\math.rs                            | Rust       |         12 |          0 |          1 |         13 |
+| ui\electron\native\src\wall.rs                            | Rust       |        135 |          0 |         14 |        149 |
+| ui\electron\package-lock.json                             | JSON       |      4,866 |          0 |          1 |      4,867 |
+| ui\electron\package.json                                  | JSON       |         28 |          0 |          0 |         28 |
+| ui\electron\tsconfig.json                                 | JSON       |         25 |          0 |          0 |         25 |
+| ui\src\operations\operations.ts                           | TypeScript |        419 |          0 |         49 |        468 |
+| ui\src\rendering\renderer.ts                              | TypeScript |        193 |          5 |         17 |        215 |
+| ui\src\ui\controller.ts                                   | TypeScript |        285 |          1 |         29 |        315 |
+| ui\src\ui\gui.ts                                          | TypeScript |        179 |          0 |          9 |        188 |
+| ui\src\ui\mouse_events.ts                                 | TypeScript |         41 |          1 |          6 |         48 |
+| ui\src\ui\tools\dimension_tool.ts                         | TypeScript |         90 |          1 |         10 |        101 |
+| ui\src\ui\tools\door_tool.ts                              | TypeScript |         81 |          3 |         10 |         94 |
+| ui\src\ui\tools\wall_tool.ts                              | TypeScript |         74 |          1 |         10 |         85 |
+| ui\src\utils\math.ts                                      | TypeScript |         38 |          0 |          6 |         44 |
+| Total                                                     |            |     19,036 |        205 |        738 |     19,979 |
++-----------------------------------------------------------+------------+------------+------------+------------+------------+

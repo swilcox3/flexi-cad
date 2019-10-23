@@ -10,6 +10,7 @@ export class DoorTool {
     undoEventId: string
 
     constructor(width = 1, height = 4, length = 3) {
+        console.log("door tool constructor")
         this.curTemp = null;
         this.width = width;
         this.height = height;
@@ -34,6 +35,7 @@ export class DoorTool {
     }
 
     onMouseDown(pt: Point3d, picked: BABYLON.Mesh) {
+        console.log("door down: ", pt);
         this.createDoor(new Point3d(pt.x, pt.y, 0), picked);
         this.curTemp = null;
     }
