@@ -27,18 +27,30 @@ impl OperationManager {
     }
 
     pub fn open(path: &PathBuf, user: UserID, sender: Sender<UpdateMsg>) -> Result<OperationManager, DBError> {
-        let data = DataManager::open(path)?;
+        let (data, keys) = DataManager::open(path)?;
+        info!("File is opened");
         let ops = OperationManager {
             data: data,
             deps: DependencyManager::new(),
             updates: DHashMap::default(),
         };
         ops.updates.insert(user.clone(), sender);
-        ops.data.iterate_all_mut(&mut |obj: &mut DataObject| {
-            ops.register_deps(&obj);
-            let msg = obj.update()?;
-            ops.send(msg, Some(&user))
-        })?;
+        keys.par_iter().for_each(|key| {
+            if let Err(e) = ops.data.get_mut_obj_no_undo(key, |obj| {
+                ops.register_deps(&obj);
+                match obj.update() {
+                    Ok(msg) => {
+                        if let Err(e) = ops.send(msg, Some(&user)) {
+                            error!("Error sending update: {:?}", e);
+                        }
+                    }
+                    Err(e) => error!("Error updating object {:?}", e),
+                }
+                Ok(())
+            }) {
+                error!("Error getting object {:?}", e);
+            }
+        });
         Ok(ops)
     }
 
@@ -105,9 +117,7 @@ impl OperationManager {
     }
 
     pub fn update_all(&self, only_to: Option<&UserID>) -> Result<(), DBError> {
-        let mut set = HashSet::new();
         self.data.iterate_all_mut(&mut |obj: &mut DataObject| {
-            set.insert(obj.get_id().clone());
             let msg = obj.update()?;
             self.send(msg, only_to)
         })

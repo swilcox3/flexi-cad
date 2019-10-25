@@ -22,14 +22,17 @@ impl DataManager {
         }
     }
 
-    pub fn open(path: &PathBuf) -> Result<DataManager, DBError> {
+    pub fn open(path: &PathBuf) -> Result<(DataManager, Vec<RefID>), DBError> {
         let db = database::FileDatabase::new();
-        db.open(path)?;
-        Ok(DataManager {
-            db: db,
-            pending: undo::PendingEvents::new(),
-            undo: Mutex::new(undo::UndoStack::new()),
-        })
+        let keys = db.open(path)?;
+        Ok((
+            DataManager {
+                db: db,
+                pending: undo::PendingEvents::new(),
+                undo: Mutex::new(undo::UndoStack::new()),
+            },
+            keys,
+        ))
     }
 
     pub fn save(&self, path: &PathBuf) -> Result<(), DBError> {

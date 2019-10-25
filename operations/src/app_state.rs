@@ -21,33 +21,25 @@ impl AppState {
 #[allow(unused_must_use)]
 pub fn init_file(file: PathBuf, user: UserID, updates: Sender<UpdateMsg>) {
     rayon::ThreadPoolBuilder::new().num_threads(6).build_global();
-    let mut send_updates = false;
     if let Some(ops) = APP_STATE.files.get(&file) {
         ops.updates.insert(user, updates);
-        send_updates = true;
-    } else if file.exists() {
-        match OperationManager::open(&file, user, updates) {
-            Ok(ops) => {
-                APP_STATE.files.insert(file.clone(), ops);
-                send_updates = true;
-            }
-            Err(e) => error!("Couldn't open file: {:?}", e),
-        }
-    } else {
-        APP_STATE.files.insert(file.clone(), OperationManager::new(user, updates));
-    }
-    if let Some(ops) = APP_STATE.files.get(&file) {
-        info!("Saving file: {:?}", file);
-        if let Err(e) = ops.save(&file) {
-            error!("Error saving file {:?}, {:?}", file, e);
-        }
-    }
-    if send_updates {
+        info!("Sending file updates");
         if let Some(ops) = APP_STATE.files.get(&file) {
             if let Err(e) = ops.update_all(Some(&user)) {
                 error!("Error sending open file updates {:?}", e);
             }
         }
+    } else if file.exists() {
+        info!("Going to open file {:?}", file);
+        rayon::spawn(move || match OperationManager::open(&file, user, updates) {
+            Ok(ops) => {
+                info!("Opened file {:?}", file);
+                APP_STATE.files.insert(file.clone(), ops);
+            }
+            Err(e) => error!("Couldn't open file: {:?}", e),
+        })
+    } else {
+        APP_STATE.files.insert(file.clone(), OperationManager::new(user, updates));
     }
 }
 

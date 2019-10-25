@@ -172,13 +172,17 @@ impl FileDatabase {
         Ok(())
     }
 
-    pub fn open(&self, path: &PathBuf) -> Result<(), DBError> {
+    pub fn open(&self, path: &PathBuf) -> Result<Vec<RefID>, DBError> {
         let file = std::fs::File::open(path).map_err(error_other)?;
         let objects: Vec<DataObject> = serde_json::from_reader(file).map_err(error_other)?;
+        let mut keys = Vec::new();
         for obj in objects {
-            self.add(obj)?;
+            keys.push(obj.get_id().clone());
+            if let Err(e) = self.add(obj) {
+                error!("Error adding object during open: {:?}", e);
+            }
         }
-        Ok(())
+        Ok(keys)
     }
 
     pub fn debug_state(&self, output: &mut String) {
