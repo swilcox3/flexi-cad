@@ -28,22 +28,51 @@
         const electron_1 = require("electron");
         const ops = require("./app/src/operations/operations");
         var mod = require("./native/index.node");
+        const prompt = require('electron-prompt');
         var user = ops.initialize(mod);
-        electron_1.ipcRenderer.on('newFile', function (event, connection) {
-            if (connection) {
-                connection = connection + "?user_id=" + user;
-                var conn = new WebSocketAsPromised(connection, {
-                    packMessage: (data) => JSON.stringify(data),
-                    unpackMessage: (data) => JSON.parse(data),
-                });
-                ops.setConnection(conn).then(() => {
-                    ops.initFile(document.getElementById('render-canvas'));
-                });
-            }
-            else {
-                ops.initFile(document.getElementById('render-canvas'));
-            }
+        electron_1.ipcRenderer.on('newFile', function (event) {
+            prompt({
+                label: "Connect to server: ",
+                value: "192.168.6.104:8000",
+                type: "input",
+                alwaysOnTop: true,
+            })
+                .then((connection) => {
+                    if (connection) {
+                        connection = "ws://" + connection + "/ws?user_id=" + user;
+                        var conn = new WebSocketAsPromised(connection, {
+                            packMessage: (data) => JSON.stringify(data),
+                            unpackMessage: (data) => JSON.parse(data),
+                        });
+                        ops.setConnection(conn).then(() => {
+                            prompt({
+                                label: "File name:",
+                                value: "defaultNew.flx",
+                                type: "input",
+                                alwaysOnTop: true,
+                            })
+                                .then((file) => {
+                                    ops.initFile(document.getElementById('render-canvas'), file);
+                                })
+                        });
+                    }
+                    else {
+                        prompt({
+                            label: "File name:",
+                            value: "defaultNew.flx",
+                            type: "input",
+                            alwaysOnTop: true,
+                        })
+                            .then((file) => {
+                                ops.initFile(document.getElementById('render-canvas'), file);
+                            })
+                    }
+
+                })
         });
+        window.addEventListener("unload", () => {
+            ops.closeFile()
+        })
     </script>
 </body>
 

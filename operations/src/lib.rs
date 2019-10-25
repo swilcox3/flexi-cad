@@ -37,7 +37,7 @@ use prelude::*;
 type LibResult = Result<(), DBError>;
 
 pub use app_state::{
-    begin_undo_event, cancel_event, copy_obj, end_undo_event, init_file, open_file, redo_latest, resume_event, save_as_file, save_file,
+    begin_undo_event, cancel_event, close_file, copy_obj, end_undo_event, init_file, redo_latest, resume_event, save_as_file, save_file,
     suspend_event, take_undo_snapshot, undo_latest,
 };
 
@@ -190,7 +190,9 @@ pub fn demo_100(file: PathBuf, user: UserID, position: Point3f) {
         let j_s: Vec<u64> = (0..10).collect();
         i_s.par_iter().for_each(|i| {
             j_s.par_iter().for_each(|j| {
-                demo(&file, &user, &(position + Vector3f::new(75.0 * (*i as f64), 75.0 * (*j as f64), 0.0))).unwrap();
+                if let Err(e) = demo(&file, &user, &(position + Vector3f::new(75.0 * (*i as f64), 75.0 * (*j as f64), 0.0))) {
+                    error!("Error in demo: {:?}", e);
+                }
             });
         });
         println!("Done!");

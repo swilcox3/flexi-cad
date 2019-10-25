@@ -48,8 +48,9 @@ function send(func: string, params: Array<any>) {
     connection.sendPacked(msg)
 }
 
-export function initFile(canvas: HTMLCanvasElement) {
-    filename = "defaultNew.flx"
+export function initFile(canvas: HTMLCanvasElement, name: string) {
+    filename = name;
+    console.log("Opening file: ", filename)
     if (connection) {
         send("init_file", [filename])
     }
@@ -60,16 +61,13 @@ export function initFile(canvas: HTMLCanvasElement) {
     renderNext(filename)  //This will readd itself, so it's an infinite loop in the background
 }
 
-export function openFile(in_file: string, canvas: HTMLCanvasElement) {
-    filename = in_file;
+export function closeFile() {
     if (connection) {
-        send("open_file", [filename])
+        send("close_file", [filename])
     }
     else {
-        dataModel.open_file(filename, user)
+        dataModel.close_file(filename, user)
     }
-    initRenderer(canvas)
-    renderNext(filename)
 }
 
 export function saveFile() {
@@ -189,7 +187,6 @@ export function deleteObject(event: string, id: string) {
 }
 
 function handleUpdate(msg: any) {
-    console.log(msg);
     if (msg.Error) {
         console.log(msg.Error.msg)
     }
@@ -459,11 +456,12 @@ export function demo_100(position: Point3d) {
 }
 
 export function createDataObjectFromJSON(data: any) {
-    console.log(data)
-    switch (data.type) {
-        case "Wall":
-            return new dataModel.JsWall(data.obj.First, data.obj.Second, data.obj.Width, data.obj.Height)
-        case "Door":
-            return new dataModel.JsDoor(data.obj.First, data.obj.Second, data.obj.Width, data.obj.Height)
+    if (data) {
+        switch (data.type) {
+            case "Wall":
+                return new dataModel.JsWall(data.obj.First, data.obj.Second, data.obj.Width, data.obj.Height)
+            case "Door":
+                return new dataModel.JsDoor(data.obj.First, data.obj.Second, data.obj.Width, data.obj.Height)
+        }
     }
 }

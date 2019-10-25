@@ -50,10 +50,16 @@ impl OperationManager {
                 Err(DBError::UserNotFound)
             }
         } else {
+            let mut to_remove = Vec::new();
             for chunk in self.updates.chunks() {
-                for (_, upd) in chunk.iter() {
-                    upd.send(msg.clone()).map_err(error_other)?;
+                for (key, upd) in chunk.iter() {
+                    if let Err(_) = upd.send(msg.clone()) {
+                        to_remove.push(key.clone());
+                    }
                 }
+            }
+            for delete in to_remove {
+                self.updates.remove(&delete);
             }
             Ok(())
         }

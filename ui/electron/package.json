@@ -1,11 +1,13 @@
 {
   "name": "cad-ui-js",
+  "productName": "TechDemo",
   "version": "1.0.0",
   "description": "",
   "private": true,
   "scripts": {
     "build": "electron-build-env neon build --release && tsc",
     "start": "npm run build && electron ./app/electron/main.js",
+    "pack": "electron-packager . TechDemo --overwrite",
     "start_nb": "electron ./app/electron/main.js"
   },
   "author": "",
@@ -14,11 +16,13 @@
     "babylonjs": "^4.0.3",
     "babylonjs-gui": "^4.0.0",
     "babylonjs-procedural-textures": "^4.0.3",
+    "electron-prompt": "^1.4.0",
     "websocket-as-promised": "^0.10.1"
   },
   "devDependencies": {
     "electron": "^3.1.13",
     "electron-build-env": "^0.2.0",
+    "electron-packager": "^14.0.6",
     "neon-cli": "^0.3.1",
     "node-loader": "^0.6.0",
     "typescript": "^3.5.3"

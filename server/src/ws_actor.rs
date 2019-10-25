@@ -103,6 +103,11 @@ impl MyWebSocket {
                 self.updates.insert(path, r);
                 Ok(())
             }
+            "close_file" => {
+                let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
+                operations_kernel::close_file(&path, &self.id);
+                Ok(())
+            }
             "begin_undo_event" => {
                 let desc: String = serde_json::from_value(msg.params.remove(2)).map_err(error)?;
                 let id: UndoEventID =
@@ -312,7 +317,11 @@ impl MyWebSocket {
             // check client heartbeats
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
                 // heartbeat timed out
-
+                for chunk in act.updates.chunks() {
+                    for (file, _) in chunk.iter() {
+                        operations_kernel::close_file(file, &act.id);
+                    }
+                }
                 // stop actor
                 ctx.stop();
 
@@ -322,7 +331,7 @@ impl MyWebSocket {
             for chunk in act.updates.chunks() {
                 for (path, r) in chunk.iter() {
                     for msg in r.try_iter() {
-                        info!("Sending msg: {:?} for file {:?}", msg, path);
+                        trace!("Sending msg: {:?} for file {:?}", msg, path);
                         ctx.text(serde_json::to_string(&msg).unwrap());
                     }
                 }

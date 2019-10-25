@@ -1,7 +1,6 @@
 use super::undo::{Change, UndoEvent};
 use crate::prelude::*;
 use ccl::dhashmap::{DHashMap, TryGetError};
-use std::io::{Read, Write};
 use std::time::Duration;
 
 fn print_stacktrace() {
@@ -162,23 +161,20 @@ impl FileDatabase {
     }
 
     pub fn save(&self, path: &PathBuf) -> Result<(), DBError> {
-        let mut file = std::fs::File::create(path).map_err(error_other)?;
+        let file = std::fs::File::create(path).map_err(error_other)?;
         let mut vals = Vec::new();
         for chunk in self.db.chunks() {
             for (_, val) in chunk.iter() {
                 vals.push(val.clone());
             }
         }
-        let buf = bincode::serialize(&vals).map_err(error_other)?;
-        file.write_all(&buf).map_err(error_other)?;
+        serde_json::to_writer(file, &vals).map_err(error_other)?;
         Ok(())
     }
 
     pub fn open(&self, path: &PathBuf) -> Result<(), DBError> {
-        let mut file = std::fs::File::open(path).map_err(error_other)?;
-        let mut buf = Vec::new();
-        file.read_to_end(&mut buf).map_err(error_other)?;
-        let objects: Vec<DataObject> = bincode::deserialize(&buf).map_err(error_other)?;
+        let file = std::fs::File::open(path).map_err(error_other)?;
+        let objects: Vec<DataObject> = serde_json::from_reader(file).map_err(error_other)?;
         for obj in objects {
             self.add(obj)?;
         }

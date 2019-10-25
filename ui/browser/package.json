@@ -4,7 +4,7 @@
   "description": "Template for Webpack TypeScript and BabylonJS",
   "main": "index.js",
   "scripts": {
-    "build": "webpack",
+    "build": "rimraf dist && webpack",
     "start": "webpack-dev-server --open"
   },
   "keywords": [],

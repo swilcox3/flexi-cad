@@ -4,6 +4,7 @@
 /server/Cargo.lock
 /server/log
 **/*.rs.bk
+**/*.flx
 /operations/Cargo.lock
 /data-model/Cargo.lock
 /ui/electron/app

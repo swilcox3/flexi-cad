@@ -1,5 +1,5 @@
-import { app, BrowserWindow, Menu} from "electron";
-const {dialog} = require('electron');
+import { app, BrowserWindow, Menu } from "electron";
+const { dialog } = require('electron');
 import * as path from "path";
 import * as url from "url";
 
@@ -9,7 +9,8 @@ let defaultNew: string = "defaultNew.flx";
 
 function createWindow(title: string) {
   var newWindow = new BrowserWindow(
-    {"title": title, 
+    {
+      "title": title,
       show: false,
       webPreferences: {
         nodeIntegration: true
@@ -17,25 +18,15 @@ function createWindow(title: string) {
     });
 
   newWindow.loadURL(url.format({
-      pathname: path.join(__dirname, "../../index_electron.html"),
-      protocol: "file:",
-      slashes: true,
+    pathname: path.join(__dirname, "../../index_electron.html"),
+    protocol: "file:",
+    slashes: true,
   }));
 
   newWindow.webContents.openDevTools();
-  var connection: string = undefined;
 
   newWindow.once("ready-to-show", () => {
-    var response = dialog.showMessageBox(newWindow, {"type": "question", "buttons": ["Yes", "No"], "defaultId": 1, "message": "Connect to server?"})
-    if(response === 0) {
-      connection = "ws://127.0.0.1:80/ws"
-    }
-    if(title !== defaultNew) {
-      newWindow.webContents.send("openFile", title, connection)
-    }
-    else {
-      newWindow.webContents.send("newFile", connection);
-    }
+    newWindow.webContents.send("newFile");
     newWindow.show();
   });
   newWindow.on("closed", () => {
@@ -52,39 +43,7 @@ function createWindow(title: string) {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", () => {
-  createWindow("defaultNew.flx");
-  var menu = Menu.buildFromTemplate([
-    {
-      label: 'File',
-      submenu: [
-        {
-          label:'Open',
-          click() {
-            dialog.showOpenDialog({
-              properties: ['openFile']
-            }, function (files: Array<string>) {
-              if (files != undefined) {
-                files.forEach((file) => {
-                  createWindow(file)
-                })
-              }
-            })
-          }
-        },
-        {
-          label:'Save As...',
-          click() {
-            dialog.showSaveDialog({ title: "Save"}, (file:string) => {
-              if (file != undefined) {
-                curWindow.webContents.send('saveAsFile', file)
-              }
-            })
-          }
-        }
-      ]
-    }
-  ])
-  Menu.setApplicationMenu(menu)
+  createWindow("Tech Demo");
 });
 
 // Quit when all windows are closed.
@@ -100,7 +59,6 @@ app.on("activate", () => {
   // On OS X it"s common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (windows.size === 0) {
-    createWindow("defaultNew.flx");
-    curWindow.webContents.send("newFile");
+    createWindow("Tech Demo");
   }
 });

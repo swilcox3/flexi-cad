@@ -83,13 +83,12 @@ fn init_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
-fn open_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+fn close_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let user = cx.argument::<JsString>(1)?.value();
-    let (s, r) = crossbeam_channel::unbounded();
     let pathbuf = PathBuf::from(path);
-    operations_kernel::open_file(pathbuf.clone(), UserID::from_str(&user).unwrap(), s).unwrap();
-    UPDATES.insert(pathbuf, r);
+    operations_kernel::close_file(&pathbuf, &UserID::from_str(&user).unwrap());
+    UPDATES.remove(&pathbuf);
     Ok(cx.undefined())
 }
 
@@ -413,7 +412,7 @@ fn get_query_id(mut cx: FunctionContext) -> JsResult<JsString> {
 register_module!(mut cx, {
     cx.export_function("get_updates", get_updates)?;
     cx.export_function("init_file", init_file)?;
-    cx.export_function("open_file", open_file)?;
+    cx.export_function("close_file", close_file)?;
     cx.export_function("save_file", save_file)?;
     cx.export_function("save_as_file", save_as_file)?;
     cx.export_function("begin_undo_event", begin_undo_event)?;

@@ -66,7 +66,9 @@ export class WallTool {
         if (this.undoEventId) {
             ops.endUndoEvent(this.undoEventId)
         }
-        ops.deleteTempObject(this.curTemp.id())
+        if (this.curTemp) {
+            ops.deleteTempObject(this.curTemp.id())
+        }
     }
 
     drawWall() {

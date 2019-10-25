@@ -14,41 +14,60 @@ pub struct AppState {
 
 impl AppState {
     fn new() -> AppState {
-        AppState {
-            files: DHashMap::default(),
+        AppState { files: DHashMap::default() }
+    }
+}
+
+#[allow(unused_must_use)]
+pub fn init_file(file: PathBuf, user: UserID, updates: Sender<UpdateMsg>) {
+    rayon::ThreadPoolBuilder::new().num_threads(6).build_global();
+    let mut send_updates = false;
+    if let Some(ops) = APP_STATE.files.get(&file) {
+        ops.updates.insert(user, updates);
+        send_updates = true;
+    } else if file.exists() {
+        match OperationManager::open(&file, user, updates) {
+            Ok(ops) => {
+                APP_STATE.files.insert(file.clone(), ops);
+                send_updates = true;
+            }
+            Err(e) => error!("Couldn't open file: {:?}", e),
+        }
+    } else {
+        APP_STATE.files.insert(file.clone(), OperationManager::new(user, updates));
+    }
+    if let Some(ops) = APP_STATE.files.get(&file) {
+        info!("Saving file: {:?}", file);
+        if let Err(e) = ops.save(&file) {
+            error!("Error saving file {:?}, {:?}", file, e);
+        }
+    }
+    if send_updates {
+        if let Some(ops) = APP_STATE.files.get(&file) {
+            if let Err(e) = ops.update_all(Some(&user)) {
+                error!("Error sending open file updates {:?}", e);
+            }
         }
     }
 }
 
-pub fn init_file(file: PathBuf, user: UserID, updates: Sender<UpdateMsg>) {
-    if let Err(_) = rayon::ThreadPoolBuilder::new()
-        .num_threads(6)
-        .build_global()
-    {
-        println!("Thread pool already initialized");
+pub fn close_file(file: &PathBuf, user: &UserID) {
+    let mut remove = false;
+    if let Some(ops) = APP_STATE.files.get(file) {
+        info!("Saving file: {:?}", file);
+        if let Err(e) = ops.save(file) {
+            error!("Error saving file {:?}, {:?}", file, e);
+        }
+        info!("Removing user {:?} from file {:?}", user, file);
+        ops.updates.remove(user);
+        if ops.updates.len() == 0 {
+            remove = true;
+        }
     }
-    if let Some(ops) = APP_STATE.files.get(&file) {
-        ops.updates.insert(user, updates);
-    } else {
-        APP_STATE
-            .files
-            .insert(file, OperationManager::new(user, updates));
+    if remove {
+        info!("Closing file: {:?}", file);
+        APP_STATE.files.remove(file);
     }
-}
-
-pub fn open_file(file: PathBuf, user: UserID, updates: Sender<UpdateMsg>) -> Result<(), DBError> {
-    if let Some(ops) = APP_STATE.files.get(&file) {
-        ops.updates.insert(user, updates);
-    } else {
-        let ops = OperationManager::open(&file, user, updates)?;
-        APP_STATE.files.insert(file.clone(), ops);
-        rayon::spawn(move || {
-            if let Some(ops) = APP_STATE.files.get(&file) {
-                ops.update_all(Some(&user)).unwrap();
-            }
-        });
-    }
-    Ok(())
 }
 
 pub fn save_file(file: &PathBuf) -> Result<(), DBError> {
@@ -74,12 +93,7 @@ pub fn save_as_file(orig_file: &PathBuf, file_new: PathBuf) -> Result<(), DBErro
     }
 }
 
-pub fn send_read_result(
-    file: &PathBuf,
-    query_id: QueryID,
-    user: &UserID,
-    data: serde_json::Value,
-) -> Result<(), DBError> {
+pub fn send_read_result(file: &PathBuf, query_id: QueryID, user: &UserID, data: serde_json::Value) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => {
             info!("Sending data {:?} to user {:?}", data, user);
@@ -96,12 +110,7 @@ pub fn send_read_result(
     }
 }
 
-pub fn begin_undo_event(
-    file: &PathBuf,
-    user_id: &UserID,
-    event_id: UndoEventID,
-    desc: String,
-) -> Result<(), DBError> {
+pub fn begin_undo_event(file: &PathBuf, user_id: &UserID, event_id: UndoEventID, desc: String) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.begin_undo_event(user_id, event_id, desc),
         None => Err(DBError::FileNotFound),
@@ -164,11 +173,7 @@ pub fn add_obj(file: &PathBuf, event: &UndoEventID, obj: DataObject) -> Result<(
     }
 }
 
-pub fn get_obj(
-    file: &PathBuf,
-    id: &RefID,
-    mut callback: impl FnMut(&DataObject) -> Result<(), DBError>,
-) -> Result<(), DBError> {
+pub fn get_obj(file: &PathBuf, id: &RefID, mut callback: impl FnMut(&DataObject) -> Result<(), DBError>) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => ops.get_obj(id, &mut callback),
         None => Err(DBError::FileNotFound),
@@ -203,18 +208,16 @@ pub fn add_ref(
     snap_pt: &Option<Point3f>,
 ) -> Result<(), DBError> {
     let mut index = 0;
-    modify_obj(&file, &event, &obj, |owner| {
-        match owner.query_mut::<dyn UpdateFromRefs>() {
-            Some(joinable) => {
-                index = joinable.get_num_refs();
-                if joinable.add_ref(result, refer.clone(), snap_pt) {
-                    Ok(())
-                } else {
-                    Err(error_other("Reference not added"))
-                }
+    modify_obj(&file, &event, &obj, |owner| match owner.query_mut::<dyn UpdateFromRefs>() {
+        Some(joinable) => {
+            index = joinable.get_num_refs();
+            if joinable.add_ref(result, refer.clone(), snap_pt) {
+                Ok(())
+            } else {
+                Err(error_other("Reference not added"))
             }
-            None => Err(DBError::ObjLacksTrait),
         }
+        None => Err(DBError::ObjLacksTrait),
     })?;
     add_deps(&file, obj)
 }
@@ -228,14 +231,12 @@ pub fn set_ref(
     refer: GeometryId,
     snap_pt: &Option<Point3f>,
 ) -> Result<(), DBError> {
-    modify_obj(&file, &event, &obj, |owner| {
-        match owner.query_mut::<dyn UpdateFromRefs>() {
-            Some(joinable) => {
-                joinable.set_ref(index, result, refer.clone(), snap_pt);
-                Ok(())
-            }
-            None => Err(DBError::ObjLacksTrait),
+    modify_obj(&file, &event, &obj, |owner| match owner.query_mut::<dyn UpdateFromRefs>() {
+        Some(joinable) => {
+            joinable.set_ref(index, result, refer.clone(), snap_pt);
+            Ok(())
         }
+        None => Err(DBError::ObjLacksTrait),
     })?;
     add_deps(&file, obj)
 }
@@ -267,11 +268,7 @@ pub fn add_deps(file: &PathBuf, id: &RefID) -> Result<(), DBError> {
     }
 }
 
-pub fn remove_dep(
-    file: &PathBuf,
-    publisher: &GeometryId,
-    subscriber: &GeometryId,
-) -> Result<(), DBError> {
+pub fn remove_dep(file: &PathBuf, publisher: &GeometryId, subscriber: &GeometryId) -> Result<(), DBError> {
     match APP_STATE.files.get(file) {
         Some(ops) => Ok(ops.remove_dep(publisher, subscriber)),
         None => Err(DBError::FileNotFound),
