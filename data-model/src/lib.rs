@@ -16,6 +16,7 @@ use uuid::Uuid;
 pub use cgmath::prelude::*;
 pub use entities::dimension::Dimension;
 pub use entities::door::Door;
+pub use entities::slab::Slab;
 pub use entities::wall::Wall;
 pub use geometry_kernel::*;
 

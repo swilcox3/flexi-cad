@@ -109,6 +109,41 @@ impl JsWall {
 }
 
 #[wasm_bindgen]
+pub struct JsSlab {
+    slab: data_model::Slab,
+}
+
+#[wasm_bindgen]
+impl JsSlab {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> JsSlab {
+        let slab = data_model::Slab::new();
+        JsSlab { slab }
+    }
+
+    pub fn getTempRepr(&self) -> JsValue {
+        let msg = self.slab.get_temp_repr().unwrap();
+        JsValue::from_serde(&msg).unwrap()
+    }
+
+    pub fn moveObj(&mut self, delta: CoordTriple) {
+        self.slab.move_obj(&vector_3f(&delta));
+    }
+
+    pub fn getObj(&self) -> JsValue {
+        JsValue::from_serde(&json!({
+            "type": "Slab",
+            "obj": &self.slab
+        }))
+        .unwrap()
+    }
+
+    pub fn id(&self) -> String {
+        format!("{:?}", self.slab.get_id())
+    }
+}
+
+#[wasm_bindgen]
 pub struct JsDoor {
     door: data_model::Door,
 }

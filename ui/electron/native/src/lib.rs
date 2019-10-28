@@ -14,6 +14,7 @@ extern crate lazy_static;
 mod dimension;
 mod door;
 mod math;
+mod slab;
 mod wall;
 
 use ccl::dhashmap::DHashMap;
@@ -444,5 +445,6 @@ register_module!(mut cx, {
     cx.export_class::<dimension::JsDimension>("JsDimension")?;
     cx.export_class::<wall::JsWall>("JsWall")?;
     cx.export_class::<door::JsDoor>("JsDoor")?;
+    cx.export_class::<slab::JsSlab>("JsSlab")?;
     Ok(())
 });

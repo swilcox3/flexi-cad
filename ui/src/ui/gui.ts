@@ -3,6 +3,7 @@ import * as BABYLON from 'babylonjs'
 import { WallTool } from './tools/wall_tool'
 import { DoorTool } from './tools/door_tool'
 import { DimensionTool } from './tools/dimension_tool'
+import { SlabTool } from './tools/slab_tool'
 import * as ops from "../operations/operations"
 import { Point3d } from "../utils/math"
 import { UIControllerSingleton } from './controller'
@@ -55,6 +56,10 @@ export class GUI {
             var tool = new DimensionTool()
             mySingleton.setActiveTool(tool)
         })
+        this.newButton("but4", "Slab", this.buttonPanel, () => {
+            var tool = new SlabTool()
+            mySingleton.setActiveTool(tool)
+        });
         this.newButton("demo", "Demo 1", this.buttonPanel, () => {
             ops.demo(new Point3d(0, 0, 0))
         })

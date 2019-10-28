@@ -6,6 +6,7 @@ declare global {
   export type JsDimension = import("../data-model-wasm/pkg/index").JsDimension;
   export type JsWall = import("../data-model-wasm/pkg/index").JsWall;
   export type JsDoor = import("../data-model-wasm/pkg/index").JsDoor;
+  export type JsSlab = import("../data-model-wasm/pkg/index").JsSlab;
 }
 window.addEventListener('DOMContentLoaded', () => {
   import("../data-model-wasm/pkg/index").then(mod => {
