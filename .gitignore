@@ -20,3 +20,4 @@
 /ui/browser/dist
 /ui/browser/pkg
 /ui/browser/node_modules
+server/server_log.log

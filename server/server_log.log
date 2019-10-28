@@ -61,3 +61,533 @@ Response HTTP/1.1 101 Switching Protocols
 [2019-10-28][11:05:01][actix_server::builder][INFO] Starting 8 workers
 [2019-10-28][11:05:01][actix_server::builder][INFO] Starting server on 192.168.6.104:8000
 [2019-10-28][11:05:01][actix_server::builder][INFO] Starting server on 192.168.6.104:80
+[2019-10-28][11:05:04][server::ws_actor][INFO] 
+Response HTTP/1.1 101 Switching Protocols
+  headers:
+    "upgrade": "websocket"
+    "sec-websocket-accept": "C0Z79mqHm5imEhXpb6u59UK7hc4="
+    "transfer-encoding": "chunked"
+  body: Stream
+
+[2019-10-28][11:05:08][server::ws_actor][INFO] CmdMsg { func_name: "init_file", params: [String("defaultNew3.flx")] }
+[2019-10-28][11:05:08][operations_kernel::app_state][INFO] Going to open file "defaultNew3.flx"
+[2019-10-28][11:05:08][server::ws_actor][INFO] Processed in 0.0009998 seconds
+[2019-10-28][11:05:08][operations_kernel::operation_manager][INFO] File is opened
+[2019-10-28][11:05:25][operations_kernel::app_state][INFO] Opened file "defaultNew3.flx"
+[2019-10-28][11:05:42][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew3.flx"), String("12dfbf25-f34a-46c8-825e-09b9a94b56d3"), String("Move objs")] }
+[2019-10-28][11:05:42][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:05:42][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew3.flx"), String("12dfbf25-f34a-46c8-825e-09b9a94b56d3"), Array([String("45ed4461-4504-4fde-a886-be0122242292")]), Object({"x": Number(-13.588918537295513), "y": Number(26.360566249507883), "z": Number(0.00000000000005684341886080803)})] }
+[2019-10-28][11:05:42][server::ws_actor][INFO] Processed in 0.0030294 seconds
+[2019-10-28][11:05:42][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew3.flx"), String("12dfbf25-f34a-46c8-825e-09b9a94b56d3")] }
+[2019-10-28][11:05:42][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:05:44][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew3.flx"), String("80cc779b-9d4c-4412-9e65-4282d4258e02"), String("Move objs")] }
+[2019-10-28][11:05:44][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:05:44][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew3.flx"), String("80cc779b-9d4c-4412-9e65-4282d4258e02"), Array([String("24e6a3f7-3913-4e58-9eb9-17b343f1d04c")]), Object({"x": Number(13.025453793391648), "y": Number(17.787430830907397), "z": Number(-0.00000000000005684341886080803)})] }
+[2019-10-28][11:05:44][server::ws_actor][INFO] Processed in 0.0029971 seconds
+[2019-10-28][11:05:44][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew3.flx"), String("80cc779b-9d4c-4412-9e65-4282d4258e02")] }
+[2019-10-28][11:05:44][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:05:48][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew3.flx"), String("7cf3378a-3898-4cb8-9771-d6fea1d77e23"), String("Move objs")] }
+[2019-10-28][11:05:48][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:05:48][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew3.flx"), String("7cf3378a-3898-4cb8-9771-d6fea1d77e23"), Array([String("2141f2c3-63ae-4405-93dd-660f47680aea")]), Object({"x": Number(-10.23563750611038), "y": Number(27.114902062304907), "z": Number(0)})] }
+[2019-10-28][11:05:48][server::ws_actor][INFO] Processed in 0.0039971 seconds
+[2019-10-28][11:05:48][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew3.flx"), String("7cf3378a-3898-4cb8-9771-d6fea1d77e23")] }
+[2019-10-28][11:05:48][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:05:50][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew3.flx"), String("218ae13e-eceb-4d40-a630-7933ed022167"), String("Move objs")] }
+[2019-10-28][11:05:50][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:05:50][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew3.flx"), String("218ae13e-eceb-4d40-a630-7933ed022167"), Array([String("76353cef-7061-4830-b5aa-59175357d406")]), Object({"x": Number(-9.364188030076775), "y": Number(6.086751160414792), "z": Number(0.00000000000011368683772161605)})] }
+[2019-10-28][11:05:50][server::ws_actor][INFO] Processed in 0.0029998 seconds
+[2019-10-28][11:05:50][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew3.flx"), String("218ae13e-eceb-4d40-a630-7933ed022167")] }
+[2019-10-28][11:05:50][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:05:52][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew3.flx"), String("928ad7ec-9972-4cbe-a28a-727a351d7249"), String("Move objs")] }
+[2019-10-28][11:05:52][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:05:52][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew3.flx"), String("928ad7ec-9972-4cbe-a28a-727a351d7249"), Array([String("f9597d83-6dfe-4b14-af95-9c8814354f34")]), Object({"x": Number(-19.17747276287253), "y": Number(6.753958692076083), "z": Number(0.00000000000011368683772161605)})] }
+[2019-10-28][11:05:52][server::ws_actor][INFO] Processed in 0.0029975 seconds
+[2019-10-28][11:05:52][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew3.flx"), String("928ad7ec-9972-4cbe-a28a-727a351d7249")] }
+[2019-10-28][11:05:52][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:01][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew3.flx"), String("9fea06dd-c0a5-48d5-8769-b0713e907a19"), String("Move objs")] }
+[2019-10-28][11:06:01][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:01][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew3.flx"), String("9fea06dd-c0a5-48d5-8769-b0713e907a19"), Array([String("f7806548-5f6f-4dbf-b07e-296e2c3709a7")]), Object({"x": Number(16.60892189270453), "y": Number(11.141724972740748), "z": Number(0.00000000000005684341886080803)})] }
+[2019-10-28][11:06:01][server::ws_actor][INFO] Processed in 0.003023 seconds
+[2019-10-28][11:06:01][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew3.flx"), String("9fea06dd-c0a5-48d5-8769-b0713e907a19")] }
+[2019-10-28][11:06:01][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:03][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew3.flx"), String("0d8ecd3a-3684-4078-98f5-0e867f966bb8"), String("Move objs")] }
+[2019-10-28][11:06:03][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:03][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew3.flx"), String("0d8ecd3a-3684-4078-98f5-0e867f966bb8"), Array([String("3151e5bb-44bd-4717-a4dc-b7e7af0e5373")]), Object({"x": Number(12.810316481665325), "y": Number(6.9210648179111445), "z": Number(0.00000000000011368683772161605)})] }
+[2019-10-28][11:06:03][server::ws_actor][INFO] Processed in 0.0020003 seconds
+[2019-10-28][11:06:03][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew3.flx"), String("0d8ecd3a-3684-4078-98f5-0e867f966bb8")] }
+[2019-10-28][11:06:03][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:04][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew3.flx"), String("b74c593a-4cfa-400d-830b-d45ee3a97188"), String("Move objs")] }
+[2019-10-28][11:06:04][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:04][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew3.flx"), String("b74c593a-4cfa-400d-830b-d45ee3a97188"), Array([String("6393f50f-dcb5-4eb7-bf91-f66afc025c35")]), Object({"x": Number(14.1886598801716), "y": Number(8.529414462859506), "z": Number(0)})] }
+[2019-10-28][11:06:04][server::ws_actor][INFO] Processed in 0.002999 seconds
+[2019-10-28][11:06:04][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew3.flx"), String("b74c593a-4cfa-400d-830b-d45ee3a97188")] }
+[2019-10-28][11:06:04][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:12][server::ws_actor][INFO] CmdMsg { func_name: "close_file", params: [String("defaultNew3.flx")] }
+[2019-10-28][11:06:12][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:12][operations_kernel::app_state][INFO] Saving file: "defaultNew3.flx"
+[2019-10-28][11:06:14][operations_kernel::app_state][INFO] Removing user b7376333-7e52-47f9-b06d-8eb831ddc848 from file "defaultNew3.flx"
+[2019-10-28][11:06:14][operations_kernel::app_state][INFO] Closing file: "defaultNew3.flx"
+[2019-10-28][11:06:19][server::ws_actor][INFO] 
+Response HTTP/1.1 101 Switching Protocols
+  headers:
+    "upgrade": "websocket"
+    "sec-websocket-accept": "eUnz7uEk+yLR6PyYL5EKKRLlgg0="
+    "transfer-encoding": "chunked"
+  body: Stream
+
+[2019-10-28][11:06:20][server::ws_actor][INFO] CmdMsg { func_name: "init_file", params: [String("defaultNew.flx")] }
+[2019-10-28][11:06:20][operations_kernel::app_state][INFO] Going to open file "defaultNew.flx"
+[2019-10-28][11:06:20][server::ws_actor][INFO] Processed in 0.0009981 seconds
+[2019-10-28][11:06:20][operations_kernel::operation_manager][INFO] File is opened
+[2019-10-28][11:06:20][operations_kernel::app_state][INFO] Opened file "defaultNew.flx"
+[2019-10-28][11:06:23][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("a73dc432-bf0e-47ec-af20-f521b4bf078a"), String("Delete objs")] }
+[2019-10-28][11:06:23][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:23][server::ws_actor][INFO] CmdMsg { func_name: "delete_object", params: [String("defaultNew.flx"), String("a73dc432-bf0e-47ec-af20-f521b4bf078a"), String("daf0a475-4004-4bc8-873e-2e5567108f43")] }
+[2019-10-28][11:06:23][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:23][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("a73dc432-bf0e-47ec-af20-f521b4bf078a")] }
+[2019-10-28][11:06:23][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:26][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("3d5dc96a-33df-48b5-99b7-8b34513abd0e"), String("Delete objs")] }
+[2019-10-28][11:06:26][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:26][server::ws_actor][INFO] CmdMsg { func_name: "delete_object", params: [String("defaultNew.flx"), String("3d5dc96a-33df-48b5-99b7-8b34513abd0e"), String("c8bb350d-94b7-40b2-9a29-c3992307cef9")] }
+[2019-10-28][11:06:26][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:26][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("3d5dc96a-33df-48b5-99b7-8b34513abd0e")] }
+[2019-10-28][11:06:26][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:29][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("a8067522-f886-4bcf-9cb2-305423704326"), String("Delete objs")] }
+[2019-10-28][11:06:29][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:29][server::ws_actor][INFO] CmdMsg { func_name: "delete_object", params: [String("defaultNew.flx"), String("a8067522-f886-4bcf-9cb2-305423704326"), String("84113b5f-7183-4150-8209-f89b1602b5c9")] }
+[2019-10-28][11:06:29][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:29][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("a8067522-f886-4bcf-9cb2-305423704326")] }
+[2019-10-28][11:06:29][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:32][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("99457a95-a15e-48b0-90b4-e65baeee78f8"), String("Create Wall")] }
+[2019-10-28][11:06:32][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:32][server::ws_actor][INFO] CmdMsg { func_name: "add_object", params: [String("defaultNew.flx"), String("99457a95-a15e-48b0-90b4-e65baeee78f8"), String("Wall"), Object({"first_pt": Object({"geom": Object({"pt": Object({"x": Number(344.59884405857827), "y": Number(463.4613461736753), "z": Number(0)})}), "refer": Null}), "height": Number(5), "id": String("b26dfbf9-197d-4e4a-8920-891be4956c99"), "openings": Array([]), "second_pt": Object({"geom": Object({"pt": Object({"x": Number(411.572487464508), "y": Number(379.2173593582172), "z": Number(0)})}), "refer": Null}), "width": Number(1)})] }
+[2019-10-28][11:06:32][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:32][server::ws_actor][INFO] CmdMsg { func_name: "add_object", params: [String("defaultNew.flx"), String("99457a95-a15e-48b0-90b4-e65baeee78f8"), String("Wall"), Object({"first_pt": Object({"geom": Object({"pt": Object({"x": Number(411.572487464508), "y": Number(379.2173593582172), "z": Number(0)})}), "refer": Null}), "height": Number(5), "id": String("c951f89a-65d9-4d06-a501-d8aa87da7a09"), "openings": Array([]), "second_pt": Object({"geom": Object({"pt": Object({"x": Number(566.739919329248), "y": Number(546.1604818409844), "z": Number(0)})}), "refer": Null}), "width": Number(1)})] }
+[2019-10-28][11:06:32][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:32][server::ws_actor][INFO] CmdMsg { func_name: "join_at_points", params: [String("defaultNew.flx"), String("99457a95-a15e-48b0-90b4-e65baeee78f8"), String("b26dfbf9-197d-4e4a-8920-891be4956c99"), String("c951f89a-65d9-4d06-a501-d8aa87da7a09"), Object({"x": Number(411.572487464508), "y": Number(379.2173593582172), "z": Number(0)})] }
+[2019-10-28][11:06:32][server::ws_actor][INFO] Processed in 0.0820274 seconds
+[2019-10-28][11:06:33][server::ws_actor][INFO] CmdMsg { func_name: "add_object", params: [String("defaultNew.flx"), String("99457a95-a15e-48b0-90b4-e65baeee78f8"), String("Wall"), Object({"first_pt": Object({"geom": Object({"pt": Object({"x": Number(566.739919329248), "y": Number(546.1604818409844), "z": Number(0)})}), "refer": Null}), "height": Number(5), "id": String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), "openings": Array([]), "second_pt": Object({"geom": Object({"pt": Object({"x": Number(534.93051941566), "y": Number(626.6883008062268), "z": Number(0)})}), "refer": Null}), "width": Number(1)})] }
+[2019-10-28][11:06:33][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:33][server::ws_actor][INFO] CmdMsg { func_name: "join_at_points", params: [String("defaultNew.flx"), String("99457a95-a15e-48b0-90b4-e65baeee78f8"), String("c951f89a-65d9-4d06-a501-d8aa87da7a09"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), Object({"x": Number(566.739919329248), "y": Number(546.1604818409844), "z": Number(0)})] }
+[2019-10-28][11:06:33][server::ws_actor][INFO] Processed in 0.082027294 seconds
+[2019-10-28][11:06:33][server::ws_actor][INFO] CmdMsg { func_name: "add_object", params: [String("defaultNew.flx"), String("99457a95-a15e-48b0-90b4-e65baeee78f8"), String("Wall"), Object({"first_pt": Object({"geom": Object({"pt": Object({"x": Number(534.93051941566), "y": Number(626.6883008062268), "z": Number(0)})}), "refer": Null}), "height": Number(5), "id": String("4c16ca3a-aa59-4167-84b2-5966d5016307"), "openings": Array([]), "second_pt": Object({"geom": Object({"pt": Object({"x": Number(408.082150046492), "y": Number(614.5605555249682), "z": Number(0)})}), "refer": Null}), "width": Number(1)})] }
+[2019-10-28][11:06:33][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:33][server::ws_actor][INFO] CmdMsg { func_name: "join_at_points", params: [String("defaultNew.flx"), String("99457a95-a15e-48b0-90b4-e65baeee78f8"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), Object({"x": Number(534.93051941566), "y": Number(626.6883008062268), "z": Number(0)})] }
+[2019-10-28][11:06:33][server::ws_actor][INFO] Processed in 0.090000704 seconds
+[2019-10-28][11:06:33][server::ws_actor][INFO] CmdMsg { func_name: "add_object", params: [String("defaultNew.flx"), String("99457a95-a15e-48b0-90b4-e65baeee78f8"), String("Wall"), Object({"first_pt": Object({"geom": Object({"pt": Object({"x": Number(408.082150046492), "y": Number(614.5605555249682), "z": Number(0)})}), "refer": Null}), "height": Number(5), "id": String("2027eb43-c810-4eb1-9444-4c94b56557d3"), "openings": Array([]), "second_pt": Object({"geom": Object({"pt": Object({"x": Number(437.580976194289), "y": Number(531.9486353696375), "z": Number(0)})}), "refer": Null}), "width": Number(1)})] }
+[2019-10-28][11:06:33][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:33][server::ws_actor][INFO] CmdMsg { func_name: "join_at_points", params: [String("defaultNew.flx"), String("99457a95-a15e-48b0-90b4-e65baeee78f8"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), String("2027eb43-c810-4eb1-9444-4c94b56557d3"), Object({"x": Number(408.082150046492), "y": Number(614.5605555249682), "z": Number(0)})] }
+[2019-10-28][11:06:33][server::ws_actor][INFO] Processed in 0.081000306 seconds
+[2019-10-28][11:06:34][server::ws_actor][INFO] CmdMsg { func_name: "add_object", params: [String("defaultNew.flx"), String("99457a95-a15e-48b0-90b4-e65baeee78f8"), String("Wall"), Object({"first_pt": Object({"geom": Object({"pt": Object({"x": Number(437.580976194289), "y": Number(531.9486353696375), "z": Number(0)})}), "refer": Null}), "height": Number(5), "id": String("0a34c325-4fad-4805-91e2-998052570186"), "openings": Array([]), "second_pt": Object({"geom": Object({"pt": Object({"x": Number(314.31927444067094), "y": Number(504.96845629345927), "z": Number(0)})}), "refer": Null}), "width": Number(1)})] }
+[2019-10-28][11:06:34][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:34][server::ws_actor][INFO] CmdMsg { func_name: "join_at_points", params: [String("defaultNew.flx"), String("99457a95-a15e-48b0-90b4-e65baeee78f8"), String("2027eb43-c810-4eb1-9444-4c94b56557d3"), String("0a34c325-4fad-4805-91e2-998052570186"), Object({"x": Number(437.580976194289), "y": Number(531.9486353696375), "z": Number(0)})] }
+[2019-10-28][11:06:34][server::ws_actor][INFO] Processed in 0.0800284 seconds
+[2019-10-28][11:06:35][server::ws_actor][INFO] CmdMsg { func_name: "add_object", params: [String("defaultNew.flx"), String("99457a95-a15e-48b0-90b4-e65baeee78f8"), String("Wall"), Object({"first_pt": Object({"geom": Object({"pt": Object({"x": Number(314.31927444067094), "y": Number(504.96845629345927), "z": Number(0)})}), "refer": Null}), "height": Number(5), "id": String("d3c09a5a-68a1-4204-955e-692a3e0c5a8a"), "openings": Array([]), "second_pt": Object({"geom": Object({"pt": Object({"x": Number(348.5492537077008), "y": Number(451.7212929489086), "z": Number(0)})}), "refer": Null}), "width": Number(1)})] }
+[2019-10-28][11:06:35][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:35][server::ws_actor][INFO] CmdMsg { func_name: "join_at_points", params: [String("defaultNew.flx"), String("99457a95-a15e-48b0-90b4-e65baeee78f8"), String("0a34c325-4fad-4805-91e2-998052570186"), String("d3c09a5a-68a1-4204-955e-692a3e0c5a8a"), Object({"x": Number(314.31927444067094), "y": Number(504.96845629345927), "z": Number(0)})] }
+[2019-10-28][11:06:35][server::ws_actor][INFO] Processed in 0.0810319 seconds
+[2019-10-28][11:06:35][server::ws_actor][INFO] CmdMsg { func_name: "join_at_points", params: [String("defaultNew.flx"), String("99457a95-a15e-48b0-90b4-e65baeee78f8"), String("b26dfbf9-197d-4e4a-8920-891be4956c99"), String("d3c09a5a-68a1-4204-955e-692a3e0c5a8a"), Object({"x": Number(348.5492537077008), "y": Number(451.7212929489086), "z": Number(0)})] }
+[2019-10-28][11:06:35][server::ws_actor][INFO] Processed in 0.0049802 seconds
+[2019-10-28][11:06:35][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("99457a95-a15e-48b0-90b4-e65baeee78f8")] }
+[2019-10-28][11:06:35][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:39][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("77c1b777-0a5c-4f8d-8248-7024d6b46dd1"), String("Move objs")] }
+[2019-10-28][11:06:39][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:39][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("77c1b777-0a5c-4f8d-8248-7024d6b46dd1"), Array([String("b26dfbf9-197d-4e4a-8920-891be4956c99")]), Object({"x": Number(-30.073709882235903), "y": Number(-32.097193038608395), "z": Number(-0.00000000000005684341886080803)})] }
+[2019-10-28][11:06:39][server::ws_actor][INFO] Processed in 0.0029999 seconds
+[2019-10-28][11:06:39][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("77c1b777-0a5c-4f8d-8248-7024d6b46dd1")] }
+[2019-10-28][11:06:39][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:40][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("60d7a996-8730-4a90-a7a9-f0866757d40b"), String("Move objs")] }
+[2019-10-28][11:06:40][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:40][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("60d7a996-8730-4a90-a7a9-f0866757d40b"), Array([String("0a34c325-4fad-4805-91e2-998052570186")]), Object({"x": Number(-6.376476112614682), "y": Number(37.75497809326174), "z": Number(-0.00000000000005684341886080803)})] }
+[2019-10-28][11:06:40][server::ws_actor][INFO] Processed in 0.0030015 seconds
+[2019-10-28][11:06:40][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("60d7a996-8730-4a90-a7a9-f0866757d40b")] }
+[2019-10-28][11:06:40][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:41][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("6df6bade-dde2-4702-ad35-d659cf586657"), String("Move objs")] }
+[2019-10-28][11:06:41][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:41][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("6df6bade-dde2-4702-ad35-d659cf586657"), Array([String("4c16ca3a-aa59-4167-84b2-5966d5016307")]), Object({"x": Number(63.19461758174583), "y": Number(36.56575139137033), "z": Number(0.00000000000005684341886080803)})] }
+[2019-10-28][11:06:41][server::ws_actor][INFO] Processed in 0.003008 seconds
+[2019-10-28][11:06:41][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("6df6bade-dde2-4702-ad35-d659cf586657")] }
+[2019-10-28][11:06:41][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:42][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("75e5834a-eed1-47a3-8e2a-00a45077d7e6"), String("Move objs")] }
+[2019-10-28][11:06:42][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:42][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("75e5834a-eed1-47a3-8e2a-00a45077d7e6"), Array([String("c951f89a-65d9-4d06-a501-d8aa87da7a09")]), Object({"x": Number(-51.79306264244917), "y": Number(59.77875867646526), "z": Number(0)})] }
+[2019-10-28][11:06:42][server::ws_actor][INFO] Processed in 0.0030278 seconds
+[2019-10-28][11:06:42][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("75e5834a-eed1-47a3-8e2a-00a45077d7e6")] }
+[2019-10-28][11:06:42][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:44][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("a1021937-2959-4acc-9a21-51e487ad3c94"), String("Move objs")] }
+[2019-10-28][11:06:44][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:44][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("a1021937-2959-4acc-9a21-51e487ad3c94"), Array([String("e13c4e13-9245-4556-9304-88c85aa2c7ad")]), Object({"x": Number(30.39158323210154), "y": Number(-120.22359597916102), "z": Number(0)})] }
+[2019-10-28][11:06:44][server::ws_actor][INFO] Processed in 0.0029983 seconds
+[2019-10-28][11:06:44][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("a1021937-2959-4acc-9a21-51e487ad3c94")] }
+[2019-10-28][11:06:44][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:48][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("e0cb15de-6c08-430c-81da-b217bc788baf"), String("Move objs")] }
+[2019-10-28][11:06:48][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:48][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("e0cb15de-6c08-430c-81da-b217bc788baf"), Array([String("b26dfbf9-197d-4e4a-8920-891be4956c99")]), Object({"x": Number(28.440362318913003), "y": Number(68.0939433005048), "z": Number(0)})] }
+[2019-10-28][11:06:48][server::ws_actor][INFO] Processed in 0.0030241 seconds
+[2019-10-28][11:06:48][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("e0cb15de-6c08-430c-81da-b217bc788baf")] }
+[2019-10-28][11:06:48][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:50][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("be9d4a89-4609-4b97-b127-dd826e313c14"), String("Move objs")] }
+[2019-10-28][11:06:50][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:50][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("be9d4a89-4609-4b97-b127-dd826e313c14"), Array([String("c951f89a-65d9-4d06-a501-d8aa87da7a09")]), Object({"x": Number(15.974490962199866), "y": Number(59.34316427128215), "z": Number(-0.00000000000005684341886080803)})] }
+[2019-10-28][11:06:50][server::ws_actor][INFO] Processed in 0.0030019 seconds
+[2019-10-28][11:06:50][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("be9d4a89-4609-4b97-b127-dd826e313c14")] }
+[2019-10-28][11:06:50][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:51][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("a98d0d82-d80c-48e8-85ac-b4a72a398fb4"), String("Move objs")] }
+[2019-10-28][11:06:51][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:51][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("a98d0d82-d80c-48e8-85ac-b4a72a398fb4"), Array([String("c951f89a-65d9-4d06-a501-d8aa87da7a09")]), Object({"x": Number(-32.4129743161069), "y": Number(-238.84339868941868), "z": Number(-0.00000000000005684341886080803)})] }
+[2019-10-28][11:06:51][server::ws_actor][INFO] Processed in 0.0030311 seconds
+[2019-10-28][11:06:51][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("a98d0d82-d80c-48e8-85ac-b4a72a398fb4")] }
+[2019-10-28][11:06:51][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:52][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("f2651a40-f089-448d-bf06-5f0f67ed01f9"), String("Move objs")] }
+[2019-10-28][11:06:52][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:06:52][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("f2651a40-f089-448d-bf06-5f0f67ed01f9"), Array([String("0a34c325-4fad-4805-91e2-998052570186")]), Object({"x": Number(100.13093693933764), "y": Number(-45.61032815248075), "z": Number(0.00000000000005684341886080803)})] }
+[2019-10-28][11:06:52][server::ws_actor][INFO] Processed in 0.0030009 seconds
+[2019-10-28][11:06:52][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("f2651a40-f089-448d-bf06-5f0f67ed01f9")] }
+[2019-10-28][11:06:52][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:01][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("0a34c325-4fad-4805-91e2-998052570186"), String("First"), String("acfdb4e2-8470-45c3-815d-9a9f3e87d993")] }
+[2019-10-28][11:07:01][operations_kernel::app_state][INFO] Sending data Object({"x": Number(531.335437021012), "y": Number(524.0932853104185), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:01][server::ws_actor][INFO] Processed in 0.0199834 seconds
+[2019-10-28][11:07:01][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("0a34c325-4fad-4805-91e2-998052570186"), String("Second"), String("6abc5adc-9de0-441e-b745-58de2d1a3b5a")] }
+[2019-10-28][11:07:01][operations_kernel::app_state][INFO] Sending data Object({"x": Number(408.0737352673939), "y": Number(497.11310623424026), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:01][server::ws_actor][INFO] Processed in 0.0010016 seconds
+[2019-10-28][11:07:01][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("0a34c325-4fad-4805-91e2-998052570186"), String("First"), String("26c42c2c-282a-4921-8c23-281f6b4106bb")] }
+[2019-10-28][11:07:01][operations_kernel::app_state][INFO] Sending data Object({"x": Number(531.335437021012), "y": Number(524.0932853104185), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:01][server::ws_actor][INFO] Processed in 0.0010102 seconds
+[2019-10-28][11:07:01][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("0a34c325-4fad-4805-91e2-998052570186"), String("Second"), String("b9e443a9-452e-4cdf-a7bf-ec645a442375")] }
+[2019-10-28][11:07:01][operations_kernel::app_state][INFO] Sending data Object({"x": Number(408.0737352673939), "y": Number(497.11310623424026), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:01][server::ws_actor][INFO] Processed in 0.0010014 seconds
+[2019-10-28][11:07:01][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("0a34c325-4fad-4805-91e2-998052570186"), String("First"), String("fb069b44-b83a-4add-be9e-6fba4822b692")] }
+[2019-10-28][11:07:01][operations_kernel::app_state][INFO] Sending data Object({"x": Number(531.335437021012), "y": Number(524.0932853104185), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:01][server::ws_actor][INFO] Processed in 0.0010019 seconds
+[2019-10-28][11:07:01][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("0a34c325-4fad-4805-91e2-998052570186"), String("Second"), String("26a53a8d-9537-4cc3-9aff-1b9a7cd8f4f8")] }
+[2019-10-28][11:07:01][operations_kernel::app_state][INFO] Sending data Object({"x": Number(408.0737352673939), "y": Number(497.11310623424026), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:01][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:01][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("0a34c325-4fad-4805-91e2-998052570186"), String("First"), String("c9eb6eba-1b46-4f5b-9995-838ec6d93ecb")] }
+[2019-10-28][11:07:01][operations_kernel::app_state][INFO] Sending data Object({"x": Number(531.335437021012), "y": Number(524.0932853104185), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:01][server::ws_actor][INFO] Processed in 0.0010009 seconds
+[2019-10-28][11:07:01][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("0a34c325-4fad-4805-91e2-998052570186"), String("Second"), String("a2685180-f5c6-4bb7-990d-08469c749ca9")] }
+[2019-10-28][11:07:01][operations_kernel::app_state][INFO] Sending data Object({"x": Number(408.0737352673939), "y": Number(497.11310623424026), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:01][server::ws_actor][INFO] Processed in 0.0010021 seconds
+[2019-10-28][11:07:01][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("0a34c325-4fad-4805-91e2-998052570186"), String("First"), String("82f90edf-2dde-4638-a78e-54d2ccd43199")] }
+[2019-10-28][11:07:01][operations_kernel::app_state][INFO] Sending data Object({"x": Number(531.335437021012), "y": Number(524.0932853104185), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:01][server::ws_actor][INFO] Processed in 0.0010214 seconds
+[2019-10-28][11:07:01][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("0a34c325-4fad-4805-91e2-998052570186"), String("Second"), String("b485d65a-08a6-4368-9000-895ec6188795")] }
+[2019-10-28][11:07:01][operations_kernel::app_state][INFO] Sending data Object({"x": Number(408.0737352673939), "y": Number(497.11310623424026), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:01][server::ws_actor][INFO] Processed in 0.0009791 seconds
+[2019-10-28][11:07:01][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("0a34c325-4fad-4805-91e2-998052570186"), String("First"), String("67b658d3-16ad-4808-8556-a7b79dc898e3")] }
+[2019-10-28][11:07:01][operations_kernel::app_state][INFO] Sending data Object({"x": Number(531.335437021012), "y": Number(524.0932853104185), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:01][server::ws_actor][INFO] Processed in 0.0010009 seconds
+[2019-10-28][11:07:01][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("0a34c325-4fad-4805-91e2-998052570186"), String("Second"), String("ba42becc-ea58-4971-b7a9-f1279f8029aa")] }
+[2019-10-28][11:07:01][operations_kernel::app_state][INFO] Sending data Object({"x": Number(408.0737352673939), "y": Number(497.11310623424026), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:01][server::ws_actor][INFO] Processed in 0.0009981 seconds
+[2019-10-28][11:07:01][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("006afbe9-2e1f-4a14-b76e-09112dbdc4e0"), String("Create Door")] }
+[2019-10-28][11:07:01][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:01][server::ws_actor][INFO] CmdMsg { func_name: "add_object", params: [String("defaultNew.flx"), String("006afbe9-2e1f-4a14-b76e-09112dbdc4e0"), String("Door"), Object({"dir": Object({"geom": Object({"interp": Object({"val": Number(0)}), "length": Number(3.0000000000000147), "pt_1": Object({"x": Number(455.8517923902568), "y": Number(507.5710223488771), "z": Number(0)}), "pt_2": Object({"x": Number(452.9211751610362), "y": Number(506.92955321026216), "z": Number(0)})}), "refer": Null}), "height": Number(4), "id": String("ed9799aa-f779-47b8-ba55-149a2d9e6b19"), "width": Number(1)})] }
+[2019-10-28][11:07:01][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:01][server::ws_actor][INFO] CmdMsg { func_name: "snap_to_line", params: [String("defaultNew.flx"), String("006afbe9-2e1f-4a14-b76e-09112dbdc4e0"), String("0a34c325-4fad-4805-91e2-998052570186"), String("ed9799aa-f779-47b8-ba55-149a2d9e6b19"), Object({"x": Number(456.76835801226486), "y": Number(503.3835987584488), "z": Number(0)})] }
+[2019-10-28][11:07:01][server::ws_actor][INFO] Processed in 0.0030278 seconds
+[2019-10-28][11:07:01][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("006afbe9-2e1f-4a14-b76e-09112dbdc4e0")] }
+[2019-10-28][11:07:01][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:05][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("11c1fc9d-f569-4b92-9a95-413cf4ace6dc"), String("Move objs")] }
+[2019-10-28][11:07:05][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:05][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("11c1fc9d-f569-4b92-9a95-413cf4ace6dc"), Array([String("0a34c325-4fad-4805-91e2-998052570186")]), Object({"x": Number(-13.569282205186424), "y": Number(75.82662363036366), "z": Number(0)})] }
+[2019-10-28][11:07:05][server::ws_actor][INFO] Processed in 0.0030022 seconds
+[2019-10-28][11:07:05][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("11c1fc9d-f569-4b92-9a95-413cf4ace6dc")] }
+[2019-10-28][11:07:05][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:06][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("570042e1-de0e-43fe-9981-b700a2528888"), String("Move objs")] }
+[2019-10-28][11:07:06][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:06][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("570042e1-de0e-43fe-9981-b700a2528888"), Array([String("0a34c325-4fad-4805-91e2-998052570186")]), Object({"x": Number(-14.27783241027771), "y": Number(-71.82416003667254), "z": Number(-0.00000000000005684341886080803)})] }
+[2019-10-28][11:07:06][server::ws_actor][INFO] Processed in 0.0030024 seconds
+[2019-10-28][11:07:06][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("570042e1-de0e-43fe-9981-b700a2528888")] }
+[2019-10-28][11:07:06][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:14][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("282b94dc-ede6-41a5-8e63-4884a52691cc"), String("Move objs")] }
+[2019-10-28][11:07:14][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:14][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("282b94dc-ede6-41a5-8e63-4884a52691cc"), Array([String("2027eb43-c810-4eb1-9444-4c94b56557d3")]), Object({"x": Number(-50.21950203207001), "y": Number(22.94846794108048), "z": Number(0.00000000000005684341886080803)})] }
+[2019-10-28][11:07:14][server::ws_actor][INFO] Processed in 0.0020239 seconds
+[2019-10-28][11:07:14][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("282b94dc-ede6-41a5-8e63-4884a52691cc")] }
+[2019-10-28][11:07:14][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:16][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("99d39cf7-55fa-47e2-b536-8a2f6a10881e"), String("Move objs")] }
+[2019-10-28][11:07:16][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:16][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("99d39cf7-55fa-47e2-b536-8a2f6a10881e"), Array([String("0a34c325-4fad-4805-91e2-998052570186")]), Object({"x": Number(19.94730717873796), "y": Number(57.20095849619224), "z": Number(0)})] }
+[2019-10-28][11:07:16][server::ws_actor][INFO] Processed in 0.0030267 seconds
+[2019-10-28][11:07:16][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("99d39cf7-55fa-47e2-b536-8a2f6a10881e")] }
+[2019-10-28][11:07:16][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:17][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("871efebe-45f4-4bd1-be40-4a93dff3316b"), String("Move objs")] }
+[2019-10-28][11:07:17][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:17][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("871efebe-45f4-4bd1-be40-4a93dff3316b"), Array([String("0a34c325-4fad-4805-91e2-998052570186")]), Object({"x": Number(-21.690063411585697), "y": Number(-86.02062599260273), "z": Number(0.00000000000005684341886080803)})] }
+[2019-10-28][11:07:17][server::ws_actor][INFO] Processed in 0.0029721 seconds
+[2019-10-28][11:07:17][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("871efebe-45f4-4bd1-be40-4a93dff3316b")] }
+[2019-10-28][11:07:17][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:18][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("2b423305-3ca7-4ee4-8093-8dd621080f27"), String("Move objs")] }
+[2019-10-28][11:07:18][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:18][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("2b423305-3ca7-4ee4-8093-8dd621080f27"), Array([String("d3c09a5a-68a1-4204-955e-692a3e0c5a8a")]), Object({"x": Number(27.14944958250942), "y": Number(108.48140963401396), "z": Number(0.00000000000005684341886080803)})] }
+[2019-10-28][11:07:18][server::ws_actor][INFO] Processed in 0.0029981 seconds
+[2019-10-28][11:07:18][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("2b423305-3ca7-4ee4-8093-8dd621080f27")] }
+[2019-10-28][11:07:18][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:19][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("2674c1d6-5e26-4a94-a3fb-08182e88418e"), String("Move objs")] }
+[2019-10-28][11:07:19][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:19][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("2674c1d6-5e26-4a94-a3fb-08182e88418e"), Array([String("b26dfbf9-197d-4e4a-8920-891be4956c99")]), Object({"x": Number(44.6557877116515), "y": Number(-15.893157099466464), "z": Number(-0.00000000000005684341886080803)})] }
+[2019-10-28][11:07:19][server::ws_actor][INFO] Processed in 0.0030047 seconds
+[2019-10-28][11:07:19][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("2674c1d6-5e26-4a94-a3fb-08182e88418e")] }
+[2019-10-28][11:07:19][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:21][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("1b35cd91-fe71-4379-8f44-bbf5e1ce94b0"), String("Move objs")] }
+[2019-10-28][11:07:21][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:21][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("1b35cd91-fe71-4379-8f44-bbf5e1ce94b0"), Array([String("0a34c325-4fad-4805-91e2-998052570186")]), Object({"x": Number(37.048871646579585), "y": Number(12.054444778223456), "z": Number(0)})] }
+[2019-10-28][11:07:21][server::ws_actor][INFO] Processed in 0.0029927 seconds
+[2019-10-28][11:07:21][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("1b35cd91-fe71-4379-8f44-bbf5e1ce94b0")] }
+[2019-10-28][11:07:21][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:23][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("8860152b-c3ca-4c4f-8673-5d4ffb64fe35"), String("Move objs")] }
+[2019-10-28][11:07:23][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:23][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("8860152b-c3ca-4c4f-8673-5d4ffb64fe35"), Array([String("e13c4e13-9245-4556-9304-88c85aa2c7ad")]), Object({"x": Number(-61.702970964511564), "y": Number(62.80677019006168), "z": Number(0.00000000000011368683772161605)})] }
+[2019-10-28][11:07:23][server::ws_actor][INFO] Processed in 0.002997 seconds
+[2019-10-28][11:07:23][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("8860152b-c3ca-4c4f-8673-5d4ffb64fe35")] }
+[2019-10-28][11:07:23][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("c951f89a-65d9-4d06-a501-d8aa87da7a09"), String("First"), String("b0954696-a5b7-4ebf-8f9e-3cf2a516d524")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(386.3633816164804), "y": Number(279.5994767789759), "z": Number(-0.0000000000002273736754432321)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0010007 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("c951f89a-65d9-4d06-a501-d8aa87da7a09"), String("Second"), String("1bec11aa-2a14-43fa-a9f9-f10538f4e953")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(467.19698560048175), "y": Number(369.0221803102138), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0010005 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("0a34c325-4fad-4805-91e2-998052570186"), String("First"), String("3b043dc7-14dd-4851-b53d-320b79b948cd")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(488.57493578720977), "y": Number(534.2789941270031), "z": Number(0.00000000000005684341886080803)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("0a34c325-4fad-4805-91e2-998052570186"), String("Second"), String("ec9546ac-e129-4399-b334-60f0bd4261a3")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(442.682185648171), "y": Number(592.8317567437583), "z": Number(0.00000000000005684341886080803)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0009977 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("2027eb43-c810-4eb1-9444-4c94b56557d3"), String("First"), String("3c71ddd4-e026-4fbe-8612-b5f6dda4d185")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(421.05726559616784), "y": Number(674.074774857419), "z": Number(0.00000000000011368683772161605)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("2027eb43-c810-4eb1-9444-4c94b56557d3"), String("Second"), String("eab70cf3-68d5-46e1-8693-eb1d0c486c79")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(488.57493578720977), "y": Number(534.2789941270031), "z": Number(0.00000000000005684341886080803)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0009857 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("First"), String("fbd6025e-b498-4cba-876a-d7307a705543")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(467.19698560048175), "y": Number(369.0221803102138), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0259936 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("Second"), String("ee4fbce9-dd8e-4930-9336-dc276949d5cf")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(566.8137492649959), "y": Number(605.8372264084978), "z": Number(0.0000000000001705302565824241)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0009986 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("First"), String("4f88a405-2f1d-4cf8-9c4f-c1662191a4b6")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(467.19698560048175), "y": Number(369.0221803102138), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("Second"), String("985ab01e-7081-49c9-9e7e-ba3a9a031628")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(566.8137492649959), "y": Number(605.8372264084978), "z": Number(0.0000000000001705302565824241)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("First"), String("f04828bc-6e25-4619-9654-a36bf769a178")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(467.19698560048175), "y": Number(369.0221803102138), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0009988 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("Second"), String("7da849b3-9516-4559-856f-5cb463c315cb")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(566.8137492649959), "y": Number(605.8372264084978), "z": Number(0.0000000000001705302565824241)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0010003 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("First"), String("c239ecd1-e826-4c5b-a3c6-fe49707fbcf3")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(467.19698560048175), "y": Number(369.0221803102138), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0149976 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("Second"), String("cb770af5-0914-4223-9fca-6982a0632448")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(566.8137492649959), "y": Number(605.8372264084978), "z": Number(0.0000000000001705302565824241)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0010015 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("First"), String("29fd5851-59b1-4b54-906e-29091712b96f")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(467.19698560048175), "y": Number(369.0221803102138), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.000999 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("Second"), String("71c29fe4-5fe5-47f3-8491-e9a4d8a99a2d")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(566.8137492649959), "y": Number(605.8372264084978), "z": Number(0.0000000000001705302565824241)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0010024 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("First"), String("fbcae318-604c-434f-81a7-d662242e3567")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(467.19698560048175), "y": Number(369.0221803102138), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0009987 seconds
+[2019-10-28][11:07:25][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("Second"), String("28a2d3fa-60db-4a41-a569-719c6d2c10b9")] }
+[2019-10-28][11:07:25][operations_kernel::app_state][INFO] Sending data Object({"x": Number(566.8137492649959), "y": Number(605.8372264084978), "z": Number(0.0000000000001705302565824241)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:25][server::ws_actor][INFO] Processed in 0.0009984 seconds
+[2019-10-28][11:07:26][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("a5d60546-f1d6-4cf5-90c6-9e1f627765f6"), String("Create Door")] }
+[2019-10-28][11:07:26][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:26][server::ws_actor][INFO] CmdMsg { func_name: "add_object", params: [String("defaultNew.flx"), String("a5d60546-f1d6-4cf5-90c6-9e1f627765f6"), String("Door"), Object({"dir": Object({"geom": Object({"interp": Object({"val": Number(0)}), "length": Number(3.0000000000000333), "pt_1": Object({"x": Number(522.6043139791929), "y": Number(500.7398605630741), "z": Number(0.0000000000000948497579864066)}), "pt_2": Object({"x": Number(523.7675442820712), "y": Number(503.5051625831916), "z": Number(0.0000000000000948497579864066)})}), "refer": Null}), "height": Number(4), "id": String("d15e0a22-b551-47d4-a73e-4f860b865a8b"), "width": Number(1)})] }
+[2019-10-28][11:07:26][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:26][server::ws_actor][INFO] CmdMsg { func_name: "snap_to_line", params: [String("defaultNew.flx"), String("a5d60546-f1d6-4cf5-90c6-9e1f627765f6"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("d15e0a22-b551-47d4-a73e-4f860b865a8b"), Object({"x": Number(523.9001890117293), "y": Number(500.1947479151161), "z": Number(0)})] }
+[2019-10-28][11:07:26][server::ws_actor][INFO] Processed in 0.003 seconds
+[2019-10-28][11:07:26][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("a5d60546-f1d6-4cf5-90c6-9e1f627765f6")] }
+[2019-10-28][11:07:26][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:29][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("c951f89a-65d9-4d06-a501-d8aa87da7a09"), String("First"), String("c9bc3a1e-c9dd-4c7d-834e-964a2fe273a3")] }
+[2019-10-28][11:07:29][operations_kernel::app_state][INFO] Sending data Object({"x": Number(386.3633816164804), "y": Number(279.5994767789759), "z": Number(-0.0000000000002273736754432321)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:29][server::ws_actor][INFO] Processed in 0.0169897 seconds
+[2019-10-28][11:07:29][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("c951f89a-65d9-4d06-a501-d8aa87da7a09"), String("Second"), String("c6f11203-7b06-48cd-b21e-a2b2b5c9c1ff")] }
+[2019-10-28][11:07:29][operations_kernel::app_state][INFO] Sending data Object({"x": Number(467.19698560048175), "y": Number(369.0221803102138), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:29][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:30][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("26963f9a-db34-4118-ba8f-08874a4b8001"), String("Create Door")] }
+[2019-10-28][11:07:30][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:30][server::ws_actor][INFO] CmdMsg { func_name: "add_object", params: [String("defaultNew.flx"), String("26963f9a-db34-4118-ba8f-08874a4b8001"), String("Door"), Object({"dir": Object({"geom": Object({"interp": Object({"val": Number(0)}), "length": Number(2.999999999999982), "pt_1": Object({"x": Number(426.72128488074054), "y": Number(324.2456714414902), "z": Number(-0.00000000000011385251164366397)}), "pt_2": Object({"x": Number(428.73303041339983), "y": Number(326.47117810556136), "z": Number(-0.00000000000011385251164366397)})}), "refer": Null}), "height": Number(4), "id": String("876557b5-7c0d-4961-be58-ca10e4335797"), "width": Number(1)})] }
+[2019-10-28][11:07:30][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:30][server::ws_actor][INFO] CmdMsg { func_name: "snap_to_line", params: [String("defaultNew.flx"), String("26963f9a-db34-4118-ba8f-08874a4b8001"), String("c951f89a-65d9-4d06-a501-d8aa87da7a09"), String("876557b5-7c0d-4961-be58-ca10e4335797"), Object({"x": Number(427.5287315628357), "y": Number(323.51578045451197), "z": Number(0)})] }
+[2019-10-28][11:07:30][server::ws_actor][INFO] Processed in 0.0030268 seconds
+[2019-10-28][11:07:30][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("First"), String("d103e1b8-e040-4024-9d39-6e9151ccc50a")] }
+[2019-10-28][11:07:30][operations_kernel::app_state][INFO] Sending data Object({"x": Number(467.19698560048175), "y": Number(369.0221803102138), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:30][server::ws_actor][INFO] Processed in 0.0150013 seconds
+[2019-10-28][11:07:30][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("Second"), String("dae15476-90cc-4b3e-9a23-8e780bff9b9d")] }
+[2019-10-28][11:07:30][operations_kernel::app_state][INFO] Sending data Object({"x": Number(566.8137492649959), "y": Number(605.8372264084978), "z": Number(0.0000000000001705302565824241)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:30][server::ws_actor][INFO] Processed in 0.0009977 seconds
+[2019-10-28][11:07:30][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("First"), String("a1780091-8e46-4e74-966e-8c94c98b2f34")] }
+[2019-10-28][11:07:30][operations_kernel::app_state][INFO] Sending data Object({"x": Number(467.19698560048175), "y": Number(369.0221803102138), "z": Number(0.0)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:30][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:30][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("Second"), String("03e3dee7-1d81-410f-8000-fc5dc1b9b451")] }
+[2019-10-28][11:07:30][operations_kernel::app_state][INFO] Sending data Object({"x": Number(566.8137492649959), "y": Number(605.8372264084978), "z": Number(0.0000000000001705302565824241)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:30][server::ws_actor][INFO] Processed in 0.0009673 seconds
+[2019-10-28][11:07:31][server::ws_actor][INFO] CmdMsg { func_name: "add_object", params: [String("defaultNew.flx"), String("26963f9a-db34-4118-ba8f-08874a4b8001"), String("Door"), Object({"dir": Object({"geom": Object({"interp": Object({"val": Number(0)}), "length": Number(3.000000000000011), "pt_1": Object({"x": Number(494.94347240126), "y": Number(434.98282096022126), "z": Number(0.000000000000047498185439275414)}), "pt_2": Object({"x": Number(496.1067027041383), "y": Number(437.74812298033874), "z": Number(0.000000000000047498185439275414)})}), "refer": Null}), "height": Number(4), "id": String("7155270e-ce0d-463e-b47b-1e265a570466"), "width": Number(1)})] }
+[2019-10-28][11:07:31][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:31][server::ws_actor][INFO] CmdMsg { func_name: "snap_to_line", params: [String("defaultNew.flx"), String("26963f9a-db34-4118-ba8f-08874a4b8001"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), String("7155270e-ce0d-463e-b47b-1e265a570466"), Object({"x": Number(496.34781608710273), "y": Number(434.3920807375824), "z": Number(0)})] }
+[2019-10-28][11:07:31][server::ws_actor][INFO] Processed in 0.0029986 seconds
+[2019-10-28][11:07:31][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("b26dfbf9-197d-4e4a-8920-891be4956c99"), String("First"), String("eaa3aef2-45ea-4e34-89a8-d7082d872d33")] }
+[2019-10-28][11:07:31][operations_kernel::app_state][INFO] Sending data Object({"x": Number(414.7707337894163), "y": Number(592.0463489701192), "z": Number(-0.00000000000005684341886080803)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:31][server::ws_actor][INFO] Processed in 0.001 seconds
+[2019-10-28][11:07:31][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("b26dfbf9-197d-4e4a-8920-891be4956c99"), String("Second"), String("d6be06df-bdd8-4a64-b64f-d85a6161c604")] }
+[2019-10-28][11:07:31][operations_kernel::app_state][INFO] Sending data Object({"x": Number(386.3633816164804), "y": Number(279.5994767789759), "z": Number(-0.0000000000002273736754432321)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:31][server::ws_actor][INFO] Processed in 0.0009979 seconds
+[2019-10-28][11:07:31][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("b26dfbf9-197d-4e4a-8920-891be4956c99"), String("First"), String("9a114ba3-efc4-4263-8d42-4314791c6b54")] }
+[2019-10-28][11:07:31][operations_kernel::app_state][INFO] Sending data Object({"x": Number(414.7707337894163), "y": Number(592.0463489701192), "z": Number(-0.00000000000005684341886080803)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:31][server::ws_actor][INFO] Processed in 0.0010004 seconds
+[2019-10-28][11:07:31][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("b26dfbf9-197d-4e4a-8920-891be4956c99"), String("Second"), String("ecee00f3-6d76-4c1c-8a8e-ad2dc2f1231c")] }
+[2019-10-28][11:07:31][operations_kernel::app_state][INFO] Sending data Object({"x": Number(386.3633816164804), "y": Number(279.5994767789759), "z": Number(-0.0000000000002273736754432321)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:31][server::ws_actor][INFO] Processed in 0.0010153 seconds
+[2019-10-28][11:07:32][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("b26dfbf9-197d-4e4a-8920-891be4956c99"), String("First"), String("2eb1fcb4-9e7c-467a-b993-96bbde759e99")] }
+[2019-10-28][11:07:32][operations_kernel::app_state][INFO] Sending data Object({"x": Number(414.7707337894163), "y": Number(592.0463489701192), "z": Number(-0.00000000000005684341886080803)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:32][server::ws_actor][INFO] Processed in 0.001964 seconds
+[2019-10-28][11:07:32][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("b26dfbf9-197d-4e4a-8920-891be4956c99"), String("Second"), String("16cda055-a487-4dbd-a63b-3d3c57c7de20")] }
+[2019-10-28][11:07:32][operations_kernel::app_state][INFO] Sending data Object({"x": Number(386.3633816164804), "y": Number(279.5994767789759), "z": Number(-0.0000000000002273736754432321)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:32][server::ws_actor][INFO] Processed in 0.0019991 seconds
+[2019-10-28][11:07:32][server::ws_actor][INFO] CmdMsg { func_name: "add_object", params: [String("defaultNew.flx"), String("26963f9a-db34-4118-ba8f-08874a4b8001"), String("Door"), Object({"dir": Object({"geom": Object({"interp": Object({"val": Number(0)}), "length": Number(3.0000000000000173), "pt_1": Object({"x": Number(399.8723315017096), "y": Number(428.1817562019771), "z": Number(-0.00000000000014627901107384416)}), "pt_2": Object({"x": Number(399.6006949485151), "y": Number(425.1940792477251), "z": Number(-0.00000000000014627901107384416)})}), "refer": Null}), "height": Number(4), "id": String("3b34c7be-96e5-437d-8746-3fb60a75d423"), "width": Number(1)})] }
+[2019-10-28][11:07:32][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:32][server::ws_actor][INFO] CmdMsg { func_name: "snap_to_line", params: [String("defaultNew.flx"), String("26963f9a-db34-4118-ba8f-08874a4b8001"), String("b26dfbf9-197d-4e4a-8920-891be4956c99"), String("3b34c7be-96e5-437d-8746-3fb60a75d423"), Object({"x": Number(400.1538913597374), "y": Number(428.1561570657507), "z": Number(0)})] }
+[2019-10-28][11:07:32][server::ws_actor][INFO] Processed in 0.0029564 seconds
+[2019-10-28][11:07:33][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), String("First"), String("466369af-0ac9-4c3a-85d2-b8c1cc27d8c8")] }
+[2019-10-28][11:07:33][operations_kernel::app_state][INFO] Sending data Object({"x": Number(566.8137492649959), "y": Number(605.8372264084978), "z": Number(0.0000000000001705302565824241)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:33][server::ws_actor][INFO] Processed in 0.0149979 seconds
+[2019-10-28][11:07:33][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), String("Second"), String("d5f9a016-f0e7-476d-962d-ca08f29c1e41")] }
+[2019-10-28][11:07:33][operations_kernel::app_state][INFO] Sending data Object({"x": Number(421.05726559616784), "y": Number(674.074774857419), "z": Number(0.00000000000011368683772161605)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:33][server::ws_actor][INFO] Processed in 0.0010011 seconds
+[2019-10-28][11:07:33][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), String("First"), String("ce33e624-7c12-4977-b9ea-2a5b0bf48ccc")] }
+[2019-10-28][11:07:33][operations_kernel::app_state][INFO] Sending data Object({"x": Number(566.8137492649959), "y": Number(605.8372264084978), "z": Number(0.0000000000001705302565824241)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:33][server::ws_actor][INFO] Processed in 0.0010002 seconds
+[2019-10-28][11:07:33][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), String("Second"), String("02c6a7d0-8d0b-46a5-a0ee-71d2271cec75")] }
+[2019-10-28][11:07:33][operations_kernel::app_state][INFO] Sending data Object({"x": Number(421.05726559616784), "y": Number(674.074774857419), "z": Number(0.00000000000011368683772161605)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:33][server::ws_actor][INFO] Processed in 0.001 seconds
+[2019-10-28][11:07:33][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), String("First"), String("7d0a4645-be8a-48e7-a9cd-cf9a01afc758")] }
+[2019-10-28][11:07:33][operations_kernel::app_state][INFO] Sending data Object({"x": Number(566.8137492649959), "y": Number(605.8372264084978), "z": Number(0.0000000000001705302565824241)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:33][server::ws_actor][INFO] Processed in 0.0010022 seconds
+[2019-10-28][11:07:33][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), String("Second"), String("65ab67f0-add6-446f-a7b7-3df9b04cb2ce")] }
+[2019-10-28][11:07:33][operations_kernel::app_state][INFO] Sending data Object({"x": Number(421.05726559616784), "y": Number(674.074774857419), "z": Number(0.00000000000011368683772161605)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:33][server::ws_actor][INFO] Processed in 0.0010004 seconds
+[2019-10-28][11:07:33][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), String("First"), String("207cb9db-637f-4e71-9537-bb4916136cad")] }
+[2019-10-28][11:07:33][operations_kernel::app_state][INFO] Sending data Object({"x": Number(566.8137492649959), "y": Number(605.8372264084978), "z": Number(0.0000000000001705302565824241)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:33][server::ws_actor][INFO] Processed in 0.0009776 seconds
+[2019-10-28][11:07:33][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), String("Second"), String("f5ad7acc-8502-452b-9303-aa8deb7f94f1")] }
+[2019-10-28][11:07:33][operations_kernel::app_state][INFO] Sending data Object({"x": Number(421.05726559616784), "y": Number(674.074774857419), "z": Number(0.00000000000011368683772161605)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:33][server::ws_actor][INFO] Processed in 0.0010013 seconds
+[2019-10-28][11:07:33][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), String("First"), String("ced7b593-76fc-4d1c-99b9-1fc8abe0faf9")] }
+[2019-10-28][11:07:33][operations_kernel::app_state][INFO] Sending data Object({"x": Number(566.8137492649959), "y": Number(605.8372264084978), "z": Number(0.0000000000001705302565824241)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:33][server::ws_actor][INFO] Processed in 0.0009992 seconds
+[2019-10-28][11:07:33][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), String("Second"), String("3bf72eed-b8af-4d7a-adf5-b069da7d3be7")] }
+[2019-10-28][11:07:33][operations_kernel::app_state][INFO] Sending data Object({"x": Number(421.05726559616784), "y": Number(674.074774857419), "z": Number(0.00000000000011368683772161605)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:33][server::ws_actor][INFO] Processed in 0.0010003 seconds
+[2019-10-28][11:07:33][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), String("First"), String("609b6476-8c7f-4041-b1b4-e26708d065ef")] }
+[2019-10-28][11:07:33][operations_kernel::app_state][INFO] Sending data Object({"x": Number(566.8137492649959), "y": Number(605.8372264084978), "z": Number(0.0000000000001705302565824241)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:33][server::ws_actor][INFO] Processed in 0.0009985 seconds
+[2019-10-28][11:07:33][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), String("Second"), String("6c056557-b342-4053-9124-0af9c1de106b")] }
+[2019-10-28][11:07:33][operations_kernel::app_state][INFO] Sending data Object({"x": Number(421.05726559616784), "y": Number(674.074774857419), "z": Number(0.00000000000011368683772161605)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:33][server::ws_actor][INFO] Processed in 0.0010002 seconds
+[2019-10-28][11:07:33][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), String("First"), String("546eb7ac-7cc4-460a-8c08-acf3e0dce724")] }
+[2019-10-28][11:07:33][operations_kernel::app_state][INFO] Sending data Object({"x": Number(566.8137492649959), "y": Number(605.8372264084978), "z": Number(0.0000000000001705302565824241)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:33][server::ws_actor][INFO] Processed in 0.0019846 seconds
+[2019-10-28][11:07:33][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), String("Second"), String("d35a5615-a183-494a-8923-4492c783de96")] }
+[2019-10-28][11:07:33][operations_kernel::app_state][INFO] Sending data Object({"x": Number(421.05726559616784), "y": Number(674.074774857419), "z": Number(0.00000000000011368683772161605)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:33][server::ws_actor][INFO] Processed in 0.0009995 seconds
+[2019-10-28][11:07:34][server::ws_actor][INFO] CmdMsg { func_name: "add_object", params: [String("defaultNew.flx"), String("26963f9a-db34-4118-ba8f-08874a4b8001"), String("Door"), Object({"dir": Object({"geom": Object({"interp": Object({"val": Number(0)}), "length": Number(3.0000000000000444), "pt_1": Object({"x": Number(472.52551330555775), "y": Number(649.9793318400757), "z": Number(0.00000000000013375888590043996)}), "pt_2": Object({"x": Number(469.80852214281714), "y": Number(651.2513220214803), "z": Number(0.00000000000013375888590043996)})}), "refer": Null}), "height": Number(4), "id": String("39619fc7-4f11-42d9-8d52-d6ffcd6979a3"), "width": Number(1)})] }
+[2019-10-28][11:07:34][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:34][server::ws_actor][INFO] CmdMsg { func_name: "snap_to_line", params: [String("defaultNew.flx"), String("26963f9a-db34-4118-ba8f-08874a4b8001"), String("4c16ca3a-aa59-4167-84b2-5966d5016307"), String("39619fc7-4f11-42d9-8d52-d6ffcd6979a3"), Object({"x": Number(472.1435041246348), "y": Number(649.1633541825222), "z": Number(0)})] }
+[2019-10-28][11:07:34][server::ws_actor][INFO] Processed in 0.0030244 seconds
+[2019-10-28][11:07:35][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("0a34c325-4fad-4805-91e2-998052570186"), String("First"), String("233b2653-fda8-4c3e-97bb-f6c9bf92343c")] }
+[2019-10-28][11:07:35][operations_kernel::app_state][INFO] Sending data Object({"x": Number(488.57493578720977), "y": Number(534.2789941270031), "z": Number(0.00000000000005684341886080803)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:35][server::ws_actor][INFO] Processed in 0.0139978 seconds
+[2019-10-28][11:07:35][server::ws_actor][INFO] CmdMsg { func_name: "get_object_data", params: [String("defaultNew.flx"), String("0a34c325-4fad-4805-91e2-998052570186"), String("Second"), String("a3a911d7-30a8-445a-8b2f-3e1adde4174a")] }
+[2019-10-28][11:07:35][operations_kernel::app_state][INFO] Sending data Object({"x": Number(442.682185648171), "y": Number(592.8317567437583), "z": Number(0.00000000000005684341886080803)}) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:35][server::ws_actor][INFO] Processed in 0.0010023 seconds
+[2019-10-28][11:07:35][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("26963f9a-db34-4118-ba8f-08874a4b8001")] }
+[2019-10-28][11:07:35][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:37][server::ws_actor][INFO] CmdMsg { func_name: "get_closest_point", params: [String("defaultNew.flx"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), Object({"x": Number(470.0890063576642), "y": Number(366.3820754412974), "z": Number(0)}), String("544fdecc-a827-4df8-8f5f-1853101423ea")] }
+[2019-10-28][11:07:37][operations_kernel::app_state][INFO] Sending data Array([Object({"id": String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), "index": Number(0)}), Object({"Point": Object({"pt": Object({"x": Number(467.19698560048175), "y": Number(369.0221803102138), "z": Number(0.0)})})})]) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:37][server::ws_actor][INFO] Processed in 0.0010018 seconds
+[2019-10-28][11:07:40][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("dd621a75-15fb-45d3-b5df-48ac83f1e9fa"), String("Create Dimension")] }
+[2019-10-28][11:07:40][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:40][server::ws_actor][INFO] CmdMsg { func_name: "add_object", params: [String("defaultNew.flx"), String("dd621a75-15fb-45d3-b5df-48ac83f1e9fa"), String("Dimension"), Object({"first": Object({"geom": Object({"pt": Object({"x": Number(467.19698560048175), "y": Number(369.0221803102138), "z": Number(0)})}), "refer": Null}), "id": String("b736106d-c47d-450f-baa8-8ee3ee8d8968"), "offset": Number(5), "second": Object({"geom": Object({"pt": Object({"x": Number(569.1205933546053), "y": Number(601.4512067003338), "z": Number(0)})}), "refer": Null})})] }
+[2019-10-28][11:07:40][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:40][server::ws_actor][INFO] CmdMsg { func_name: "snap_to_point", params: [String("defaultNew.flx"), String("dd621a75-15fb-45d3-b5df-48ac83f1e9fa"), String("b736106d-c47d-450f-baa8-8ee3ee8d8968"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), Object({"x": Number(467.19698560048175), "y": Number(369.0221803102138), "z": Number(0)})] }
+[2019-10-28][11:07:40][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:40][server::ws_actor][INFO] CmdMsg { func_name: "snap_to_point", params: [String("defaultNew.flx"), String("dd621a75-15fb-45d3-b5df-48ac83f1e9fa"), String("b736106d-c47d-450f-baa8-8ee3ee8d8968"), String("e13c4e13-9245-4556-9304-88c85aa2c7ad"), Object({"x": Number(569.1205933546053), "y": Number(601.4512067003338), "z": Number(0)})] }
+[2019-10-28][11:07:40][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:47][server::ws_actor][INFO] CmdMsg { func_name: "get_closest_point", params: [String("defaultNew.flx"), String("2027eb43-c810-4eb1-9444-4c94b56557d3"), Object({"x": Number(485.9074843494556), "y": Number(540.1340421862669), "z": Number(0)}), String("af8bb3df-3e53-4cba-9dc1-a311a40d13b9")] }
+[2019-10-28][11:07:47][operations_kernel::app_state][INFO] Sending data Array([Object({"id": String("2027eb43-c810-4eb1-9444-4c94b56557d3"), "index": Number(1)}), Object({"Point": Object({"pt": Object({"x": Number(488.57493578720977), "y": Number(534.2789941270031), "z": Number(0.00000000000005684341886080803)})})})]) to user 3081426f-63ca-4858-8241-c1ef788abcb4
+[2019-10-28][11:07:47][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:49][server::ws_actor][INFO] CmdMsg { func_name: "add_object", params: [String("defaultNew.flx"), String("dd621a75-15fb-45d3-b5df-48ac83f1e9fa"), String("Dimension"), Object({"first": Object({"geom": Object({"pt": Object({"x": Number(488.57493578720977), "y": Number(534.2789941270031), "z": Number(0.00000000000005684341886080804)})}), "refer": Null}), "id": String("e6427ee5-e223-4da2-a5da-a053e75c9434"), "offset": Number(5), "second": Object({"geom": Object({"pt": Object({"x": Number(422.4428813324168), "y": Number(672.3084738855007), "z": Number(0)})}), "refer": Null})})] }
+[2019-10-28][11:07:49][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:49][server::ws_actor][INFO] CmdMsg { func_name: "snap_to_point", params: [String("defaultNew.flx"), String("dd621a75-15fb-45d3-b5df-48ac83f1e9fa"), String("e6427ee5-e223-4da2-a5da-a053e75c9434"), String("2027eb43-c810-4eb1-9444-4c94b56557d3"), Object({"x": Number(488.57493578720977), "y": Number(534.2789941270031), "z": Number(0.00000000000005684341886080804)})] }
+[2019-10-28][11:07:49][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:49][server::ws_actor][INFO] CmdMsg { func_name: "snap_to_point", params: [String("defaultNew.flx"), String("dd621a75-15fb-45d3-b5df-48ac83f1e9fa"), String("e6427ee5-e223-4da2-a5da-a053e75c9434"), String("2027eb43-c810-4eb1-9444-4c94b56557d3"), Object({"x": Number(422.4428813324168), "y": Number(672.3084738855007), "z": Number(0)})] }
+[2019-10-28][11:07:49][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:54][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("dd621a75-15fb-45d3-b5df-48ac83f1e9fa")] }
+[2019-10-28][11:07:54][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:56][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("49ddd4e2-8a3c-4f9f-9f53-d063b6c425ed"), String("Move objs")] }
+[2019-10-28][11:07:56][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:56][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("49ddd4e2-8a3c-4f9f-9f53-d063b6c425ed"), Array([String("2027eb43-c810-4eb1-9444-4c94b56557d3")]), Object({"x": Number(-99.3441225493251), "y": Number(54.65438671626396), "z": Number(-0.00000000000005684341886080803)})] }
+[2019-10-28][11:07:56][server::ws_actor][INFO] Processed in 0.0029993 seconds
+[2019-10-28][11:07:56][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("49ddd4e2-8a3c-4f9f-9f53-d063b6c425ed")] }
+[2019-10-28][11:07:56][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:58][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("91e93a38-f4e0-4139-885a-e28087e0247b"), String("Move objs")] }
+[2019-10-28][11:07:58][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:58][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("91e93a38-f4e0-4139-885a-e28087e0247b"), Array([String("b26dfbf9-197d-4e4a-8920-891be4956c99")]), Object({"x": Number(-29.964627694269723), "y": Number(-60.23918131274564), "z": Number(-0.00000000000005684341886080803)})] }
+[2019-10-28][11:07:58][server::ws_actor][INFO] Processed in 0.0030235 seconds
+[2019-10-28][11:07:58][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("91e93a38-f4e0-4139-885a-e28087e0247b")] }
+[2019-10-28][11:07:58][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:59][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("a6d5e7d9-4500-4695-8355-b0a594e6f26e"), String("Move objs")] }
+[2019-10-28][11:07:59][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:07:59][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("a6d5e7d9-4500-4695-8355-b0a594e6f26e"), Array([String("0a34c325-4fad-4805-91e2-998052570186")]), Object({"x": Number(-22.905434748626135), "y": Number(-17.49986111097337), "z": Number(-0.00000000000005684341886080803)})] }
+[2019-10-28][11:07:59][server::ws_actor][INFO] Processed in 0.0030295 seconds
+[2019-10-28][11:07:59][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("a6d5e7d9-4500-4695-8355-b0a594e6f26e")] }
+[2019-10-28][11:07:59][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:08:01][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("083dc107-3bc3-4811-8136-1f9edaefd813"), String("Move objs")] }
+[2019-10-28][11:08:01][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:08:01][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("083dc107-3bc3-4811-8136-1f9edaefd813"), Array([String("e13c4e13-9245-4556-9304-88c85aa2c7ad")]), Object({"x": Number(-28.850775148746663), "y": Number(3.42540230989448), "z": Number(-0.00000000000005684341886080803)})] }
+[2019-10-28][11:08:01][server::ws_actor][INFO] Processed in 0.0029919 seconds
+[2019-10-28][11:08:01][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("083dc107-3bc3-4811-8136-1f9edaefd813")] }
+[2019-10-28][11:08:01][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:08:16][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("9f96bd62-7dbe-44dd-9174-86a532a00bd3"), String("Move objs")] }
+[2019-10-28][11:08:16][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:08:16][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("9f96bd62-7dbe-44dd-9174-86a532a00bd3"), Array([String("4c16ca3a-aa59-4167-84b2-5966d5016307")]), Object({"x": Number(95.03110948881545), "y": Number(21.153423673351085), "z": Number(0)})] }
+[2019-10-28][11:08:16][server::ws_actor][INFO] Processed in 0.0030005 seconds
+[2019-10-28][11:08:16][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("9f96bd62-7dbe-44dd-9174-86a532a00bd3")] }
+[2019-10-28][11:08:16][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:08:19][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("29607555-2317-4281-9e69-cf7b9b6201b9"), String("Move objs")] }
+[2019-10-28][11:08:19][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:08:19][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("29607555-2317-4281-9e69-cf7b9b6201b9"), Array([String("b26dfbf9-197d-4e4a-8920-891be4956c99")]), Object({"x": Number(54.24853690377029), "y": Number(105.88887660325383), "z": Number(0.00000000000011368683772161605)})] }
+[2019-10-28][11:08:19][server::ws_actor][INFO] Processed in 0.0030004 seconds
+[2019-10-28][11:08:19][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("29607555-2317-4281-9e69-cf7b9b6201b9")] }
+[2019-10-28][11:08:19][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:08:21][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("cb38f17f-2e5a-4535-a0c9-c8b7bceaa058"), String("Move objs")] }
+[2019-10-28][11:08:21][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:08:21][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("cb38f17f-2e5a-4535-a0c9-c8b7bceaa058"), Array([String("d3c09a5a-68a1-4204-955e-692a3e0c5a8a")]), Object({"x": Number(-10.783858938346782), "y": Number(9.903557983650444), "z": Number(0.00000000000011368683772161605)})] }
+[2019-10-28][11:08:21][server::ws_actor][INFO] Processed in 0.0029936 seconds
+[2019-10-28][11:08:21][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("cb38f17f-2e5a-4535-a0c9-c8b7bceaa058")] }
+[2019-10-28][11:08:21][server::ws_actor][INFO] Processed in 0.0009996 seconds
+[2019-10-28][11:08:25][server::ws_actor][INFO] CmdMsg { func_name: "demo_100", params: [String("defaultNew.flx"), Object({"x": Number(0), "y": Number(0), "z": Number(0)})] }
+[2019-10-28][11:08:25][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:08:57][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("0d9e131f-0080-467d-a829-116bb24d3456"), String("Move objs")] }
+[2019-10-28][11:08:57][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:08:57][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("0d9e131f-0080-467d-a829-116bb24d3456"), Array([String("c095038c-c76d-403a-b599-50d0b077fe08")]), Object({"x": Number(20.714984075091703), "y": Number(12.037671798655367), "z": Number(0)})] }
+[2019-10-28][11:08:57][server::ws_actor][INFO] Processed in 0.0029963 seconds
+[2019-10-28][11:08:57][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("0d9e131f-0080-467d-a829-116bb24d3456")] }
+[2019-10-28][11:08:57][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:08:59][server::ws_actor][INFO] CmdMsg { func_name: "begin_undo_event", params: [String("defaultNew.flx"), String("93d7a47c-9012-4804-8423-3387b8a32b7a"), String("Move objs")] }
+[2019-10-28][11:08:59][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:08:59][server::ws_actor][INFO] CmdMsg { func_name: "move_objects", params: [String("defaultNew.flx"), String("93d7a47c-9012-4804-8423-3387b8a32b7a"), Array([String("c095038c-c76d-403a-b599-50d0b077fe08")]), Object({"x": Number(-28.36691754361425), "y": Number(-10.144218209864562), "z": Number(0)})] }
+[2019-10-28][11:08:59][server::ws_actor][INFO] Processed in 0.003 seconds
+[2019-10-28][11:08:59][server::ws_actor][INFO] CmdMsg { func_name: "end_undo_event", params: [String("defaultNew.flx"), String("93d7a47c-9012-4804-8423-3387b8a32b7a")] }
+[2019-10-28][11:08:59][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:10:15][server::ws_actor][INFO] CmdMsg { func_name: "close_file", params: [String("defaultNew.flx")] }
+[2019-10-28][11:10:15][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:10:15][operations_kernel::app_state][INFO] Saving file: "defaultNew.flx"
+[2019-10-28][11:10:16][operations_kernel::app_state][INFO] Removing user 3081426f-63ca-4858-8241-c1ef788abcb4 from file "defaultNew.flx"
+[2019-10-28][11:10:16][operations_kernel::app_state][INFO] Closing file: "defaultNew.flx"
