@@ -87,7 +87,7 @@ fn close_file(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let path = cx.argument::<JsString>(0)?.value();
     let user = cx.argument::<JsString>(1)?.value();
     let pathbuf = PathBuf::from(path);
-    operations_kernel::close_file(pathbuf, UserID::from_str(&user).unwrap());
+    operations_kernel::close_file(pathbuf.clone(), UserID::from_str(&user).unwrap());
     UPDATES.remove(&pathbuf);
     Ok(cx.undefined())
 }
