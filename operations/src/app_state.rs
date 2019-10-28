@@ -44,24 +44,22 @@ pub fn init_file(file: PathBuf, user: UserID, updates: Sender<UpdateMsg>) {
 }
 
 pub fn close_file(file: PathBuf, user: UserID) {
-    rayon::spawn(move || {
-        let mut remove = false;
-        if let Some(ops) = APP_STATE.files.get(&file) {
-            info!("Saving file: {:?}", file);
-            if let Err(e) = ops.save(&file) {
-                error!("Error saving file {:?}, {:?}", file, e);
-            }
-            info!("Removing user {:?} from file {:?}", user, file);
-            ops.updates.remove(&user);
-            if ops.updates.len() == 0 {
-                remove = true;
-            }
+    let mut remove = false;
+    if let Some(ops) = APP_STATE.files.get(&file) {
+        info!("Saving file: {:?}", file);
+        if let Err(e) = ops.save(&file) {
+            error!("Error saving file {:?}, {:?}", file, e);
         }
-        if remove {
-            info!("Closing file: {:?}", file);
-            APP_STATE.files.remove(&file);
+        info!("Removing user {:?} from file {:?}", user, file);
+        ops.updates.remove(&user);
+        if ops.updates.len() == 0 {
+            remove = true;
         }
-    });
+    }
+    if remove {
+        info!("Closing file: {:?}", file);
+        APP_STATE.files.remove(&file);
+    }
 }
 
 pub fn save_file(file: &PathBuf) -> Result<(), DBError> {

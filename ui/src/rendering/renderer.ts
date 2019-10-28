@@ -1,4 +1,5 @@
 import * as BABYLON from 'babylonjs'
+import * as BABYLONGUI from "babylonjs-gui"
 import * as TEXTURES from './babylonjs.proceduralTextures.min.js'
 import * as mouse from '../ui/mouse_events'
 import * as gui from '../ui/gui'
@@ -170,11 +171,27 @@ export class Renderer {
                 var text_pos = new BABYLON.Vector3(json.text_pos.x, 1, json.text_pos.z);
 
                 if (!mesh) {
-                    mesh = BABYLON.MeshBuilder.CreateSphere(id, { diameter: 2 }, this._scene);
+                    mesh = BABYLON.MeshBuilder.CreateSphere(id, { diameter: 1 }, this._scene);
                 }
-                this.applyNewMeshProps(mesh, temp);
                 mesh.metadata = json.metadata;
                 mesh.position = text_pos;
+
+                //Performance TANKS with this method of displaying text in 3D space.
+                /*var plane = this._scene.getMeshByName(id + "_plane");
+                if (!plane) {
+                    plane = BABYLON.Mesh.CreatePlane(id + "_plane", 500, this._scene);
+                    plane.rotation = new BABYLON.Vector3(Math.PI / 2, 0, 0);
+                    plane.parent = mesh;
+                    plane.position.y = 2;
+                }
+                var guiTexture = BABYLONGUI.AdvancedDynamicTexture.CreateForMesh(plane);
+                var textLabel = new BABYLONGUI.TextBlock();
+                textLabel.name = id + "_text";
+                textLabel.text = json.text;
+                textLabel.width = 1;
+                textLabel.height = 1;
+                textLabel.color = "black";
+                guiTexture.addControl(textLabel);*/
 
                 var line_1 = this._scene.getMeshByName(id + "_line1");
                 if (!line_1) {
