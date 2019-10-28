@@ -90,6 +90,7 @@ fn main() {
         .level_for("mio", LevelFilter::Error)
         .level(log_level)
         .chain(std::io::stdout())
+        .chain(fern::log_file("server_log.log").expect("couldn't create log file"))
         .apply()
         .unwrap();
 

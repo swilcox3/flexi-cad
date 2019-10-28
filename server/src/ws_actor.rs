@@ -11,6 +11,8 @@ use std::path::PathBuf;
 
 /// How often heartbeat pings are sent
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
+///How often update messages are sent
+const UPDATE_INTERVAL: Duration = Duration::from_millis(100);
 /// How long before lack of client response causes a timeout
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(30);
 
@@ -95,7 +97,8 @@ impl MyWebSocket {
     }
 
     fn route(&self, mut msg: CmdMsg) -> Result<(), String> {
-        match msg.func_name.as_ref() {
+        let now = std::time::SystemTime::now();
+        let answer = match msg.func_name.as_ref() {
             "init_file" => {
                 let (s, r) = crossbeam_channel::unbounded();
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
@@ -105,7 +108,7 @@ impl MyWebSocket {
             }
             "close_file" => {
                 let path: PathBuf = serde_json::from_value(msg.params.remove(0)).map_err(error)?;
-                operations_kernel::close_file(&path, &self.id);
+                operations_kernel::close_file(path, self.id);
                 Ok(())
             }
             "begin_undo_event" => {
@@ -306,10 +309,15 @@ impl MyWebSocket {
                 Ok(())
             }
             _ => Err(error("Not Implemented")),
-        }
+        };
+        info!(
+            "Processed in {:?} seconds",
+            now.elapsed().unwrap().as_secs_f32()
+        );
+        answer
     }
 
-    /// helper method that sends ping to client every second.
+    /// helper method that sends ping to client every HEARTBEAT_INTERVAL.
     ///
     /// also this method checks heartbeats from client
     fn hb(&self, ctx: &mut <Self as Actor>::Context) {
@@ -319,13 +327,18 @@ impl MyWebSocket {
                 // heartbeat timed out
                 for chunk in act.updates.chunks() {
                     for (file, _) in chunk.iter() {
-                        operations_kernel::close_file(file, &act.id);
+                        operations_kernel::close_file(file.clone(), act.id);
                     }
                 }
                 // stop actor
                 ctx.stop();
-
                 // don't try to send a ping
+                return;
+            }
+            ctx.ping("");
+        });
+        ctx.run_interval(UPDATE_INTERVAL, |act, ctx| {
+            if let actix::ActorState::Stopped = ctx.state() {
                 return;
             }
             for chunk in act.updates.chunks() {
@@ -336,7 +349,6 @@ impl MyWebSocket {
                     }
                 }
             }
-            ctx.ping("");
         });
     }
 }

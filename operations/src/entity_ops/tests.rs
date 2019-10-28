@@ -13,7 +13,7 @@ fn test_setup(desc: &str, callback: impl Fn(PathBuf, UserID, Receiver<UpdateMsg>
 
 //This makes sure that all the background updates have completed
 fn empty_receiver(rcv: &Receiver<UpdateMsg>) {
-    while let Ok(_) = rcv.recv_timeout(std::time::Duration::from_millis(500)) {
+    while let Ok(_) = rcv.recv_timeout(std::time::Duration::from_millis(1000)) {
         //Do nothing
     }
 }
@@ -232,6 +232,13 @@ fn test_walls_and_doors() {
         let door_2_id = door_2.get_id().clone();
         let door_3 = Box::new(Door::new(Point3f::new(0.75, 1.0, 0.0), Point3f::new(0.25, 1.0, 0.0), 0.25, 0.75));
         let door_3_id = door_3.get_id().clone();
+
+        /*println!("wall 1: {:?}", wall_1_id);
+        println!("wall 2: {:?}", wall_2_id);
+        println!("wall 3: {:?}", wall_3_id);
+        println!("door 1: {:?}", door_1_id);
+        println!("door 2: {:?}", door_2_id);
+        println!("door 3: {:?}", door_3_id);*/
 
         let event = UndoEventID::new_v4();
         app_state::begin_undo_event(&file, &user, event.clone(), String::from("add objs")).unwrap();

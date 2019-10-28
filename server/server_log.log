@@ -1,0 +1,63 @@
+[2019-10-28][10:53:00][actix_server::builder][INFO] Starting 8 workers
+[2019-10-28][10:53:00][actix_server::builder][INFO] Starting server on 192.168.6.104:8000
+[2019-10-28][10:53:00][actix_server::builder][INFO] Starting server on 192.168.6.104:80
+[2019-10-28][10:53:08][server::ws_actor][INFO] 
+Response HTTP/1.1 101 Switching Protocols
+  headers:
+    "upgrade": "websocket"
+    "sec-websocket-accept": "FTqElDf3RG3nSGieOzpMn/YXGEw="
+    "transfer-encoding": "chunked"
+  body: Stream
+
+[2019-10-28][10:53:15][server::ws_actor][INFO] CmdMsg { func_name: "init_file", params: [String("defaultNew3.flx")] }
+[2019-10-28][10:53:15][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][10:53:22][server::ws_actor][INFO] CmdMsg { func_name: "demo_100", params: [String("defaultNew3.flx"), Object({"x": Number(0), "y": Number(0), "z": Number(0)})] }
+[2019-10-28][10:53:22][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][10:53:39][server::ws_actor][INFO] CmdMsg { func_name: "close_file", params: [String("defaultNew3.flx")] }
+[2019-10-28][10:53:39][operations_kernel::app_state][INFO] Saving file: "defaultNew3.flx"
+[2019-10-28][10:53:40][operations_kernel::app_state][INFO] Removing user b4484e10-e7d6-4a59-8004-168bac5e9460 from file "defaultNew3.flx"
+[2019-10-28][10:53:40][operations_kernel::app_state][INFO] Closing file: "defaultNew3.flx"
+[2019-10-28][10:53:40][server::ws_actor][INFO] Processed in 1.7710149 seconds
+[2019-10-28][10:53:42][actix_server::builder][INFO] SIGINT received, exiting
+[2019-10-28][11:02:44][actix_server::builder][INFO] Starting 8 workers
+[2019-10-28][11:02:44][actix_server::builder][INFO] Starting server on 192.168.6.104:8000
+[2019-10-28][11:02:44][actix_server::builder][INFO] Starting server on 192.168.6.104:80
+[2019-10-28][11:02:52][server::ws_actor][INFO] 
+Response HTTP/1.1 101 Switching Protocols
+  headers:
+    "upgrade": "websocket"
+    "sec-websocket-accept": "YYPLIphyG11jpoOshwCplVS9yws="
+    "transfer-encoding": "chunked"
+  body: Stream
+
+[2019-10-28][11:03:01][server::ws_actor][INFO] CmdMsg { func_name: "init_file", params: [String("defaultNew4.flx")] }
+[2019-10-28][11:03:01][server::ws_actor][INFO] Processed in 0.0009995 seconds
+[2019-10-28][11:03:08][server::ws_actor][INFO] CmdMsg { func_name: "demo_100", params: [String("defaultNew4.flx"), Object({"x": Number(0), "y": Number(0), "z": Number(0)})] }
+[2019-10-28][11:03:08][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:03:30][server::ws_actor][INFO] CmdMsg { func_name: "close_file", params: [String("defaultNew4.flx")] }
+[2019-10-28][11:03:30][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:03:30][operations_kernel::app_state][INFO] Saving file: "defaultNew4.flx"
+[2019-10-28][11:03:32][operations_kernel::app_state][INFO] Removing user 73601690-8d5e-4d65-8df7-5d8228352954 from file "defaultNew4.flx"
+[2019-10-28][11:03:32][operations_kernel::app_state][INFO] Closing file: "defaultNew4.flx"
+[2019-10-28][11:04:14][server::ws_actor][INFO] 
+Response HTTP/1.1 101 Switching Protocols
+  headers:
+    "upgrade": "websocket"
+    "sec-websocket-accept": "eo4flQpwEcaAhGINqU09Lyzh4rU="
+    "transfer-encoding": "chunked"
+  body: Stream
+
+[2019-10-28][11:04:20][server::ws_actor][INFO] CmdMsg { func_name: "init_file", params: [String("defaultNew3.flx")] }
+[2019-10-28][11:04:20][operations_kernel::app_state][INFO] Going to open file "defaultNew3.flx"
+[2019-10-28][11:04:20][server::ws_actor][INFO] Processed in 0.0009995 seconds
+[2019-10-28][11:04:20][operations_kernel::operation_manager][INFO] File is opened
+[2019-10-28][11:04:33][operations_kernel::app_state][INFO] Opened file "defaultNew3.flx"
+[2019-10-28][11:04:41][server::ws_actor][INFO] CmdMsg { func_name: "close_file", params: [String("defaultNew3.flx")] }
+[2019-10-28][11:04:41][server::ws_actor][INFO] Processed in 0.0 seconds
+[2019-10-28][11:04:41][operations_kernel::app_state][INFO] Saving file: "defaultNew3.flx"
+[2019-10-28][11:04:43][operations_kernel::app_state][INFO] Removing user fb880659-7603-4a20-93ea-b7a8d627afbd from file "defaultNew3.flx"
+[2019-10-28][11:04:43][operations_kernel::app_state][INFO] Closing file: "defaultNew3.flx"
+[2019-10-28][11:04:49][actix_server::builder][INFO] SIGINT received, exiting
+[2019-10-28][11:05:01][actix_server::builder][INFO] Starting 8 workers
+[2019-10-28][11:05:01][actix_server::builder][INFO] Starting server on 192.168.6.104:8000
+[2019-10-28][11:05:01][actix_server::builder][INFO] Starting server on 192.168.6.104:80
