@@ -1,4 +1,6 @@
 # flexi-cad
+_This is my first iteration on developing cloud-native, real-time collaborative architectural CAD.  I'm working on another implementation now based on Redis, gRPC, and OpenCASCADE._
+
 The goal of this project is to design an architectural CAD product that uses largely the same code for three different versions: workstation, thin-client/thick-server, and browser based.  The name is dumb, but it works for now.
 
 Follow the setup instructions for Neon: https://neon-bindings.com/docs/getting-started  
